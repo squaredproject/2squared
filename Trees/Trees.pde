@@ -1,6 +1,7 @@
 import heronarts.lx.*;
 import heronarts.lx.effect.*;
 import heronarts.lx.model.*;
+import heronarts.lx.output.*;
 import heronarts.lx.parameter.*;
 import heronarts.lx.pattern.*;
 import heronarts.lx.transform.*;
@@ -27,18 +28,28 @@ void setup() {
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
     new TestPattern(lx),
-  });
-  
+  }
+  );
+
   lx.ui.addLayer(new UICameraLayer(lx.ui)
     .setRadius(240)
     .setCenter(model.cx, model.cy, model.cz)
     .addComponent(new UIPointCloud(lx).setPointWeight(2))
     .addComponent(new UICubes())
-  );
+    );
   lx.ui.addLayer(new UIPatternDeck(lx.ui, lx, 4, 4));
 
+  try {
+    lx.addOutput(
+      new LXDatagramOutput(lx).addDatagram(
+        new DDPSection(model.sections.get(0)).setAddress(InetAddress.getByName("10.0.0.100"))
+      )
+    );
+  } catch (Exception x) {
+    println(x);
+  }
 }
-
+  
 void draw() {
   background(#222222);
 }
@@ -71,5 +82,4 @@ class UICubes extends UICameraComponent {
     noLights();
   }
 }
-
 

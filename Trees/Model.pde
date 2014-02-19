@@ -96,6 +96,9 @@ static class Section extends LXModel {
 
 static class Cube extends LXModel {
   
+  static final int PIXELS_PER_SMALL_CUBE = 6;
+  static final int PIXELS_PER_LARGE_CUBE = 12;
+  
   static final int SMALL = 6;
   static final int MEDIUM = 9;
   static final int LARGE = 12;
@@ -120,8 +123,9 @@ static class Cube extends LXModel {
       transform.rotateX(rx * PI / 180);
       transform.rotateZ(rz * PI / 180);
       
-      transform.translate(0, size/2, 0);
-      for (int i = 0; i < size; ++i) {
+      transform.translate(0, size/2 - 1, 0);
+      int numPixels = (size >= LARGE) ? PIXELS_PER_LARGE_CUBE : PIXELS_PER_SMALL_CUBE;
+      for (int i = 0; i < numPixels; ++i) {
         this.points.add(new LXPoint(transform.x(), transform.y(), transform.z()));
         transform.translate(0, -1, 0);
       }
