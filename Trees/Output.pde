@@ -19,20 +19,20 @@ abstract class DDPDatagram extends LXDatagram {
   }
 }
 
-class DDPSection extends DDPDatagram {
+class DDPCluster extends DDPDatagram {
   
-  private static final int PIXELS_PER_SECTION = 3*12 + 13*6;
+  private static final int PIXELS_PER_CLUSTER = 3*12 + 13*6;
   
-  private final Section section;
+  private final Cluster cluster;
   
-  public DDPSection(Section s) {
-    super(PIXELS_PER_SECTION);
-    this.section = s;
+  public DDPCluster(Cluster c) {
+    super(PIXELS_PER_CLUSTER);
+    this.cluster = c;
   }
   
   public void onSend(color[] colors) {
     int i = HEADER_LENGTH;
-    for (Cube cube : this.section.cubes) {
+    for (Cube cube : this.cluster.cubes) {
       for (LXPoint p : cube.points) {
         color c = colors[p.index]; 
         buffer[i++] = (byte) ((c >> 16) & 0xff);

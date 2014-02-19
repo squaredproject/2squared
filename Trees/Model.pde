@@ -1,17 +1,17 @@
 static class Model extends LXModel {
   
   final List<Tree> trees;
-  final List<Section> sections;
+  final List<Cluster> clusters;
   final List<Cube> cubes;
   
   Model() {
     super(new Fixture());
     Fixture f = (Fixture) this.fixtures.get(0);
     this.trees = Collections.unmodifiableList(f.trees);
-    this.sections = Collections.unmodifiableList(f.sections);
+    this.clusters = Collections.unmodifiableList(f.clusters);
     List<Cube> _cubes = new ArrayList<Cube>();
-    for (Section section : this.sections) {
-      for (Cube cube : section.cubes) {
+    for (Cluster cluster : this.clusters) {
+      for (Cube cube : cluster.cubes) {
         _cubes.add(cube);
       }
     }
@@ -21,15 +21,15 @@ static class Model extends LXModel {
   static class Fixture extends LXAbstractFixture {
     
     final List<Tree> trees = new ArrayList<Tree>();
-    final List<Section> sections;
+    final List<Cluster> clusters;
     
     Fixture() {
-      this.sections = Arrays.asList(new Section[] {
-        new Section(0, 0, 0, 0),
-        new Section(30, 32, 10, 20),
+      this.clusters = Arrays.asList(new Cluster[] {
+        new Cluster(0, 0, 0, 0),
+        new Cluster(30, 32, 10, 20),
       });
-      for (Section section : this.sections) {
-        for (LXPoint p : section.points) {
+      for (Cluster cluster : this.clusters) {
+        for (LXPoint p : cluster.points) {
           this.points.add(p);
         }
       }
@@ -49,11 +49,11 @@ static class Tree extends LXModel {
   }
 }
 
-static class Section extends LXModel {
+static class Cluster extends LXModel {
   
   final List<Cube> cubes;
   
-  Section(float x, float y, float z, float ry) {
+  Cluster(float x, float y, float z, float ry) {
     super(new Fixture(x, y, z, ry));
     Fixture f = (Fixture) this.fixtures.get(0);
     this.cubes = Collections.unmodifiableList(f.cubes);

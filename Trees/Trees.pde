@@ -27,6 +27,7 @@ void setup() {
   model = new Model();
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
+    new DiffusionTestPattern(lx),
     new TestPattern(lx),
   }
   );
@@ -42,7 +43,7 @@ void setup() {
   try {
     lx.addOutput(
       new LXDatagramOutput(lx).addDatagram(
-        new DDPSection(model.sections.get(0)).setAddress(InetAddress.getByName("10.0.0.100"))
+        new DDPCluster(model.clusters.get(0)).setAddress(InetAddress.getByName("10.0.0.100"))
       )
     );
   } catch (Exception x) {
