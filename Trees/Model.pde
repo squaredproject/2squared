@@ -113,7 +113,7 @@ static class Cube extends LXModel {
   
   final int size;
   final float rx, ry, rz;
-  
+    
   Cube(LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
     super(new Fixture(transform, size, x, y, z, rx, ry, rz));
     this.size = size;

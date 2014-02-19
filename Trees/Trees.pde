@@ -27,10 +27,10 @@ void setup() {
   model = new Model();
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
-    new DiffusionTestPattern(lx),
+    new SweepPattern(lx),
     new TestPattern(lx),
-  }
-  );
+    new DiffusionTestPattern(lx),
+  });
 
   lx.ui.addLayer(new UICameraLayer(lx.ui)
     .setRadius(240)
@@ -40,15 +40,15 @@ void setup() {
     );
   lx.ui.addLayer(new UIPatternDeck(lx.ui, lx, 4, 4));
 
-  try {
-    lx.addOutput(
-      new LXDatagramOutput(lx).addDatagram(
-        new DDPCluster(model.clusters.get(0)).setAddress(InetAddress.getByName("10.0.0.100"))
-      )
-    );
-  } catch (Exception x) {
-    println(x);
-  }
+//  try {
+//    lx.addOutput(
+//      new LXDatagramOutput(lx).addDatagram(
+//        new DDPCluster(model.clusters.get(0)).setAddress(InetAddress.getByName("10.0.0.100"))
+//      )
+//    );
+//  } catch (Exception x) {
+//    println(x);
+//  }
 }
   
 void draw() {
