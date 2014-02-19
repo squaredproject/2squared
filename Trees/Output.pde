@@ -21,12 +21,10 @@ abstract class DDPDatagram extends LXDatagram {
 
 class DDPCluster extends DDPDatagram {
   
-  private static final int PIXELS_PER_CLUSTER = 3*12 + 13*6;
-  
   private final Cluster cluster;
   
   public DDPCluster(Cluster c) {
-    super(PIXELS_PER_CLUSTER);
+    super(Cluster.PIXELS_PER_CLUSTER);
     this.cluster = c;
   }
   

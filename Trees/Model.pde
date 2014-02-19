@@ -51,6 +51,13 @@ static class Tree extends LXModel {
 
 static class Cluster extends LXModel {
   
+  public final static int LARGE_CUBES_PER_CLUSTER = 3;
+  public final static int SMALL_CUBES_PER_CLUSTER = 13;
+  
+  public final static int PIXELS_PER_CLUSTER =
+    LARGE_CUBES_PER_CLUSTER * Cube.PIXELS_PER_LARGE_CUBE +
+    SMALL_CUBES_PER_CLUSTER * Cube.PIXELS_PER_SMALL_CUBE;
+  
   final List<Cube> cubes;
   
   Cluster(float x, float y, float z, float ry) {
