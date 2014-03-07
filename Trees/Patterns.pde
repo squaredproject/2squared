@@ -1,22 +1,31 @@
 class SweepPattern extends LXPattern {
   
-  final SinLFO speedMod = new SinLFO(1000, 5000, 1800);
+  final SinLFO speedMod = new SinLFO(3000, 9000, 5400);
   final SinLFO yPos = new SinLFO(model.yMin, model.yMax, speedMod);
-  final BasicParameter width = new BasicParameter("WIDTH", 10, 5, 100);
+  final BasicParameter width = new BasicParameter("WIDTH", 50, 5, 100);
+  
+  final SawLFO offset = new SawLFO(0, TWO_PI, 9000);
+  
+  final BasicParameter amplitude = new BasicParameter("AMP", 10*FEET, 0, 20*FEET);
+  final SinLFO amp = new SinLFO(0, amplitude, 5000);
   
   SweepPattern(LX lx) {
     super(lx);
     addModulator(speedMod.start());
     addModulator(yPos.start());
     addParameter(width);
+    addParameter(amplitude);
+    addModulator(amp.start());
+    addModulator(offset.start());
   }
   
   public void run(double deltaMs) {
     for (Cube cube : model.cubes) {
+      float yp = yPos.getValuef() + amp.getValuef() * sin((cube.cx - model.cx) * .01 + offset.getValuef());
       setColor(cube, color(
-        (lx.getBaseHuef() + 2*cube.cz) % 360,
+        (lx.getBaseHuef() + abs(cube.cx - model.cx) * .2 +  cube.cz*.1 + cube.cy*.1) % 360,
         100,
-        max(0, 100 - (100/width.getValuef())*abs(cube.cy - yPos.getValuef()))
+        max(0, 100 - (100/width.getValuef())*abs(cube.cy - yp))
       ));
     }
   }

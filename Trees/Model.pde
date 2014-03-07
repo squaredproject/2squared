@@ -1,14 +1,54 @@
+static class Geometry {
+
+  final static float HEIGHT = 570;
+  
+  final static float CORNER_RADIUS = 62 * FEET;
+  final static float CORNER_DISTANCE = 786;
+  
+  final static float MIDDLE_RADIUS = 85 * FEET;
+  final static float MIDDLE_DISTANCE = 1050; 
+  
+  final static float VERTICAL_MIDPOINT = 156;
+ 
+  final static float BEAM_SPACING = 42;
+  final static int NUM_BEAMS = 11;
+  final static float BEAM_WIDTH = 6;
+
+  final float[] heights;
+  final float[] distances;
+
+  Geometry() {
+    distances = new float[NUM_BEAMS + 2];
+    heights = new float[NUM_BEAMS + 2];
+    for (int i = 0; i < heights.length; ++i) {
+      heights[i] = (i == NUM_BEAMS+1) ? HEIGHT : (i * BEAM_SPACING);
+      float oppositeLeg = VERTICAL_MIDPOINT - heights[i];
+      float angle = asin(oppositeLeg / MIDDLE_RADIUS);
+      float adjacentLeg = MIDDLE_RADIUS * cos(angle);
+      distances[i] = MIDDLE_DISTANCE - adjacentLeg;  
+    }
+  }
+}
+
 static class Model extends LXModel {
   
   final List<Tree> trees;
   final List<Cluster> clusters;
   final List<Cube> cubes;
-  
+    
   Model() {
     super(new Fixture());
     Fixture f = (Fixture) this.fixtures.get(0);
     this.trees = Collections.unmodifiableList(f.trees);
-    this.clusters = Collections.unmodifiableList(f.clusters);
+    
+    List<Cluster> _clusters = new ArrayList<Cluster>();
+    for (Tree tree : this.trees) {
+      for (Cluster cluster : tree.clusters) {
+        _clusters.add(cluster);
+      }
+    }
+    this.clusters = Collections.unmodifiableList(_clusters);
+    
     List<Cube> _cubes = new ArrayList<Cube>();
     for (Cluster cluster : this.clusters) {
       for (Cube cube : cluster.cubes) {
@@ -21,16 +61,14 @@ static class Model extends LXModel {
   static class Fixture extends LXAbstractFixture {
     
     final List<Tree> trees = new ArrayList<Tree>();
-    final List<Cluster> clusters;
     
     Fixture() {
-      this.clusters = Arrays.asList(new Cluster[] {
-        new Cluster(0, 0, 0, 0),
-        new Cluster(30, 32, 10, 20),
-      });
-      for (Cluster cluster : this.clusters) {
-        for (LXPoint p : cluster.points) {
-          this.points.add(p);
+      for (float[] treePosition : TREE_POSITIONS) {
+        trees.add(new Tree(treePosition[0], treePosition[1]));
+      }
+      for (Tree tree : trees) {
+        for (LXPoint p : tree.points) {
+          points.add(p);
         }
       }
     }
@@ -39,12 +77,46 @@ static class Model extends LXModel {
 
 static class Tree extends LXModel {
   
-  Tree(float x, float z, float ry) {
-    super(new Fixture(x, z, ry));
+  final List<Cluster> clusters;
+  
+  final float x;
+  final float z;
+  
+  Tree(float x, float z) {
+    super(new Fixture(x, z));
+    Fixture f = (Fixture)this.fixtures.get(0);
+    this.clusters = Collections.unmodifiableList(f.clusters);
+    this.x = x;
+    this.z = z;
   }
   
   static class Fixture extends LXAbstractFixture {
-    Fixture(float x, float z, float ry) {
+    
+    final List<Cluster> clusters = new ArrayList<Cluster>();
+    
+    Fixture(float x, float z) {
+      LXTransform t = new LXTransform();
+      t.translate(x, 0, z);
+      for (int y = 3; y < 11; ++y) {
+        for (int i = 0; i < 4; ++i) {
+          float distance = geometry.distances[y];
+          t.push();
+          t.translate(0, geometry.heights[y], - distance - 2*FEET);
+          if (y < 7) {
+            clusters.add(new Cluster(t.x() - distance + ((y*(i+33)*17) + (y*43) % 11) % (2*distance), t.y(), t.z(), i*90));
+          } else {
+            clusters.add(new Cluster(t.x() - distance + ((y*(i+35)*13) + (y*41) % 19) % (distance), t.y(), t.z(), i*90));
+            clusters.add(new Cluster(t.x() + ((y*(i+15)*7) + (y*43) % 11) % (distance), t.y(), t.z(), i*90));
+          }
+          t.pop();
+          t.rotateY(PI/2);
+        }
+      }
+      for (Cluster cluster : this.clusters) {
+        for (LXPoint p : cluster.points) {
+          this.points.add(p);
+        }
+      }
     }
   }
 }

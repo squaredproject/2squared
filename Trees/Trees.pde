@@ -20,11 +20,13 @@ import java.util.List;
 
 final static int FEET = 12;
 
+static Geometry geometry = new Geometry();
 Model model;
 LX lx;
 
 void setup() {
   size(800, 600, OPENGL);
+  geometry = new Geometry();
   model = new Model();
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
@@ -34,41 +36,95 @@ void setup() {
   });
 
   lx.ui.addLayer(new UICameraLayer(lx.ui)
-    .setRadius(240)
-    .setCenter(model.cx, model.cy, model.cz)
-    .addComponent(new UIPointCloud(lx).setPointWeight(2))
-    .addComponent(new UICubes())
+    .setRadius(70*FEET)
+    .setCenter(model.cx, 220, model.cz)
+    .addComponent(new UITrees())
     );
   lx.ui.addLayer(new UIPatternDeck(lx.ui, lx, 4, 4));
 
-//  try {
-//    lx.addOutput(
-//      new LXDatagramOutput(lx).addDatagram(
-//        new DDPCluster(model.clusters.get(0)).setAddress(InetAddress.getByName("10.0.0.100"))
-//      )
-//    );
-//  } catch (Exception x) {
-//    println(x);
-//  }
+  try {
+    LXOutput output = new LXDatagramOutput(lx).addDatagram(
+      new DDPCluster(model.clusters.get(0)).setAddress("10.0.0.100")
+    );
+    output.enabled.setValue(false);
+    lx.addOutput(output);
+  } catch (Exception x) {
+    println(x);
+  }
 }
   
 void draw() {
   background(#222222);
 }
 
-class UICubes extends UICameraComponent {
-  
+class UITrees extends UICameraComponent {
+    
   protected void onDraw(UI ui) {
     lights();
-    directionalLight(0, 10, 50, 1, -2, 1);
-    directionalLight(120, 10, 50, -1, -2, 1);
-    
+    pointLight(0, 0, 80, model.cx, geometry.HEIGHT/2, -10*FEET);
+
+    noStroke();
+    fill(#191919);
+    beginShape();
+    vertex(0, 0, 0);
+    vertex(60*FEET, 0, 0);
+    vertex(60*FEET, 0, 30*FEET);
+    vertex(0, 0, 30*FEET);
+    endShape(CLOSE);
+
+    drawTrees(ui);
+    drawCubes(ui);
+  }
+  
+  private void drawTrees(UI ui) {
     noStroke();
     fill(#333333);
-    box(20*FEET, 1, 20*FEET);
+    for (Tree tree : model.trees) {
+      pushMatrix();
+      translate(tree.x, 0, tree.z);
+      drawTree(ui);
+      popMatrix();
+    }
+  }
+  
+  private void drawTree(UI ui) {
+    for (int i = 0; i < 4; ++i) {
+      for (int y = 1; y < geometry.distances.length; ++y) {
+        float beamY = geometry.heights[y];
+        float prevY = geometry.heights[y-1];
+        float distance = geometry.distances[y];
+        float prevDistance = geometry.distances[y-1];
+        
+        if (y <= geometry.NUM_BEAMS) {
+          beginShape();
+          vertex(-distance, beamY - geometry.BEAM_WIDTH/2, -distance);
+          vertex(-distance, beamY + geometry.BEAM_WIDTH/2, -distance);
+          vertex(distance, beamY + geometry.BEAM_WIDTH/2, -distance);
+          vertex(distance, beamY - geometry.BEAM_WIDTH/2, -distance);
+          endShape(CLOSE);
+        }
+        
+        beginShape();
+        vertex(-geometry.BEAM_WIDTH/2, prevY, -prevDistance);
+        vertex(geometry.BEAM_WIDTH/2, prevY, -prevDistance);
+        vertex(geometry.BEAM_WIDTH/2, beamY, -distance);
+        vertex(-geometry.BEAM_WIDTH/2, beamY, -distance);
+        endShape(CLOSE);
+        
+        beginShape();
+        vertex(prevDistance-geometry.BEAM_WIDTH/2, prevY, -prevDistance-geometry.BEAM_WIDTH/2);
+        vertex(prevDistance+geometry.BEAM_WIDTH/2, prevY, -prevDistance+geometry.BEAM_WIDTH/2);
+        vertex(distance+geometry.BEAM_WIDTH/2, beamY, -distance+geometry.BEAM_WIDTH/2);
+        vertex(distance-geometry.BEAM_WIDTH/2, beamY, -distance-geometry.BEAM_WIDTH/2);
+        endShape(CLOSE);        
+      }
+      rotateY(PI/2); 
+    }    
+  }
+   
+  private void drawCubes(UI ui) {
     
     color[] colors = lx.getColors();
-    
     noStroke();    
     for (Cube cube : model.cubes) {
       pushMatrix();
