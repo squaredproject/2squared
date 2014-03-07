@@ -84,7 +84,7 @@ static class Tree extends LXModel {
   final float r;
   
   Tree(float x, float z, float r) {
-    super(new Fixture(x, z));
+    super(new Fixture(x, z, r));
     Fixture f = (Fixture)this.fixtures.get(0);
     this.clusters = Collections.unmodifiableList(f.clusters);
     this.x = x;
@@ -96,9 +96,10 @@ static class Tree extends LXModel {
     
     final List<Cluster> clusters = new ArrayList<Cluster>();
     
-    Fixture(float x, float z) {
+    Fixture(float x, float z, float r) {
       LXTransform t = new LXTransform();
       t.translate(x, 0, z);
+      t.rotateY(r);
       for (int y = 3; y < 10; ++y) {
         for (int i = 0; i < 4; ++i) {
           float distance = geometry.distances[y];
