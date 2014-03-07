@@ -97,16 +97,20 @@ static class Tree extends LXModel {
     Fixture(float x, float z) {
       LXTransform t = new LXTransform();
       t.translate(x, 0, z);
-      for (int y = 3; y < 11; ++y) {
+      for (int y = 3; y < 10; ++y) {
         for (int i = 0; i < 4; ++i) {
           float distance = geometry.distances[y];
           t.push();
-          t.translate(0, geometry.heights[y], - distance - 2*FEET);
-          if (y < 7) {
-            clusters.add(new Cluster(t.x() - distance + ((y*(i+33)*17) + (y*43) % 11) % (2*distance), t.y(), t.z(), i*90));
+          t.translate(0, geometry.heights[y], - distance - 1*FEET);
+          if (y < 6) {
+            t.translate(((y % 2) == 0) ? (-distance/2) : (distance/2), 0, 0);
+            clusters.add(new Cluster(t.x(), t.y(), t.z(), i*90));
           } else {
-            clusters.add(new Cluster(t.x() - distance + ((y*(i+35)*13) + (y*41) % 19) % (distance), t.y(), t.z(), i*90));
-            clusters.add(new Cluster(t.x() + ((y*(i+15)*7) + (y*43) % 11) % (distance), t.y(), t.z(), i*90));
+            if ((y % 2) == 0) t.translate(distance/4., 0, 0);
+            t.translate(-distance/2, 0, 0);
+            clusters.add(new Cluster(t.x(), t.y(), t.z(), i*90));
+            t.translate(distance, 0, 0);
+            clusters.add(new Cluster(t.x(), t.y(), t.z(), i*90));
           }
           t.pop();
           t.rotateY(PI/2);
@@ -184,7 +188,9 @@ static class Cube extends LXModel {
   static final int GIANT = 14;
   
   final int size;
+  final float x, y, z;
   final float rx, ry, rz;
+  final LXMatrix matrix;
     
   Cube(LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
     super(new Fixture(transform, size, x, y, z, rx, ry, rz));
@@ -192,9 +198,18 @@ static class Cube extends LXModel {
     this.rx = rx;
     this.ry = ry;
     this.rz = rz;
+    this.x = transform.x() + x;
+    this.y = transform.y() + y;
+    this.z = transform.z() + z;
+    this.matrix = new LXMatrix(transform.matrix());
+    this.matrix.translate(x, y, z);
+    this.matrix.rotateX(rx);
+    this.matrix.rotateY(ry);
+    this.matrix.rotateZ(rz);
   }
   
   static class Fixture extends LXAbstractFixture {
+    
     Fixture(LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
       transform.push();
       transform.translate(x, y, z);
@@ -202,8 +217,8 @@ static class Cube extends LXModel {
       transform.rotateX(rx * PI / 180);
       transform.rotateZ(rz * PI / 180);
       
-      transform.translate(0, size/2 - 1, 0);
       int numPixels = (size >= LARGE) ? PIXELS_PER_LARGE_CUBE : PIXELS_PER_SMALL_CUBE;
+      transform.translate(0, (numPixels-1)/2, 0);
       for (int i = 0; i < numPixels; ++i) {
         this.points.add(new LXPoint(transform.x(), transform.y(), transform.z()));
         transform.translate(0, -1, 0);

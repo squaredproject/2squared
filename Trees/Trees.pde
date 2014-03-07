@@ -121,7 +121,7 @@ class UITrees extends UICameraComponent {
       rotateY(PI/2); 
     }    
   }
-   
+     
   private void drawCubes(UI ui) {
     
     color[] colors = lx.getColors();
@@ -129,7 +129,7 @@ class UITrees extends UICameraComponent {
     for (Cube cube : model.cubes) {
       pushMatrix();
       fill(colors[cube.points.get(0).index]);
-      translate(cube.cx, cube.cy, cube.cz);
+      translate(cube.x, cube.y, cube.z);
       rotateY(-cube.ry * PI / 180);
       rotateX(-cube.rx * PI / 180);
       rotateZ(-cube.rz * PI / 180);
