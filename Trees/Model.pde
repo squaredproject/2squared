@@ -64,7 +64,7 @@ static class Model extends LXModel {
     
     Fixture() {
       for (float[] treePosition : TREE_POSITIONS) {
-        trees.add(new Tree(treePosition[0], treePosition[1]));
+        trees.add(new Tree(treePosition[0], treePosition[1], treePosition[2]));
       }
       for (Tree tree : trees) {
         for (LXPoint p : tree.points) {
@@ -81,13 +81,15 @@ static class Tree extends LXModel {
   
   final float x;
   final float z;
+  final float r;
   
-  Tree(float x, float z) {
+  Tree(float x, float z, float r) {
     super(new Fixture(x, z));
     Fixture f = (Fixture)this.fixtures.get(0);
     this.clusters = Collections.unmodifiableList(f.clusters);
     this.x = x;
     this.z = z;
+    this.r = r;
   }
   
   static class Fixture extends LXAbstractFixture {

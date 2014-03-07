@@ -82,6 +82,7 @@ class UITrees extends UICameraComponent {
     for (Tree tree : model.trees) {
       pushMatrix();
       translate(tree.x, 0, tree.z);
+      rotateY(tree.r);
       drawTree(ui);
       popMatrix();
     }
