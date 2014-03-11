@@ -1,6 +1,7 @@
 import codeanticode.syphon.*;
 
 PGraphics buffer;
+PImage imgbuffer;
 SyphonClient client;
 
 class SyphonPattern extends LXPattern {
@@ -31,12 +32,13 @@ class SyphonPattern extends LXPattern {
     if (client.available()) {
 
       buffer = client.getGraphics(buffer);
+      imgbuffer = buffer.get();
       if (this.xscale == 0) {
         generateMap(buffer.width, buffer.height);
       }
       int cubeIdx = 0;
       for (Cube cube : model.cubes) {
-        color c = buffer.get(xpoints[cubeIdx], ypoints[cubeIdx]);
+        color c = imgbuffer.get(xpoints[cubeIdx], ypoints[cubeIdx]);
         setColor(cube, c);
         cubeIdx++;
       }
