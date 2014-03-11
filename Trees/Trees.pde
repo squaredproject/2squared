@@ -33,7 +33,7 @@ void setup() {
     new SweepPattern(lx),
     new TestPattern(lx),
     new DiffusionTestPattern(lx),
-    new SyphonPattern(lx),
+    new SyphonPattern(lx, this),
   });
 
   lx.ui.addLayer(new UICameraLayer(lx.ui)
