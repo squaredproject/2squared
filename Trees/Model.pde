@@ -204,7 +204,7 @@ static class Cube extends LXModel {
     this.x = transform.x() + x;
     this.y = transform.y() + y;
     this.z = transform.z() + z;
-    this.matrix = new LXMatrix(transform.matrix());
+    this.matrix = new LXMatrix(transform.getMatrix());
     this.matrix.translate(x, y, z);
     this.matrix.rotateX(rx);
     this.matrix.rotateY(ry);

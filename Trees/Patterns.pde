@@ -22,7 +22,7 @@ class SweepPattern extends LXPattern {
   public void run(double deltaMs) {
     for (Cube cube : model.cubes) {
       float yp = yPos.getValuef() + amp.getValuef() * sin((cube.cx - model.cx) * .01 + offset.getValuef());
-      setColor(cube, color(
+      setColor(cube, lx.hsb(
         (lx.getBaseHuef() + abs(cube.cx - model.cx) * .2 +  cube.cz*.1 + cube.cy*.1) % 360,
         100,
         max(0, 100 - (100/width.getValuef())*abs(cube.cy - yp))
@@ -49,7 +49,7 @@ class DiffusionTestPattern extends LXPattern {
   public void run(double deltaMs) {
     setColors(#000000);
     for (int i = 0; i < 12; ++i) {
-      colors[i] = color(
+      colors[i] = lx.hsb(
         (hue.getValuef() + (i / 4) * spread.getValuef()) % 360,
         sat.getValuef() * 100,
         min(100, brt.getValuef() * (i+1) / 12. * 200)
@@ -74,7 +74,7 @@ class TestPattern extends LXPattern {
   public void run(double deltaMs) {
     int ci = 0;
     for (Cube cube : model.cubes) {
-      setColor(cube, color(
+      setColor(cube, lx.hsb(
         (lx.getBaseHuef() + cube.cx + cube.cy) % 360,
         100,
         max(0, 100 - 30*abs((ci % CUBE_MOD) - cubeIndex.getValuef()))

@@ -52,6 +52,9 @@ void setup() {
   } catch (Exception x) {
     println(x);
   }
+  
+  lx.engine.framesPerSecond.setValue(120);
+  lx.engine.setThreaded(true);
 }
   
 void draw() {
@@ -128,6 +131,17 @@ class UITrees extends UICameraComponent {
     
     color[] colors = lx.getColors();
     noStroke();    
+    noFill();
+    
+//    beginShape(POINTS);
+//    for (Cube cube : model.cubes) {
+//      stroke(colors[cube.points.get(0).index]);
+//      strokeWeight(cube.size*2);
+//      vertex(cube.x, cube.y, cube.z);
+//    }
+//    endShape();
+ 
+    
     for (Cube cube : model.cubes) {
       pushMatrix();
       fill(colors[cube.points.get(0).index]);
