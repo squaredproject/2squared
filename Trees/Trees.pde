@@ -33,6 +33,7 @@ void setup() {
     new SweepPattern(lx),
     new TestPattern(lx),
     new DiffusionTestPattern(lx),
+    new SyphonPattern(lx),
   });
 
   lx.ui.addLayer(new UICameraLayer(lx.ui)
@@ -141,4 +142,3 @@ class UITrees extends UICameraComponent {
     noLights();
   }
 }
-
