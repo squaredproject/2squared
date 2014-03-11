@@ -1,5 +1,5 @@
 final static float[][] TREE_POSITIONS = {
-  { 0*FEET, 0*FEET, 0 },
-  { 75*FEET, 0*FEET, 3 * PI/4 }
+  { 15*FEET, 15*FEET, 0 },
+  { 90*FEET, 15*FEET, 45 }
 };
 

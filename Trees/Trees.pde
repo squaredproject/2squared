@@ -25,7 +25,7 @@ Model model;
 LX lx;
 
 void setup() {
-  size(800, 600, OPENGL);
+  size(960, 480, OPENGL);
   geometry = new Geometry();
   model = new Model();
   lx = new LX(this, model);
@@ -71,8 +71,8 @@ class UITrees extends UICameraComponent {
     fill(#191919);
     beginShape();
     vertex(0, 0, 0);
-    vertex(60*FEET, 0, 0);
-    vertex(60*FEET, 0, 30*FEET);
+    vertex(105*FEET, 0, 0);
+    vertex(105*FEET, 0, 30*FEET);
     vertex(0, 0, 30*FEET);
     endShape(CLOSE);
 
@@ -86,7 +86,7 @@ class UITrees extends UICameraComponent {
     for (Tree tree : model.trees) {
       pushMatrix();
       translate(tree.x, 0, tree.z);
-      rotateY(tree.r);
+      rotateY(-tree.ry * PI / 180);
       drawTree(ui);
       popMatrix();
     }

@@ -81,39 +81,39 @@ static class Tree extends LXModel {
   
   final float x;
   final float z;
-  final float r;
+  final float ry;
   
-  Tree(float x, float z, float r) {
-    super(new Fixture(x, z, r));
+  Tree(float x, float z, float ry) {
+    super(new Fixture(x, z, ry));
     Fixture f = (Fixture)this.fixtures.get(0);
     this.clusters = Collections.unmodifiableList(f.clusters);
     this.x = x;
     this.z = z;
-    this.r = r;
+    this.ry = ry;
   }
   
   static class Fixture extends LXAbstractFixture {
     
     final List<Cluster> clusters = new ArrayList<Cluster>();
     
-    Fixture(float x, float z, float r) {
+    Fixture(float x, float z, float ry) {
       LXTransform t = new LXTransform();
       t.translate(x, 0, z);
-      t.rotateY(r);
+      t.rotateY(ry * PI / 180);
       for (int y = 3; y < 10; ++y) {
         for (int i = 0; i < 4; ++i) {
           float distance = geometry.distances[y];
           t.push();
-          t.translate(0, geometry.heights[y], - distance - 1*FEET);
+          t.translate(0, geometry.heights[y], -distance - 1*FEET);
           if (y < 6) {
             t.translate(((y % 2) == 0) ? (-distance/2) : (distance/2), 0, 0);
-            clusters.add(new Cluster(t.x(), t.y(), t.z(), i*90));
+            clusters.add(new Cluster(t.x(), t.y(), t.z(), ry + i*90));
           } else {
             if ((y % 2) == 0) t.translate(distance/4., 0, 0);
             t.translate(-distance/2, 0, 0);
-            clusters.add(new Cluster(t.x(), t.y(), t.z(), i*90));
+            clusters.add(new Cluster(t.x(), t.y(), t.z(), ry + i*90));
             t.translate(distance, 0, 0);
-            clusters.add(new Cluster(t.x(), t.y(), t.z(), i*90));
+            clusters.add(new Cluster(t.x(), t.y(), t.z(), ry + i*90));
           }
           t.pop();
           t.rotateY(PI/2);
