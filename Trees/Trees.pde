@@ -54,7 +54,8 @@ void setup() {
   }
   
   lx.engine.framesPerSecond.setValue(120);
-  lx.engine.setThreaded(true);
+  // Enabling this breaks syphon support
+  // lx.engine.setThreaded(true);
 }
   
 void draw() {
