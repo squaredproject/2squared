@@ -26,7 +26,7 @@ class SyphonPattern extends LXPattern {
     int cubeIdx = 0;    
     for (Cube cube : model.cubes) {
       xpoints[cubeIdx] = int((cube.cx - model.xMin) * this.xscale);
-      ypoints[cubeIdx] = int((cube.cy - model.yMin) * this.yscale);    
+      ypoints[cubeIdx] = buffHeight - int((cube.cy - model.yMin) * this.yscale);    
       cubeIdx++;
     }
   }
@@ -41,10 +41,7 @@ class SyphonPattern extends LXPattern {
       }
       int cubeIdx = 0;
       for (Cube cube : model.cubes) {
-        //color c = imgbuffer.get(xpoints[cubeIdx], ypoints[cubeIdx]);
-        color c = weighted_get(
-            imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx],
-            getWidth.getValuei());
+        color c = weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
         setColor(cube, c);
         cubeIdx++;
       }
