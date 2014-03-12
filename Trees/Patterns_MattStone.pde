@@ -10,8 +10,11 @@ class SyphonPattern extends LXPattern {
   float xscale, yscale = 0f;
   int[] xpoints, ypoints;
 
+  final DiscreteParameter getWidth = new DiscreteParameter("GW", 1, 10);
+
   SyphonPattern(LX lx, PApplet applet) {
     super(lx);
+    addParameter(getWidth);
     client = new SyphonClient(applet, "Modul8", "Main View");
     xpoints = new int[model.cubes.size()];
     ypoints = new int[model.cubes.size()];
@@ -39,7 +42,9 @@ class SyphonPattern extends LXPattern {
       int cubeIdx = 0;
       for (Cube cube : model.cubes) {
         //color c = imgbuffer.get(xpoints[cubeIdx], ypoints[cubeIdx]);
-        color c = weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], 4);
+        color c = weighted_get(
+            imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx],
+            getWidth.getValuei());
         setColor(cube, c);
         cubeIdx++;
       }
@@ -49,25 +54,25 @@ class SyphonPattern extends LXPattern {
 
 
 color weighted_get(PImage imgbuffer, int xpos, int ypos, int radius) {
-   int h, s, b;
-   int xoffset, yoffset;
-   int pixels_counted;
-  
-   color thispixel;
-  
-  
+  int h, s, b;
+  int xoffset, yoffset;
+  int pixels_counted;
+
+  color thispixel;
+
+
   h = s = b = pixels_counted = 0;
 
-    for (xoffset=-radius; xoffset<radius; xoffset++) {
-     for (yoffset=-radius; yoffset<radius; yoffset++) {
+  for (xoffset=-radius; xoffset<radius; xoffset++) {
+    for (yoffset=-radius; yoffset<radius; yoffset++) {
 
-        pixels_counted ++;
-        thispixel = imgbuffer.get(xpos + xoffset, ypos + yoffset);
-       
-        h += hue(thispixel);
-        s += saturation(thispixel);
-        b += brightness(thispixel);
-      }
+      pixels_counted ++;
+      thispixel = imgbuffer.get(xpos + xoffset, ypos + yoffset);
+
+      h += hue(thispixel);
+      s += saturation(thispixel);
+      b += brightness(thispixel);
+    }
   }
-  return color(h/pixels_counted, s/pixels_counted, b/pixels_counted);       
+  return color(h/pixels_counted, s/pixels_counted, b/pixels_counted);
 }
