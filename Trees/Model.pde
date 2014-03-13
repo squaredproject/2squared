@@ -154,22 +154,22 @@ static class Cluster extends LXModel {
       transform.translate(x, y, z);
       transform.rotateY(ry * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
-        new Cube(transform, Cube.GIANT, 0, 60, 0, 5, 10, 40),
-        new Cube(transform, Cube.LARGE, -8, 75, -2, 15, 10, -5),
-        new Cube(transform, Cube.LARGE, -9, 48, -2, 15, 10, -3),
-        new Cube(transform, Cube.MEDIUM, -20, 56, -8, 20, -20, 0),
-        new Cube(transform, Cube.MEDIUM, -14, 36, -6, 0, 15, -2),
-        new Cube(transform, Cube.MEDIUM, 0, 38, -2, 14, 0, -15),
-        new Cube(transform, Cube.SMALL, -14, 26, -6, 3, -15, 0),
-        new Cube(transform, Cube.SMALL, -6, 22, 4, 10, -15, 0),
-        new Cube(transform, Cube.SMALL, -6, 30, 0, 3, -15, 5),
-        new Cube(transform, Cube.SMALL, -24, 42, 0, 0, 0, 20),
-        new Cube(transform, Cube.SMALL, -20, 72, 0, 0, 0, 30),
-        new Cube(transform, Cube.SMALL, 6, 46, 8, 0, 0, 20),
-        new Cube(transform, Cube.MEDIUM, 8, 72, 8, 0, 0, 20),
-        new Cube(transform, Cube.SMALL, -4, 86, -4, 10, 0, -5),
-        new Cube(transform, Cube.SMALL, 2, 90, -4, -10, 0, -5),
-        new Cube(transform, Cube.SMALL, 4, 82, -4, 0, 5, -10),
+        new Cube(0, transform, Cube.GIANT, 0, 60, 0, 5, 10, 40),
+        new Cube(1, transform, Cube.LARGE, -8, 75, -2, 15, 10, -5),
+        new Cube(2, transform, Cube.LARGE, -9, 48, -2, 15, 10, -3),
+        new Cube(3, transform, Cube.MEDIUM, -20, 56, -8, 20, -20, 0),
+        new Cube(4, transform, Cube.MEDIUM, -14, 36, -6, 0, 15, -2),
+        new Cube(5, transform, Cube.MEDIUM, 0, 38, -2, 14, 0, -15),
+        new Cube(6, transform, Cube.SMALL, -14, 26, -6, 3, -15, 0),
+        new Cube(7, transform, Cube.SMALL, -6, 22, 4, 10, -15, 0),
+        new Cube(8, transform, Cube.SMALL, -6, 30, 0, 3, -15, 5),
+        new Cube(9, transform, Cube.SMALL, -24, 42, 0, 0, 0, 20),
+        new Cube(10, transform, Cube.SMALL, -20, 72, 0, 0, 0, 30),
+        new Cube(11, transform, Cube.SMALL, 6, 46, 8, 0, 0, 20),
+        new Cube(12, transform, Cube.MEDIUM, 8, 72, 8, 0, 0, 20),
+        new Cube(13, transform, Cube.SMALL, -4, 86, -4, 10, 0, -5),
+        new Cube(14, transform, Cube.SMALL, 2, 90, -4, -10, 0, -5),
+        new Cube(15, transform, Cube.SMALL, 4, 82, -4, 0, 5, -10),
       });
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
@@ -190,13 +190,15 @@ static class Cube extends LXModel {
   static final int LARGE = 12;
   static final int GIANT = 14;
   
+  final int index;
   final int size;
   final float x, y, z;
   final float rx, ry, rz;
   final LXMatrix matrix;
     
-  Cube(LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
+  Cube(int index, LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
     super(new Fixture(transform, size, x, y, z, rx, ry, rz));
+    this.index = index;
     this.size = size;
     this.rx = rx;
     this.ry = ry;

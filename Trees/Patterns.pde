@@ -1,3 +1,21 @@
+class TestCluster extends LXPattern {
+  TestCluster(LX lx) {
+    super(lx);
+  }
+  
+  public void run(double deltaMs) {
+    for (Cluster cluster : model.clusters) {
+      for (Cube cube : cluster.cubes) {
+        setColor(cube, lx.hsb(
+          cube.index * 15,
+          100,
+          100
+        )); 
+      }
+    }
+  }
+}
+
 class SweepPattern extends LXPattern {
   
   final SinLFO speedMod = new SinLFO(3000, 9000, 5400);

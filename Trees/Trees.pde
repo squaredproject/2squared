@@ -34,6 +34,7 @@ void setup() {
     new TestPattern(lx),
     new DiffusionTestPattern(lx),
     new SyphonPattern(lx, this),
+    new TestCluster(lx),
   });
 
   lx.ui.addLayer(new UICameraLayer(lx.ui)
@@ -45,7 +46,7 @@ void setup() {
 
   try {
     LXOutput output = new LXDatagramOutput(lx).addDatagram(
-      new DDPCluster(model.clusters.get(0)).setAddress("10.0.0.100")
+      clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.100")
     );
     output.enabled.setValue(false);
     lx.addOutput(output);
@@ -53,7 +54,8 @@ void setup() {
     println(x);
   }
   
-  lx.engine.framesPerSecond.setValue(120);
+  lx.engine.framesPerSecond.setValue(60);
+  
   // Enabling this breaks syphon support
   // lx.engine.setThreaded(true);
 }
