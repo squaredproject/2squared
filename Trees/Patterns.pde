@@ -21,6 +21,7 @@ class TestCluster extends LXPattern {
         }
       ++ci;
       }
+      ci = 0;
     }
   }
 }
