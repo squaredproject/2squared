@@ -1,16 +1,25 @@
 class TestCluster extends LXPattern {
+  final DiscreteParameter lightNo = new DiscreteParameter("LIGHT", 0, 16);
+  
   TestCluster(LX lx) {
     super(lx);
+    addParameter(lightNo);
   }
   
   public void run(double deltaMs) {
+    int ci = 0;
     for (Cluster cluster : model.clusters) {
-      for (Cube cube : cluster.cubes) {
-        setColor(cube, lx.hsb(
-          cube.index * 15,
-          100,
-          100
-        )); 
+        for (Cube cube : cluster.cubes) {
+          if (ci == lightNo.getValuei()) {
+            setColor(cube, lx.hsb(
+              cube.index * 15,
+              100,
+              100
+            )); 
+        } else {
+          setColor(cube, 0);
+        }
+      ++ci;
       }
     }
   }
@@ -98,7 +107,7 @@ class TestPattern extends LXPattern {
         max(0, 100 - 30*abs((ci % CUBE_MOD) - cubeIndex.getValuef()))
       ));
       ++ci;
+    
     }
   }
 }
-
