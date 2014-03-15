@@ -97,6 +97,7 @@ static class Tree extends LXModel {
     final List<Cluster> clusters = new ArrayList<Cluster>();
     
     Fixture(float x, float z, float ry) {
+      PVector treeCenter = new PVector(x, 0, z);
       LXTransform t = new LXTransform();
       t.translate(x, 0, z);
       t.rotateY(ry * PI / 180);
@@ -107,13 +108,13 @@ static class Tree extends LXModel {
           t.translate(0, geometry.heights[y], -distance - 1*FEET);
           if (y < 6) {
             t.translate(((y % 2) == 0) ? (-distance/2) : (distance/2), 0, 0);
-            clusters.add(new Cluster(t.x(), t.y(), t.z(), ry + i*90));
+            clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + i*90));
           } else {
             if ((y % 2) == 0) t.translate(distance/4., 0, 0);
             t.translate(-distance/2, 0, 0);
-            clusters.add(new Cluster(t.x(), t.y(), t.z(), ry + i*90));
+            clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + i*90));
             t.translate(distance, 0, 0);
-            clusters.add(new Cluster(t.x(), t.y(), t.z(), ry + i*90));
+            clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + i*90));
           }
           t.pop();
           t.rotateY(PI/2);
@@ -139,8 +140,8 @@ static class Cluster extends LXModel {
   
   final List<Cube> cubes;
   
-  Cluster(float x, float y, float z, float ry) {
-    super(new Fixture(x, y, z, ry));
+  Cluster(PVector treeCenter, float x, float y, float z, float ry) {
+    super(new Fixture(treeCenter, x, y, z, ry));
     Fixture f = (Fixture) this.fixtures.get(0);
     this.cubes = Collections.unmodifiableList(f.cubes);
   }
@@ -149,27 +150,27 @@ static class Cluster extends LXModel {
 
     final List<Cube> cubes;
     
-    Fixture(float x, float y, float z, float ry) {
+    Fixture(PVector treeCenter, float x, float y, float z, float ry) {
       LXTransform transform = new LXTransform();
       transform.translate(x, y, z);
       transform.rotateY(ry * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
-        new Cube(0, transform, Cube.SMALL, -6, 22, 4, 10, -15, 0),
-        new Cube(1, transform, Cube.SMALL, -14, 26, -6, 3, -15, 0),
-        new Cube(2, transform, Cube.SMALL, -6, 30, 0, 3, -15, 5),        
-        new Cube(3, transform, Cube.MEDIUM, -14, 36, -6, 0, 15, -2),        
-        new Cube(4, transform, Cube.MEDIUM, -20, 56, -8, 20, -20, 0),
-        new Cube(5, transform, Cube.GIANT, 0, 60, 0, 5, 10, 40),
-        new Cube(6, transform, Cube.SMALL, -24, 42, 0, 0, 0, 20),
-        new Cube(7, transform, Cube.SMALL, -20, 72, 0, 0, 0, 30),
-        new Cube(8, transform, Cube.SMALL, 6, 46, 8, 0, 0, 20),
-        new Cube(9, transform, Cube.MEDIUM, 0, 38, -2, 14, 0, -15),
-        new Cube(10, transform, Cube.LARGE, -8, 75, -2, 15, 10, -5),
-        new Cube(11, transform, Cube.SMALL, -4, 86, -4, 10, 0, -5),        
-        new Cube(12, transform, Cube.LARGE, -9, 48, -2, 15, 10, -3),
-        new Cube(12, transform, Cube.MEDIUM, 8, 72, 8, 0, 0, 20),
-        new Cube(14, transform, Cube.SMALL, 2, 90, -4, -10, 0, -5),
-        new Cube(15, transform, Cube.SMALL, 4, 82, -4, 0, 5, -10),
+        new Cube(0, treeCenter, transform, Cube.SMALL, -6, 22, 4, 10, -15, 0),
+        new Cube(1, treeCenter, transform, Cube.SMALL, -14, 26, -6, 3, -15, 0),
+        new Cube(2, treeCenter, transform, Cube.SMALL, -6, 30, 0, 3, -15, 5),        
+        new Cube(3, treeCenter, transform, Cube.MEDIUM, -14, 36, -6, 0, 15, -2),        
+        new Cube(4, treeCenter, transform, Cube.MEDIUM, -20, 56, -8, 20, -20, 0),
+        new Cube(5, treeCenter, transform, Cube.GIANT, 0, 60, 0, 5, 10, 40),
+        new Cube(6, treeCenter, transform, Cube.SMALL, -24, 42, 0, 0, 0, 20),
+        new Cube(7, treeCenter, transform, Cube.SMALL, -20, 72, 0, 0, 0, 30),
+        new Cube(8, treeCenter, transform, Cube.SMALL, 6, 46, 8, 0, 0, 20),
+        new Cube(9, treeCenter, transform, Cube.MEDIUM, 0, 38, -2, 14, 0, -15),
+        new Cube(10, treeCenter, transform, Cube.LARGE, -8, 75, -2, 15, 10, -5),
+        new Cube(11, treeCenter, transform, Cube.SMALL, -4, 86, -4, 10, 0, -5),        
+        new Cube(12, treeCenter, transform, Cube.LARGE, -9, 48, -2, 15, 10, -3),
+        new Cube(12, treeCenter, transform, Cube.MEDIUM, 8, 72, 8, 0, 0, 20),
+        new Cube(14, treeCenter, transform, Cube.SMALL, 2, 90, -4, -10, 0, -5),
+        new Cube(15, treeCenter, transform, Cube.SMALL, 4, 82, -4, 0, 5, -10),
       });
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
@@ -181,55 +182,45 @@ static class Cluster extends LXModel {
 }
 
 static class Cube extends LXModel {
+
+  public static final int PIXELS_PER_SMALL_CUBE = 6;
+  public static final int PIXELS_PER_LARGE_CUBE = 12;
   
-  static final int PIXELS_PER_SMALL_CUBE = 6;
-  static final int PIXELS_PER_LARGE_CUBE = 12;
-  
-  static final int SMALL = 6;
-  static final int MEDIUM = 9;
-  static final int LARGE = 12;
-  static final int GIANT = 14;
+  public static final int SMALL = 6;
+  public static final int MEDIUM = 9;
+  public static final int LARGE = 12;
+  public static final int GIANT = 14;
   
   final int index;
+  final int clusterPosition;
   final int size;
   final float x, y, z;
   final float rx, ry, rz;
+  final float theta;
   final LXMatrix matrix;
     
-  Cube(int index, LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
-    super(new Fixture(transform, size, x, y, z, rx, ry, rz));
-    this.index = index;
-    this.size = size;
-    this.rx = rx;
-    this.ry = ry;
-    this.rz = rz;
-    this.x = transform.x() + x;
-    this.y = transform.y() + y;
-    this.z = transform.z() + z;
+  Cube(int clusterPosition, PVector treeCenter, LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
+    super(Arrays.asList(new LXPoint[] {
+      new LXPoint(transform.x() + x, transform.y() + y, transform.z() + z)
+    }));
+    
     this.matrix = new LXMatrix(transform.getMatrix());
     this.matrix.translate(x, y, z);
     this.matrix.rotateX(rx);
     this.matrix.rotateY(ry);
     this.matrix.rotateZ(rz);
-  }
-  
-  static class Fixture extends LXAbstractFixture {
     
-    Fixture(LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
-      transform.push();
-      transform.translate(x, y, z);
-      transform.rotateY(ry * PI / 180);
-      transform.rotateX(rx * PI / 180);
-      transform.rotateZ(rz * PI / 180);
-      
-      int numPixels = (size >= LARGE) ? PIXELS_PER_LARGE_CUBE : PIXELS_PER_SMALL_CUBE;
-      transform.translate(0, (numPixels-1)/2, 0);
-      for (int i = 0; i < numPixels; ++i) {
-        this.points.add(new LXPoint(transform.x(), transform.y(), transform.z()));
-        transform.translate(0, -1, 0);
-      }
+    this.index = this.points.get(0).index;
+    this.clusterPosition = clusterPosition;
+    this.size = size;
+    this.rx = rx;
+    this.ry = ry;
+    this.rz = rz;
+    this.x = this.matrix.x();
+    this.y = this.matrix.y();
+    this.z = this.matrix.z();
 
-      transform.pop();
-    }
+    float _theta = atan2(this.z - treeCenter.z, this.x - treeCenter.x);
+    this.theta = _theta + PI;
   }
 }

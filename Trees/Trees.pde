@@ -30,6 +30,7 @@ void setup() {
   model = new Model();
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
+    new Helix(lx),
     new SweepPattern(lx),
     new TestPattern(lx),
     new DiffusionTestPattern(lx),
@@ -147,7 +148,7 @@ class UITrees extends UICameraComponent {
     
     for (Cube cube : model.cubes) {
       pushMatrix();
-      fill(colors[cube.points.get(0).index]);
+      fill(colors[cube.index]);
       translate(cube.x, cube.y, cube.z);
       rotateY(-cube.ry * PI / 180);
       rotateX(-cube.rx * PI / 180);

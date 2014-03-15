@@ -59,6 +59,32 @@ class SweepPattern extends LXPattern {
   }
 }
 
+class Helix extends LXPattern {
+  
+  final SinLFO coil = new SinLFO(.005, .02, 8000);
+  final SinLFO rate = new SinLFO(6000, 1000, 19000);
+  final SawLFO spin = new SawLFO(0, TWO_PI, rate);
+  final SinLFO width = new SinLFO(4, 18, 11000);
+  
+  Helix(LX lx) {
+    super(lx);
+    addModulator(rate.start());
+    addModulator(coil.start());
+    addModulator(spin.start());
+    addModulator(width.start());
+  }
+  
+  public void run(double deltaMs) {
+    for (Cube cube : model.cubes) {
+      colors[cube.index] = lx.hsb(
+        (lx.getBaseHuef() + .1*cube.y) % 360,
+        100,
+        max(0, 100 - (100*TWO_PI / (width.getValuef()))*LXUtils.wrapdistf(cube.theta, 8*TWO_PI + spin.getValuef() + coil.getValuef()*(cube.y-model.cy), TWO_PI))
+      );
+    }
+  }
+}
+
 class DiffusionTestPattern extends LXPattern {
   
   final BasicParameter hue = new BasicParameter("HUE", 0, 360);
