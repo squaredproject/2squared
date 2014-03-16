@@ -220,7 +220,6 @@ static class Cube extends LXModel {
     this.y = this.matrix.y();
     this.z = this.matrix.z();
 
-    float _theta = atan2(this.z - treeCenter.z, this.x - treeCenter.x);
-    this.theta = _theta + PI;
+    this.theta = 180 + 180/PI*atan2(this.z - treeCenter.z, this.x - treeCenter.x);
   }
 }

@@ -33,11 +33,12 @@ void setup() {
     new Helix(lx),
     new SparkleHelix(lx),
     new Stripes(lx),
+    new Twister(lx),
     new SweepPattern(lx),
-    new TestPattern(lx),
-    new DiffusionTestPattern(lx),
     new SyphonPattern(lx, this),
-    new TestCluster(lx),
+    new TestPattern(lx).setEligible(false),
+    new DiffusionTestPattern(lx).setEligible(false),
+    new TestCluster(lx).setEligible(false),
   });
 
   lx.ui.addLayer(new UICameraLayer(lx.ui)

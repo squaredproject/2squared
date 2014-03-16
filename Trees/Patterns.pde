@@ -59,27 +59,31 @@ class SweepPattern extends LXPattern {
   }
 }
 
-class Helix extends LXPattern {
+class Twister extends LXPattern {
+
+  final SinLFO spin = new SinLFO(0, 5*360, 16000);
   
-  final SinLFO coil = new SinLFO(.005, .02, 8000);
-  final SinLFO rate = new SinLFO(6000, 1000, 19000);
-  final SawLFO spin = new SawLFO(0, TWO_PI, rate);
-  final SinLFO width = new SinLFO(4, 18, 11000);
+  float coil(float basis) {
+    return sin(basis*TWO_PI - PI);
+  }
   
-  Helix(LX lx) {
+  Twister(LX lx) {
     super(lx);
-    addModulator(rate.start());
-    addModulator(coil.start());
     addModulator(spin.start());
-    addModulator(width.start());
   }
   
   public void run(double deltaMs) {
+    float spinf = spin.getValuef();
+    float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
+      float wrapdist = LXUtils.wrapdistf(cube.theta, spinf + (model.yMax - cube.y)*coilf, 360);
+      float yn = (cube.y / model.yMax);
+      float width = 10 + 30 * yn;
+      float df = max(0, 100 - (100 / 45) * max(0, wrapdist-width));
       colors[cube.index] = lx.hsb(
-        (lx.getBaseHuef() + .1*cube.y) % 360,
-        100,
-        max(0, 100 - (100*TWO_PI / (width.getValuef()))*LXUtils.wrapdistf(cube.theta, 8*TWO_PI + spin.getValuef() + coil.getValuef()*(cube.y-model.cy), TWO_PI))
+        (lx.getBaseHuef() + .2*cube.y - 360 - wrapdist) % 360,
+        max(0, 100 - 500*max(0, yn-.8)),
+        df
       );
     }
   }
