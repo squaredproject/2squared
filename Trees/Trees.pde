@@ -18,11 +18,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final static int FEET = 12;
+final static int INCHES = 1;
+final static int FEET = 12 * INCHES;
+
+final static int SECONDS = 1000;
+final static int MINUTES = 60*SECONDS;
 
 static Geometry geometry = new Geometry();
 Model model;
 LX lx;
+final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 
 void setup() {
   size(960, 480, OPENGL);
@@ -30,14 +35,15 @@ void setup() {
   model = new Model();
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
-    new Helix(lx),
+    new DoubleHelix(lx),
+    new Twister(lx),
     new SparkleHelix(lx),
     new Stripes(lx),
-    new Twister(lx),
+    new SeeSaw(lx),
     new SweepPattern(lx),
+    new ColoredLeaves(lx),
     new SyphonPattern(lx, this),
     new TestPattern(lx).setEligible(false),
-    new DiffusionTestPattern(lx).setEligible(false),
     new TestCluster(lx).setEligible(false),
   });
 
