@@ -31,6 +31,7 @@ void setup() {
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
     new Helix(lx),
+    new SparkleHelix(lx),
     new SweepPattern(lx),
     new TestPattern(lx),
     new DiffusionTestPattern(lx),
@@ -47,7 +48,7 @@ void setup() {
 
   try {
     LXOutput output = new LXDatagramOutput(lx).addDatagram(
-      clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.100")
+      clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
     );
     output.enabled.setValue(false);
     lx.addOutput(output);
