@@ -32,6 +32,7 @@ void setup() {
   lx.setPatterns(new LXPattern[] {
     new Helix(lx),
     new SparkleHelix(lx),
+    new Stripes(lx),
     new SweepPattern(lx),
     new TestPattern(lx),
     new DiffusionTestPattern(lx),

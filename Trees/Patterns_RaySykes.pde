@@ -46,5 +46,27 @@ class SparkleHelix extends LXPattern {
 }
 
 
+class Stripes extends LXPattern {
+  final BasicParameter minSpacing = new BasicParameter("MinSpacing", 0.5, .3, 2.5);
+  final BasicParameter maxSpacing = new BasicParameter("MaxSpacing", 2, .3, 2.5);
+  final SinLFO spacing = new SinLFO(minSpacing, maxSpacing, 8000);
+  final SinLFO slopeFactor = new SinLFO(0.05, 0.2, 19000);
 
+  int[] sparkleTimeOuts;
+  Stripes(LX lx) {
+    super(lx);
+    addParameter(minSpacing);
+    addParameter(maxSpacing);
+    addModulator(slopeFactor.start());
+    addModulator(spacing.start());    
+  }
+  
+  public void run(double deltaMs) {
+    for (Cube cube : model.cubes) {  
+      float hueVal = (lx.getBaseHuef() + .1*cube.y) % 360;
+      float brightVal = (50 + 50 * sin(spacing.getValuef() * (sin(4 * cube.theta) + slopeFactor.getValuef() * cube.y))) % 100; 
+      colors[cube.index] = lx.hsb(hueVal,  100, brightVal);
+    }
+  }
+}
 
