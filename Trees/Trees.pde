@@ -42,6 +42,8 @@ final static int FRONT_LEFT = 7;
 static Geometry geometry = new Geometry();
 Model model;
 LX lx;
+LXDatagramOutput output;
+LXDatagram datagram;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 
 void setup() {
@@ -62,6 +64,16 @@ void setup() {
     new TestCluster(lx).setEligible(false),
   });
 
+  try {
+    output = new LXDatagramOutput(lx).addDatagram(
+      datagram = clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
+    );
+    output.enabled.setValue(false);
+    lx.addOutput(output);
+  } catch (Exception x) {
+    println(x);
+  }
+  
   lx.ui.addLayer(new UICameraLayer(lx.ui) {
       protected void beforeDraw() {
         hint(ENABLE_DEPTH_TEST);
@@ -75,20 +87,9 @@ void setup() {
     .addComponent(new UITrees())
     );
   lx.ui.addLayer(new UIPatternDeck(lx.ui, lx, 4, 4));
-
-  try {
-    LXOutput output = new LXDatagramOutput(lx).addDatagram(
-      clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
-    );
-    // output.enabled.setValue(false);
-    lx.addOutput(output);
-  } catch (Exception x) {
-    println(x);
-  }
+  lx.ui.addLayer(new UIOutput(lx.ui, 4, 330));
   
-  lx.engine.framesPerSecond.setValue(60);
-  
-  // Enabling this breaks syphon support
+  lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
 }
   
@@ -172,7 +173,7 @@ class UITrees extends UICameraComponent {
       for (Cluster cluster : tree.clusters) {
         pushMatrix();
         translate(cluster.x, cluster.y, cluster.z);
-        rotateY(-(cluster.ry + tree.ry) * PI / 180);
+        rotateY(-cluster.ry * PI / 180);
         rotateX(-cluster.rx * PI / 180);
         for (Cube cube : cluster.cubes) {
           pushMatrix();
@@ -191,3 +192,14 @@ class UITrees extends UICameraComponent {
     noLights();
   }
 }
+
+class UIOutput extends UIWindow {
+  UIOutput(UI ui, float x, float y) {
+    super(ui, "LIVE OUTPUT", x, y, 140, 48);
+    new UIButton(4, UIWindow.TITLE_LABEL_HEIGHT, width-8, 20)
+      .setParameter(output.enabled)
+      .setLabel(datagram.getAddress().toString())
+      .addToContainer(this);
+  }
+}
+
