@@ -147,7 +147,7 @@ static class Tree extends LXModel {
               cry += QUARTER_PI;
               break;
           }
-          clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
+          clusters.add(new Cluster(treeCenter, t, cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
           t.pop();
         }
       }
@@ -199,17 +199,17 @@ static class Cluster extends LXModel {
   
   final float x, y, z, rx, ry;
   
-  Cluster(PVector treeCenter, float x, float y, float z, float ry) {
-    this(treeCenter, x, y, z, ry, 0);
+  Cluster(PVector treeCenter, LXTransform transform, float ry) {
+    this(treeCenter, transform, ry, 0);
   }
   
-  Cluster(PVector treeCenter, float x, float y, float z, float ry, float rx) {
-    super(new Fixture(treeCenter, x, y, z, ry, rx));
+  Cluster(PVector treeCenter, LXTransform transform, float ry, float rx) {
+    super(new Fixture(treeCenter, transform, ry, rx));
     Fixture f = (Fixture) this.fixtures.get(0);
     this.cubes = Collections.unmodifiableList(f.cubes);
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    this.x = transform.x();
+    this.y = transform.y();
+    this.z = transform.z();
     this.ry = ry;
     this.rx = rx;
   }
@@ -218,9 +218,8 @@ static class Cluster extends LXModel {
 
     final List<Cube> cubes;
     
-    Fixture(PVector treeCenter, float x, float y, float z, float ry, float rx) {
-      LXTransform transform = new LXTransform();
-      transform.translate(x, y, z);
+    Fixture(PVector treeCenter, LXTransform transform, float ry, float rx) {
+      transform.push();
       transform.rotateY(ry * PI / 180);
       transform.rotateX(rx * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
@@ -246,6 +245,7 @@ static class Cluster extends LXModel {
           this.points.add(p);
         }
       }
+      transform.pop();
     }
   }
 }
@@ -266,6 +266,7 @@ static class Cube extends LXModel {
   final float x, y, z;
   final float rx, ry, rz;
   final float lx, ly, lz;
+  final float tx, ty, tz;
   final float theta;
 
   Cube(int clusterPosition, PVector treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
@@ -288,6 +289,9 @@ static class Cube extends LXModel {
     this.lx = x;
     this.ly = y;
     this.lz = z;
+    this.tx = x - treeCenter.x;
+    this.ty = y - treeCenter.y;
+    this.tz = z - treeCenter.z;
     this.x = transform.x();
     this.y = transform.y();
     this.z = transform.z();

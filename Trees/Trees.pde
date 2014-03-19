@@ -172,7 +172,7 @@ class UITrees extends UICameraComponent {
       for (Cluster cluster : tree.clusters) {
         pushMatrix();
         translate(cluster.x, cluster.y, cluster.z);
-        rotateY(-cluster.ry * PI / 180);
+        rotateY(-(cluster.ry + tree.ry) * PI / 180);
         rotateX(-cluster.rx * PI / 180);
         for (Cube cube : cluster.cubes) {
           pushMatrix();
