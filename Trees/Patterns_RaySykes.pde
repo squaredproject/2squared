@@ -70,13 +70,53 @@ class Stripes extends LXPattern {
 }
 
 
+class Ripple extends LXPattern {
+  final BasicParameter speed = new BasicParameter("Speed", 15000, 8000, 25000);
+  final SawLFO rippleAge = new SawLFO(0, 100, speed);
+  float hueVal;
+  float brightVal;
+  boolean resetDone = false;
+  float yCenter;
+  float thetaCenter;
+  Ripple(LX lx) {
+    super(lx);
+    addParameter(speed);
+    addModulator(rippleAge.start());    
+  }
+  
+  public void run(double deltaMs) {
+    if (rippleAge.getValuef() < 5){
+      if (!resetDone){
+        yCenter = 150 + random(300);
+        thetaCenter = random(360);
+        resetDone = true;
+      }
+    }
+    else {
+      resetDone = false;
+    }
+    float radius = pow(rippleAge.getValuef(), 2) / 3;
+    for (Cube cube : model.cubes) {
+      float distVal = sqrt(pow((LXUtils.wrapdistf(thetaCenter, cube.theta, 360)) * 0.8, 2) + pow(yCenter - cube.y, 2));
+      float heightHueVariance = 0.1 * cube.y;
+      if (distVal < radius){
+        float rippleDecayFactor = (100 - rippleAge.getValuef()) / 100;
+        float timeDistanceCombination = distVal / 20 - rippleAge.getValuef();
+        hueVal = (lx.getBaseHuef() + 40 * sin(TWO_PI * (12.5 + rippleAge.getValuef() )/ 200) * rippleDecayFactor * sin(timeDistanceCombination) + heightHueVariance + 360) % 360;
+        brightVal = constrain((100 + 80 * rippleDecayFactor * sin(timeDistanceCombination + TWO_PI / 8)), 0, 100);
+      }
+      else {
+        hueVal = (lx.getBaseHuef() + heightHueVariance) % 360;
+        brightVal = 100; 
+      }
+      colors[cube.index] = lx.hsb(hueVal,  100, brightVal);
+    }
+  }
+}
 
 
 class SparkleTakeOver extends LXPattern {
-
-
   int[] sparkleTimeOuts;
-  int[] cubeStates;
   int lastComplimentaryToggle = 0;
   int complimentaryToggle = 0;
   boolean resetDone = false;
@@ -84,7 +124,6 @@ class SparkleTakeOver extends LXPattern {
   final SawLFO coverage = new SawLFO(0, 100, timing);
   final BasicParameter hueVariation = new BasicParameter("HueVar", 0.1, 0.1, 0.4);
   float hueSeparation = 180;
-  int resetTimeOut = 0;
   float newHueVal;
   float oldHueVal;
   float newBrightVal = 100;
@@ -97,8 +136,8 @@ class SparkleTakeOver extends LXPattern {
     addParameter(hueVariation);
   }  
   public void run(double deltaMs) {
-    if (coverage.getValuef() < 6){
-      if (resetDone == false){
+    if (coverage.getValuef() < 5){
+      if (!resetDone){
         lastComplimentaryToggle = complimentaryToggle;
         oldBrightVal = newBrightVal;
         if (random(5) < 2){          

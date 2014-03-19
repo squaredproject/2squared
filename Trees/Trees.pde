@@ -56,6 +56,7 @@ void setup() {
     new DoubleHelix(lx),
     new SparkleHelix(lx),
     new SparkleTakeOver(lx),
+    new Ripple(lx),
     new SeeSaw(lx),
     new SweepPattern(lx),
     new ColoredLeaves(lx),
