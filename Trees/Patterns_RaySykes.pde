@@ -72,6 +72,7 @@ class Stripes extends LXPattern {
 
 class Ripple extends LXPattern {
   final BasicParameter speed = new BasicParameter("Speed", 15000, 8000, 25000);
+  final BasicParameter baseBrightness = new BasicParameter("Bright", 0, 0, 100);
   final SawLFO rippleAge = new SawLFO(0, 100, speed);
   float hueVal;
   float brightVal;
@@ -81,6 +82,7 @@ class Ripple extends LXPattern {
   Ripple(LX lx) {
     super(lx);
     addParameter(speed);
+    addParameter(baseBrightness);
     addModulator(rippleAge.start());    
   }
   
@@ -103,11 +105,11 @@ class Ripple extends LXPattern {
         float rippleDecayFactor = (100 - rippleAge.getValuef()) / 100;
         float timeDistanceCombination = distVal / 20 - rippleAge.getValuef();
         hueVal = (lx.getBaseHuef() + 40 * sin(TWO_PI * (12.5 + rippleAge.getValuef() )/ 200) * rippleDecayFactor * sin(timeDistanceCombination) + heightHueVariance + 360) % 360;
-        brightVal = constrain((100 + 80 * rippleDecayFactor * sin(timeDistanceCombination + TWO_PI / 8)), 0, 100);
+        brightVal = constrain((baseBrightness.getValuef() + rippleDecayFactor * (100 - baseBrightness.getValuef()) + 80 * rippleDecayFactor * sin(timeDistanceCombination + TWO_PI / 8)), 0, 100);
       }
       else {
         hueVal = (lx.getBaseHuef() + heightHueVariance) % 360;
-        brightVal = 100; 
+        brightVal = baseBrightness.getValuef(); 
       }
       colors[cube.index] = lx.hsb(hueVal,  100, brightVal);
     }
