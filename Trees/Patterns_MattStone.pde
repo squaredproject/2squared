@@ -11,10 +11,12 @@ class SyphonPattern extends LXPattern {
   int[] xpoints, ypoints;
 
   final DiscreteParameter getWidth = new DiscreteParameter("GW", 1, 10);
+  final DiscreteParameter mode = new DiscreteParameter("MODE", 1, 10);
 
   SyphonPattern(LX lx, PApplet applet) {
     super(lx);
     addParameter(getWidth);
+    addParameter(mode);
     client = new SyphonClient(applet, "Modul8", "Main View");
     xpoints = new int[model.cubes.size()];
     ypoints = new int[model.cubes.size()];
