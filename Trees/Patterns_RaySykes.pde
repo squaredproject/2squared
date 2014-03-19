@@ -125,7 +125,7 @@ class SparkleTakeOver extends LXPattern {
       }
       else {
         colors[cube.index] = lx.hsb(oldHueVal,  (140 - coverage.getValuef()) / 1.4, oldBrightVal);
-        float chance = random(abs(sin((TWO_PI / 360) * cube.theta * 4) * 50) + abs(sin(TWO_PI * (cube.y / 1000))) * 50);
+        float chance = random(abs(sin((TWO_PI / 360) * cube.theta * 4) * 50) + abs(sin(TWO_PI * (cube.y / 9000))) * 50);
         if (chance > (100 - 100*(pow(coverage.getValuef()/100, 2)))){
           sparkleTimeOuts[cube.index] = millis() + 50000;
         }
