@@ -47,6 +47,20 @@ class SyphonPattern extends LXPattern {
       }
     }
   }
+  
+  private boolean restoreThreaded = false;
+  
+  public void onActive() {
+    if (restoreThreaded = lx.engine.isThreaded()) {
+      lx.engine.setThreaded(false);
+    } 
+  }
+  
+  public void onInactive() {
+    if (restoreThreaded) {
+      lx.engine.setThreaded(true);
+    }
+  }
 }
 
 

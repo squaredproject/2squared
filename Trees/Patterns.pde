@@ -17,7 +17,7 @@ class DoubleHelix extends LXPattern {
       colors[cube.index] = lx.hsb(
         lx.getBaseHuef() + .4*abs(cube.y - model.cy) +.2* abs(cube.theta - 180),
         100,
-        max(0, 100 - 3*LXUtils.wrapdistf(cube.theta, theta.getValuef() + coilf, 180))
+        max(0, 100 - 2*LXUtils.wrapdistf(cube.theta, theta.getValuef() + coilf, 180))
       );
     }
   }
@@ -204,29 +204,38 @@ class TestPattern extends LXPattern {
 }
 
 class TestCluster extends LXPattern {
-  final DiscreteParameter lightNo = new DiscreteParameter("LIGHT", 0, 16);
+  final DiscreteParameter lightNo = new DiscreteParameter("LIGHT", 0, 19);
+  final BasicParameter pos = new BasicParameter("POS", 0); 
   
   TestCluster(LX lx) {
     super(lx);
     addParameter(lightNo);
+    addParameter(pos);
   }
   
   public void run(double deltaMs) {
-    int ci = 0;
     for (Cluster cluster : model.clusters) {
-        for (Cube cube : cluster.cubes) {
-          if (ci == lightNo.getValuei()) {
-            setColor(cube, lx.hsb(
-              cube.index * 15,
-              100,
-              100
-            )); 
+      for (Cube cube : cluster.cubes) {
+        if (lightNo.getValuei() >= 17) {
+          float d = (lightNo.getValuei() == 17) ?
+            ((cube.y - cluster.yMin) / cluster.yRange) :
+            ((cube.x - cluster.xMin) / cluster.xRange); 
+          setColor(cube, lx.hsb(
+            lx.getBaseHuef(),
+            100,
+            max(0, 100 - 400*abs(d - pos.getValuef()))
+          ));
+        } else if ((cube.clusterPosition == lightNo.getValuei()) ||
+            (16 == lightNo.getValuei())) {
+          setColor(cube, lx.hsb(
+            lx.getBaseHuef(),
+            100,
+            100
+          )); 
         } else {
           setColor(cube, 0);
         }
-      ++ci;
       }
-      ci = 0;
     }
   }
 }

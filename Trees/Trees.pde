@@ -24,6 +24,21 @@ final static int FEET = 12 * INCHES;
 final static int SECONDS = 1000;
 final static int MINUTES = 60*SECONDS;
 
+final static int A = 0;
+final static int B = 1;
+
+final static float CHAIN = -12;
+final static float BOLT = 22;
+
+final static int FRONT = 0;
+final static int RIGHT = 1;
+final static int REAR = 2;
+final static int LEFT = 3;
+final static int FRONT_RIGHT = 4;
+final static int REAR_RIGHT = 5;
+final static int REAR_LEFT = 6;
+final static int FRONT_LEFT = 7;
+
 static Geometry geometry = new Geometry();
 Model model;
 LX lx;
@@ -35,8 +50,8 @@ void setup() {
   model = new Model();
   lx = new LX(this, model);
   lx.setPatterns(new LXPattern[] {
-    new DoubleHelix(lx),
     new Twister(lx),
+    new DoubleHelix(lx),
     new SparkleHelix(lx),
     new Stripes(lx),
     new SeeSaw(lx),
@@ -47,9 +62,16 @@ void setup() {
     new TestCluster(lx).setEligible(false),
   });
 
-  lx.ui.addLayer(new UICameraLayer(lx.ui)
+  lx.ui.addLayer(new UICameraLayer(lx.ui) {
+      protected void beforeDraw() {
+        hint(ENABLE_DEPTH_TEST);
+      }
+      protected void afterDraw() {
+        hint(DISABLE_DEPTH_TEST);
+      }  
+    }
     .setRadius(70*FEET)
-    .setCenter(model.cx, 220, model.cz)
+    .setCenter(model.cx, model.cy, model.cz)
     .addComponent(new UITrees())
     );
   lx.ui.addLayer(new UIPatternDeck(lx.ui, lx, 4, 4));
@@ -58,7 +80,7 @@ void setup() {
     LXOutput output = new LXDatagramOutput(lx).addDatagram(
       clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
     );
-    output.enabled.setValue(false);
+    // output.enabled.setValue(false);
     lx.addOutput(output);
   } catch (Exception x) {
     println(x);
@@ -146,24 +168,24 @@ class UITrees extends UICameraComponent {
     noStroke();    
     noFill();
     
-//    beginShape(POINTS);
-//    for (Cube cube : model.cubes) {
-//      stroke(colors[cube.points.get(0).index]);
-//      strokeWeight(cube.size*2);
-//      vertex(cube.x, cube.y, cube.z);
-//    }
-//    endShape();
- 
-    
-    for (Cube cube : model.cubes) {
-      pushMatrix();
-      fill(colors[cube.index]);
-      translate(cube.x, cube.y, cube.z);
-      rotateY(-cube.ry * PI / 180);
-      rotateX(-cube.rx * PI / 180);
-      rotateZ(-cube.rz * PI / 180);
-      box(cube.size, cube.size, cube.size);
-      popMatrix();
+    for (Tree tree : model.trees) {
+      for (Cluster cluster : tree.clusters) {
+        pushMatrix();
+        translate(cluster.x, cluster.y, cluster.z);
+        rotateY(-cluster.ry * PI / 180);
+        rotateX(-cluster.rx * PI / 180);
+        for (Cube cube : cluster.cubes) {
+          pushMatrix();
+          fill(colors[cube.index]);
+          translate(cube.lx, cube.ly, cube.lz);
+          rotateY(-cube.ry * PI / 180);
+          rotateX(-cube.rx * PI / 180);
+          rotateZ(-cube.rz * PI / 180);
+          box(cube.size, cube.size, cube.size);
+          popMatrix();
+        }
+        popMatrix();
+      }
     }
 
     noLights();

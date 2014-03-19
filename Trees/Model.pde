@@ -18,15 +18,35 @@ static class Geometry {
   final float[] distances;
 
   Geometry() {
-    distances = new float[NUM_BEAMS + 2];
-    heights = new float[NUM_BEAMS + 2];
+    distances = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
+    heights = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
     for (int i = 0; i < heights.length; ++i) {
-      heights[i] = (i == NUM_BEAMS+1) ? HEIGHT : (i * BEAM_SPACING);
-      float oppositeLeg = VERTICAL_MIDPOINT - heights[i];
-      float angle = asin(oppositeLeg / MIDDLE_RADIUS);
-      float adjacentLeg = MIDDLE_RADIUS * cos(angle);
-      distances[i] = MIDDLE_DISTANCE - adjacentLeg;  
+      heights[i] = min(HEIGHT, i * BEAM_SPACING);
+      distances[i] = distanceFromCenter(heights[i]);
     }
+  }
+  
+  float distanceFromCenter(float atHeight) {
+    float oppositeLeg = VERTICAL_MIDPOINT - atHeight;
+    float angle = asin(oppositeLeg / MIDDLE_RADIUS);
+    float adjacentLeg = MIDDLE_RADIUS * cos(angle);
+    return MIDDLE_DISTANCE - adjacentLeg;  
+  }
+  
+  float angleFromAxis(float atHeight) {
+    // This is some shitty trig. I am sure there
+    // is a simpler way but it wasn't occuring to me.
+    float x1 = MIDDLE_DISTANCE - distanceFromCenter(atHeight);
+    float a1 = acos(x1 / MIDDLE_RADIUS); 
+    
+    float r = MIDDLE_RADIUS;
+    float y = Cluster.BRACE_LENGTH / 2;
+    float a = asin(y/r);
+    float a2 = a1 - 2*a;
+    
+    float x2 = cos(a2) * MIDDLE_RADIUS;
+    
+    return asin((x2-x1) /Cluster.BRACE_LENGTH); 
   }
 }
 
@@ -63,8 +83,9 @@ static class Model extends LXModel {
     final List<Tree> trees = new ArrayList<Tree>();
     
     Fixture() {
+      int treeIndex = 0;
       for (float[] treePosition : TREE_POSITIONS) {
-        trees.add(new Tree(treePosition[0], treePosition[1], treePosition[2]));
+        trees.add(new Tree(treeIndex++, treePosition[0], treePosition[1], treePosition[2]));
       }
       for (Tree tree : trees) {
         for (LXPoint p : tree.points) {
@@ -83,8 +104,8 @@ static class Tree extends LXModel {
   final float z;
   final float ry;
   
-  Tree(float x, float z, float ry) {
-    super(new Fixture(x, z, ry));
+  Tree(int treeIndex, float x, float z, float ry) {
+    super(new Fixture(treeIndex, x, z, ry));
     Fixture f = (Fixture)this.fixtures.get(0);
     this.clusters = Collections.unmodifiableList(f.clusters);
     this.x = x;
@@ -96,11 +117,43 @@ static class Tree extends LXModel {
     
     final List<Cluster> clusters = new ArrayList<Cluster>();
     
-    Fixture(float x, float z, float ry) {
+    Fixture(int treeIndex, float x, float z, float ry) {
       PVector treeCenter = new PVector(x, 0, z);
       LXTransform t = new LXTransform();
       t.translate(x, 0, z);
       t.rotateY(ry * PI / 180);
+      
+      for (CP cp : CLUSTER_POSITIONS) {
+        if (cp.treeIndex == treeIndex) {
+          t.push();
+          float cry = 0;
+          switch (cp.face) {
+            // Could be math, but this way it's readable!
+            case FRONT: case FRONT_RIGHT:                  break;
+            case RIGHT: case REAR_RIGHT:  cry = HALF_PI;   break;
+            case REAR:  case REAR_LEFT:   cry = PI;        break;
+            case LEFT:  case FRONT_LEFT:  cry = 3*HALF_PI; break;
+          }
+          t.rotateY(cry);
+          t.translate(cp.offset, geometry.heights[cp.level] + cp.mountPoint, -geometry.distances[cp.level]);
+          
+          switch (cp.face) {
+            case FRONT_RIGHT:
+            case REAR_RIGHT:
+            case REAR_LEFT:
+            case FRONT_LEFT:
+              t.translate(geometry.distances[cp.level], 0, 0);
+              t.rotateY(QUARTER_PI);
+              cry += QUARTER_PI;
+              break;
+          }
+          clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
+          t.pop();
+        }
+      }
+      
+      // Mock clusters algorithm
+      /*
       for (int y = 3; y < 10; ++y) {
         for (int i = 0; i < 4; ++i) {
           float distance = geometry.distances[y];
@@ -120,6 +173,8 @@ static class Tree extends LXModel {
           t.rotateY(PI/2);
         }
       }
+      */
+
       for (Cluster cluster : this.clusters) {
         for (LXPoint p : cluster.points) {
           this.points.add(p);
@@ -131,6 +186,8 @@ static class Tree extends LXModel {
 
 static class Cluster extends LXModel {
   
+  public final static float BRACE_LENGTH = 62;
+  
   public final static int LARGE_CUBES_PER_CLUSTER = 3;
   public final static int SMALL_CUBES_PER_CLUSTER = 13;
   
@@ -140,37 +197,49 @@ static class Cluster extends LXModel {
   
   final List<Cube> cubes;
   
+  final float x, y, z, rx, ry;
+  
   Cluster(PVector treeCenter, float x, float y, float z, float ry) {
-    super(new Fixture(treeCenter, x, y, z, ry));
+    this(treeCenter, x, y, z, ry, 0);
+  }
+  
+  Cluster(PVector treeCenter, float x, float y, float z, float ry, float rx) {
+    super(new Fixture(treeCenter, x, y, z, ry, rx));
     Fixture f = (Fixture) this.fixtures.get(0);
     this.cubes = Collections.unmodifiableList(f.cubes);
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.ry = ry;
+    this.rx = rx;
   }
   
   static class Fixture extends LXAbstractFixture {
 
     final List<Cube> cubes;
     
-    Fixture(PVector treeCenter, float x, float y, float z, float ry) {
+    Fixture(PVector treeCenter, float x, float y, float z, float ry, float rx) {
       LXTransform transform = new LXTransform();
       transform.translate(x, y, z);
       transform.rotateY(ry * PI / 180);
+      transform.rotateX(rx * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
-        new Cube(0, treeCenter, transform, Cube.SMALL, -6, 22, 4, 10, -15, 0),
-        new Cube(1, treeCenter, transform, Cube.SMALL, -14, 26, -6, 3, -15, 0),
-        new Cube(2, treeCenter, transform, Cube.SMALL, -6, 30, 0, 3, -15, 5),        
-        new Cube(3, treeCenter, transform, Cube.MEDIUM, -14, 36, -6, 0, 15, -2),        
-        new Cube(4, treeCenter, transform, Cube.MEDIUM, -20, 56, -8, 20, -20, 0),
-        new Cube(5, treeCenter, transform, Cube.GIANT, 0, 60, 0, 5, 10, 40),
-        new Cube(6, treeCenter, transform, Cube.SMALL, -24, 42, 0, 0, 0, 20),
-        new Cube(7, treeCenter, transform, Cube.SMALL, -20, 72, 0, 0, 0, 30),
-        new Cube(8, treeCenter, transform, Cube.SMALL, 6, 46, 8, 0, 0, 20),
-        new Cube(9, treeCenter, transform, Cube.MEDIUM, 0, 38, -2, 14, 0, -15),
-        new Cube(10, treeCenter, transform, Cube.LARGE, -8, 75, -2, 15, 10, -5),
-        new Cube(11, treeCenter, transform, Cube.SMALL, -4, 86, -4, 10, 0, -5),        
-        new Cube(12, treeCenter, transform, Cube.LARGE, -9, 48, -2, 15, 10, -3),
-        new Cube(12, treeCenter, transform, Cube.MEDIUM, 8, 72, 8, 0, 0, 20),
-        new Cube(14, treeCenter, transform, Cube.SMALL, 2, 90, -4, -10, 0, -5),
-        new Cube(15, treeCenter, transform, Cube.SMALL, 4, 82, -4, 0, 5, -10),
+        new Cube( 0, treeCenter, transform, Cube.SMALL,   -7, -98, -10,  -5,  18, -18),
+        new Cube( 1, treeCenter, transform, Cube.SMALL,   -4, -87,  -9,  -3,  20, -20),
+        new Cube( 2, treeCenter, transform, Cube.SMALL,    1, -78,  -8,  10,  30,   5),        
+        new Cube( 3, treeCenter, transform, Cube.MEDIUM,  -6, -70, -10,  -3,  20,   0),        
+        new Cube( 4, treeCenter, transform, Cube.MEDIUM,   8, -65, -10,   0, -20,  -5),
+        new Cube( 5, treeCenter, transform, Cube.GIANT,   -6, -51,  -9,   0,  -5, -30),
+        new Cube( 6, treeCenter, transform, Cube.SMALL,    3,   1, -16, -10,   0,  20),
+        new Cube( 7, treeCenter, transform, Cube.SMALL,  -22, -44, -11,  -5,   0,  15),
+        new Cube( 8, treeCenter, transform, Cube.SMALL,    8, -47, -13, -10,   0, -45),
+        new Cube( 9, treeCenter, transform, Cube.MEDIUM, -12, -33,  -8, -10,   0,   8),
+        new Cube(10, treeCenter, transform, Cube.LARGE,    4, -33,  -8,   0,  10, -15),
+        new Cube(11, treeCenter, transform, Cube.SMALL,  -18, -22,  -7, -10,   0,  45),        
+        new Cube(12, treeCenter, transform, Cube.LARGE,   -4, -16,  -9,   0,   0,  -5),
+        new Cube(13, treeCenter, transform, Cube.MEDIUM,  12, -17,  -9,   5, -20,   0),
+        new Cube(14, treeCenter, transform, Cube.SMALL,    8,  -5,  -8,  -5,  10, -45),
+        new Cube(15, treeCenter, transform, Cube.SMALL,   -3,  -2,  -7, -10, -10, -50),
       });
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
@@ -186,29 +255,29 @@ static class Cube extends LXModel {
   public static final int PIXELS_PER_SMALL_CUBE = 6;
   public static final int PIXELS_PER_LARGE_CUBE = 12;
   
-  public static final int SMALL = 6;
-  public static final int MEDIUM = 9;
-  public static final int LARGE = 12;
-  public static final int GIANT = 14;
+  public static final float SMALL = 8;
+  public static final float MEDIUM = 12;
+  public static final float LARGE = 16;
+  public static final float GIANT = 17.5;
   
   final int index;
   final int clusterPosition;
-  final int size;
+  final float size;
   final float x, y, z;
   final float rx, ry, rz;
+  final float lx, ly, lz;
   final float theta;
-  final LXMatrix matrix;
-    
-  Cube(int clusterPosition, PVector treeCenter, LXTransform transform, int size, float x, float y, float z, float rx, float ry, float rz) {
+
+  Cube(int clusterPosition, PVector treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
     super(Arrays.asList(new LXPoint[] {
       new LXPoint(transform.x() + x, transform.y() + y, transform.z() + z)
     }));
     
-    this.matrix = new LXMatrix(transform.getMatrix());
-    this.matrix.translate(x, y, z);
-    this.matrix.rotateX(rx);
-    this.matrix.rotateY(ry);
-    this.matrix.rotateZ(rz);
+    transform.push();
+    transform.translate(x, y, z);
+    transform.rotateX(rx);
+    transform.rotateY(ry);
+    transform.rotateZ(rz);
     
     this.index = this.points.get(0).index;
     this.clusterPosition = clusterPosition;
@@ -216,10 +285,15 @@ static class Cube extends LXModel {
     this.rx = rx;
     this.ry = ry;
     this.rz = rz;
-    this.x = this.matrix.x();
-    this.y = this.matrix.y();
-    this.z = this.matrix.z();
+    this.lx = x;
+    this.ly = y;
+    this.lz = z;
+    this.x = transform.x();
+    this.y = transform.y();
+    this.z = transform.z();
 
     this.theta = 180 + 180/PI*atan2(this.z - treeCenter.z, this.x - treeCenter.x);
+    
+    transform.pop();
   }
 }
