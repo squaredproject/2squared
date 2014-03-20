@@ -46,6 +46,51 @@ class SparkleHelix extends LXPattern {
 }
 
 
+
+
+
+
+class MultiSine extends LXPattern {
+  final int numLayers = 3;
+  int[][] distLayerDivisors = {{50, 140, 200}, {360, 60, 45}}; 
+  final BasicParameter brightEffect = new BasicParameter("Bright", 100, 0, 100);
+
+  final BasicParameter[] timingSettings =  {
+    new BasicParameter("T1", 6300, 5000, 30000),
+    new BasicParameter("T2", 4300, 2000, 10000),
+    new BasicParameter("T3", 11000, 10000, 20000)
+  };
+  SinLFO[] frequencies = {
+    new SinLFO(0, 1, timingSettings[0]),
+    new SinLFO(0, 1, timingSettings[1]),
+    new SinLFO(0, 1, timingSettings[2])
+  };      
+  MultiSine(LX lx) {
+    super(lx);
+    for (int i = 0; i < numLayers; i++){
+      addParameter(timingSettings[i]);
+      addModulator(frequencies[i].start());
+    }
+    addParameter(brightEffect);
+  }
+  
+  public void run(double deltaMs) {
+    for (Cube cube : model.cubes) {
+      float[] combinedDistanceSines = {0, 0};
+      for (int i = 0; i < numLayers; i++){
+        combinedDistanceSines[0] += sin(TWO_PI * frequencies[i].getValuef() + cube.y / distLayerDivisors[0][i]) / numLayers;
+        combinedDistanceSines[1] += sin(TWO_PI * frequencies[i].getValuef() + TWO_PI*(cube.theta / distLayerDivisors[1][i])) / numLayers;
+      }
+      float hueVal = (lx.getBaseHuef() + 20 * sin(TWO_PI * (combinedDistanceSines[0] + combinedDistanceSines[1]))) % 360;
+      float brightVal = (100 - brightEffect.getValuef()) + brightEffect.getValuef() * (2 + combinedDistanceSines[0] + combinedDistanceSines[1]) / 4;
+      float satVal = 90 + 10 * sin(TWO_PI * (combinedDistanceSines[0] + combinedDistanceSines[1]));
+      colors[cube.index] = lx.hsb(hueVal,  satVal, brightVal);
+    }
+  }
+}
+
+
+
 class Stripes extends LXPattern {
   final BasicParameter minSpacing = new BasicParameter("MinSpacing", 0.5, .3, 2.5);
   final BasicParameter maxSpacing = new BasicParameter("MaxSpacing", 2, .3, 2.5);
@@ -63,7 +108,7 @@ class Stripes extends LXPattern {
   public void run(double deltaMs) {
     for (Cube cube : model.cubes) {  
       float hueVal = (lx.getBaseHuef() + .1*cube.y) % 360;
-      float brightVal = (50 + 50 * sin(spacing.getValuef() * (sin((TWO_PI / 360) * 4 * cube.theta) + slopeFactor.getValuef() * cube.y))) % 100; 
+      float brightVal = 50 + 50 * sin(spacing.getValuef() * (sin((TWO_PI / 360) * 4 * cube.theta) + slopeFactor.getValuef() * cube.y)); 
       colors[cube.index] = lx.hsb(hueVal,  100, brightVal);
     }
   }
