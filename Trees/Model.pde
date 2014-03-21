@@ -1,21 +1,61 @@
-static class Geometry {
+import heronarts.lx.model.*;
+import heronarts.lx.transform.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-  final static float HEIGHT = 570;
-  
+public static class Geometry {
+
   final static float CORNER_RADIUS = 62 * FEET;
   final static float CORNER_DISTANCE = 786;
-  
-  final static float MIDDLE_RADIUS = 85 * FEET;
-  final static float MIDDLE_DISTANCE = 1050; 
-  
-  final static float VERTICAL_MIDPOINT = 156;
- 
-  final static float BEAM_SPACING = 42;
-  final static int NUM_BEAMS = 11;
-  final static float BEAM_WIDTH = 6;
 
-  final float[] heights;
-  final float[] distances;
+  /**
+   * Height of the trees.
+   */
+  public final static float HEIGHT = 570;  
+  
+  /**
+   * Radius of the curved arches
+   */
+  public final static float MIDDLE_RADIUS = 85 * FEET;
+  
+  /**
+   * Distance from the center of the tree to the center
+   * point of the curve radials.
+   */
+  public final static float MIDDLE_DISTANCE = 1050; 
+  
+  /**
+   * Height of the center point of the radial curve
+   */
+  public final static float VERTICAL_MIDPOINT = 156;
+ 
+  /**
+   * Spacing between horizontal cross-beams
+   */
+  public final static float BEAM_SPACING = 42;
+  
+  /**
+   * Number of cross-beams
+   */
+  public final static int NUM_BEAMS = 11;
+  
+  /**
+   * Width of cross-beam inches
+   */
+  public final static float BEAM_WIDTH = 6;
+
+  
+  /**
+   * The heights of each cross-support on the arched beams
+   */
+  public final float[] heights;
+  
+  /**
+   * At each cross-support point, the distance the support
+   * is from the center of the tree.
+   */
+  public final float[] distances;
 
   Geometry() {
     distances = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
@@ -50,11 +90,22 @@ static class Geometry {
   }
 }
 
-static class Model extends LXModel {
+public static class Model extends LXModel {
   
-  final List<Tree> trees;
-  final List<Cluster> clusters;
-  final List<Cube> cubes;
+  /**
+   * Trees in the model
+   */
+  public final List<Tree> trees;
+  
+  /**
+   * Clusters in the model
+   */
+  public final List<Cluster> clusters;
+  
+  /**
+   * Cubes in the model
+   */
+  public final List<Cube> cubes;
     
   Model() {
     super(new Fixture());
@@ -78,11 +129,11 @@ static class Model extends LXModel {
     this.cubes = Collections.unmodifiableList(_cubes);
   }
   
-  static class Fixture extends LXAbstractFixture {
+  private static class Fixture extends LXAbstractFixture {
     
     final List<Tree> trees = new ArrayList<Tree>();
     
-    Fixture() {
+    private Fixture() {
       int treeIndex = 0;
       for (float[] treePosition : TREE_POSITIONS) {
         trees.add(new Tree(treeIndex++, treePosition[0], treePosition[1], treePosition[2]));
@@ -96,24 +147,50 @@ static class Model extends LXModel {
   }
 }
 
-static class Tree extends LXModel {
+public static class Tree extends LXModel {
   
-  final List<Cluster> clusters;
+  /**
+   * Clusters in the tree
+   */
+  public final List<Cluster> clusters;
   
-  final float x;
-  final float z;
-  final float ry;
+  /**
+   * Cubes in the tree
+   */
+  public final List<Cube> cubes;
+  
+  /**
+   * x-position of center of base of tree
+   */
+  public final float x;
+  
+  /**
+   * z-position of center of base of tree
+   */
+  public final float z;
+  
+  /**
+   * Rotation in degrees of tree about vertical y-axis
+   */
+  public final float ry;
   
   Tree(int treeIndex, float x, float z, float ry) {
     super(new Fixture(treeIndex, x, z, ry));
     Fixture f = (Fixture)this.fixtures.get(0);
     this.clusters = Collections.unmodifiableList(f.clusters);
+    List<Cube> _cubes = new ArrayList<Cube>();
+    for (Cluster cluster : clusters) {
+      for (Cube cube : cluster.cubes) {
+        _cubes.add(cube);
+      }
+    }
+    this.cubes = Collections.unmodifiableList(_cubes);
     this.x = x;
     this.z = z;
     this.ry = ry;
   }
   
-  static class Fixture extends LXAbstractFixture {
+  private static class Fixture extends LXAbstractFixture {
     
     final List<Cluster> clusters = new ArrayList<Cluster>();
     
@@ -184,20 +261,74 @@ static class Tree extends LXModel {
   }
 }
 
-static class Cluster extends LXModel {
+public static class Cluster extends LXModel {
   
+  /**
+   * Length of the metal brace on the back of the cluster
+   */
   public final static float BRACE_LENGTH = 62;
   
+  /**
+   * Number of large 12-LED cubes in cluster
+   */
   public final static int LARGE_CUBES_PER_CLUSTER = 3;
+  
+  /**
+   * Number of smaller 6-LED cubes in cluster
+   */
   public final static int SMALL_CUBES_PER_CLUSTER = 13;
   
+  /**
+   * Total number of LED pixels in cluster
+   */
   public final static int PIXELS_PER_CLUSTER =
     LARGE_CUBES_PER_CLUSTER * Cube.PIXELS_PER_LARGE_CUBE +
     SMALL_CUBES_PER_CLUSTER * Cube.PIXELS_PER_SMALL_CUBE;
   
-  final List<Cube> cubes;
+  /**
+   * Cubes in the cluster
+   */
+  public final List<Cube> cubes;
   
-  final float x, y, z, rx, ry;
+  /**
+   * Global x-position of cluster mount
+   */
+  public final float x;
+  
+  /**
+   * Global y-position of cluster mount
+   */
+  public final float y;
+  
+  /**
+   * Global z-position of cluster mount
+   */
+  public final float z;
+  
+  /**
+   * x-position of cluster, relative to tree
+   */
+  public final float tx;
+  
+  /**
+   * y-position of cluster, relative to tree
+   */
+  public final float ty;
+  
+  /**
+   * z-position of cluster, relative to tree
+   */
+  public final float tz;
+  
+  /**
+   * Rotation of cluster about vertical axis, in degrees relative to tree (not including tree rotation)
+   */
+  public final float ry;
+  
+  /**
+   * Pitch of the cluster, in degrees (how much it tilts based on angle of supports
+   */ 
+  public final float rx;
   
   Cluster(PVector treeCenter, LXTransform transform, float ry) {
     this(treeCenter, transform, ry, 0);
@@ -210,11 +341,14 @@ static class Cluster extends LXModel {
     this.x = transform.x();
     this.y = transform.y();
     this.z = transform.z();
+    this.tx = this.x - treeCenter.x;
+    this.ty = this.y - treeCenter.y;
+    this.tz = this.z - treeCenter.z;
     this.ry = ry;
     this.rx = rx;
   }
   
-  static class Fixture extends LXAbstractFixture {
+  private static class Fixture extends LXAbstractFixture {
 
     final List<Cube> cubes;
     
@@ -250,7 +384,7 @@ static class Cluster extends LXModel {
   }
 }
 
-static class Cube extends LXModel {
+public static class Cube extends LXModel {
 
   public static final int PIXELS_PER_SMALL_CUBE = 6;
   public static final int PIXELS_PER_LARGE_CUBE = 12;
@@ -260,14 +394,90 @@ static class Cube extends LXModel {
   public static final float LARGE = 16;
   public static final float GIANT = 17.5;
   
-  final int index;
-  final int clusterPosition;
-  final float size;
-  final float x, y, z;
-  final float rx, ry, rz;
-  final float lx, ly, lz;
-  final float tx, ty, tz;
-  final float theta;
+  /**
+   * Index of this cube in color buffer, colors[cube.index]
+   */
+  public final int index;
+  
+  /**
+   * Index of this cube in cluster, from 1-16
+   */
+  public final int clusterPosition;
+  
+  /**
+   * Size of this cube, one of SMALL/MEDIUM/LARGE/GIANT
+   */
+  public final float size;
+  
+  /**
+   * Global x-position of center of cube
+   */
+  public final float x;
+  
+  /**
+   * Global y-position of center of cube
+   */
+  public final float y;
+  
+  /**
+   * Global z-position of center of cube
+   */
+  public final float z;
+  
+  /**
+   * Pitch of cube, in degrees, relative to cluster
+   */
+  public final float rx;
+  
+  /**
+   * Yaw of cube, in degrees, relative to cluster, after pitch
+   */
+  public final float ry;
+  
+  /**
+   * Roll of cube, in degrees, relative to cluster, after pitch+yaw
+   */
+  public final float rz;
+  
+  /**
+   * Local x-position of cube, relative to cluster 
+   */
+  public final float lx;
+  
+  /**
+   * Local y-position of cube, relative to cluster 
+   */
+  public final float ly;
+  
+  /**
+   * Local z-position of cube, relative to cluster 
+   */
+  public final float lz;
+  
+  /**
+   * x-position of cube, relative to center of tree base 
+   */
+  public final float tx;
+  
+  /**
+   * y-position of cube, relative to center of tree base 
+   */
+  public final float ty;
+  
+  /**
+   * z-position of cube, relative to center of tree base 
+   */
+  public final float tz;
+  
+  /**
+   * Radial distance from cube center to center of tree in x-z plane 
+   */
+  public final float r;
+  
+  /**
+   * Angle in degrees from cube center to center of tree in x-z plane
+   */
+  public final float theta;
 
   Cube(int clusterPosition, PVector treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
     super(Arrays.asList(new LXPoint[] {
@@ -296,6 +506,7 @@ static class Cube extends LXModel {
     this.y = transform.y();
     this.z = transform.z();
 
+    this.r = dist(treeCenter.x, treeCenter.z, this.x, this.z);
     this.theta = 180 + 180/PI*atan2(this.z - treeCenter.z, this.x - treeCenter.x);
     
     transform.pop();
