@@ -226,7 +226,7 @@ class TestCluster extends LXPattern {
             max(0, 100 - 400*abs(d - pos.getValuef()))
           ));
         } else if ((cube.clusterPosition == lightNo.getValuei()) ||
-            (16 == lightNo.getValuei())) {
+            (0 == lightNo.getValuei())) {
           setColor(cube, lx.hsb(
             lx.getBaseHuef(),
             100,

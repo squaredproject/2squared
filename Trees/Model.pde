@@ -223,22 +223,22 @@ static class Cluster extends LXModel {
       transform.rotateY(ry * PI / 180);
       transform.rotateX(rx * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
-        new Cube( 0, treeCenter, transform, Cube.SMALL,   -7, -98, -10,  -5,  18, -18),
-        new Cube( 1, treeCenter, transform, Cube.SMALL,   -4, -87,  -9,  -3,  20, -20),
-        new Cube( 2, treeCenter, transform, Cube.SMALL,    1, -78,  -8,  10,  30,   5),        
-        new Cube( 3, treeCenter, transform, Cube.MEDIUM,  -6, -70, -10,  -3,  20,   0),        
-        new Cube( 4, treeCenter, transform, Cube.MEDIUM,   8, -65, -10,   0, -20,  -5),
-        new Cube( 5, treeCenter, transform, Cube.GIANT,   -6, -51,  -9,   0,  -5, -30),
-        new Cube( 6, treeCenter, transform, Cube.SMALL,    3,   1, -16, -10,   0,  20),
-        new Cube( 7, treeCenter, transform, Cube.SMALL,  -22, -44, -11,  -5,   0,  15),
-        new Cube( 8, treeCenter, transform, Cube.SMALL,    8, -47, -13, -10,   0, -45),
-        new Cube( 9, treeCenter, transform, Cube.MEDIUM, -12, -33,  -8, -10,   0,   8),
-        new Cube(10, treeCenter, transform, Cube.LARGE,    4, -33,  -8,   0,  10, -15),
-        new Cube(11, treeCenter, transform, Cube.SMALL,  -18, -22,  -7, -10,   0,  45),        
-        new Cube(12, treeCenter, transform, Cube.LARGE,   -4, -16,  -9,   0,   0,  -5),
-        new Cube(13, treeCenter, transform, Cube.MEDIUM,  12, -17,  -9,   5, -20,   0),
-        new Cube(14, treeCenter, transform, Cube.SMALL,    8,  -5,  -8,  -5,  10, -45),
-        new Cube(15, treeCenter, transform, Cube.SMALL,   -3,  -2,  -7, -10, -10, -50),
+        new Cube( 1, treeCenter, transform, Cube.SMALL,   -7, -98, -10,  -5,  18, -18),
+        new Cube( 2, treeCenter, transform, Cube.SMALL,   -4, -87,  -9,  -3,  20, -20),
+        new Cube( 3, treeCenter, transform, Cube.SMALL,    1, -78,  -8,  10,  30,   5),        
+        new Cube( 4, treeCenter, transform, Cube.MEDIUM,  -6, -70, -10,  -3,  20,   0),        
+        new Cube( 5, treeCenter, transform, Cube.MEDIUM,   8, -65, -10,   0, -20,  -5),
+        new Cube( 6, treeCenter, transform, Cube.GIANT,   -6, -51,  -9,   0,  -5, -30),
+        new Cube( 7, treeCenter, transform, Cube.SMALL,    3,   1, -16, -10,   0,  20),
+        new Cube( 8, treeCenter, transform, Cube.SMALL,  -22, -44, -11,  -5,   0,  15),
+        new Cube( 9, treeCenter, transform, Cube.SMALL,    8, -47, -13, -10,   0, -45),
+        new Cube(10, treeCenter, transform, Cube.MEDIUM, -12, -33,  -8, -10,   0,   8),
+        new Cube(11, treeCenter, transform, Cube.LARGE,    4, -33,  -8,   0,  10, -15),
+        new Cube(12, treeCenter, transform, Cube.SMALL,  -18, -22,  -7, -10,   0,  45),        
+        new Cube(13, treeCenter, transform, Cube.LARGE,   -4, -16,  -9,   0,   0,  -5),
+        new Cube(14, treeCenter, transform, Cube.MEDIUM,  12, -17,  -9,   5, -20,   0),
+        new Cube(15, treeCenter, transform, Cube.SMALL,    8,  -5,  -8,  -5,  10, -45),
+        new Cube(16, treeCenter, transform, Cube.SMALL,   -3,  -2,  -7, -10, -10, -50),
       });
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
