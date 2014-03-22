@@ -65,6 +65,9 @@ void setup() {
     new SyphonPattern(lx, this),
     new TestPattern(lx).setEligible(false),
     new TestCluster(lx).setEligible(false),
+    new Pulley(lx),
+    new Springs(lx),
+    new Lattice(lx),
   });
 
   try {
