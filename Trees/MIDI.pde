@@ -1,14 +1,98 @@
-DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", 8); 
+DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", 8);
+DiscreteParameter previewChannel = new DiscreteParameter("PRV", 9);
 
 public class MidiEngine {
   public MidiEngine() {
+    previewChannel.setValue(8);
     for (MidiInputDevice mid : RWMidi.getInputDevices()) {
       if (mid.getName().contains("APC40")) {
         new APC40Input(mid);
       }
     }
+    for (MidiOutputDevice mid : RWMidi.getOutputDevices()) {
+      if (mid.getName().contains("APC40")) {
+        new APC40Output(mid);
+      }
+    }
   }
 }
+
+public class APC40Output {
+  
+  private static final int OFF = 0;
+  private static final int GREEN = 1; 
+  
+  private final MidiOutput output;
+  
+  private LXListenableNormalizedParameter[] knobs = new LXListenableNormalizedParameter[8*8];
+  private final LXParameterListener[] knobListener = new LXParameterListener[8*8];
+  
+  public APC40Output(MidiOutputDevice device) {
+    this.output = device.createOutput();
+    
+    for (int i = 0; i < knobListener.length; ++i) {
+      final int channel = i / 8;
+      final int cc = 16 + (i % 8);
+      knobListener[i] = new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          int normalized = (int) (127. * ((LXNormalizedParameter)parameter).getNormalized());
+          output.sendController(channel, cc, normalized);
+        }
+      };
+    }
+    
+    for (int i = 0; i < knobs.length; ++i) {
+      knobs[i] = null;
+    }
+    
+    for (LXDeck deck : lx.engine.getDecks()) {
+      setKnobs(deck);
+      deck.addListener(new LXDeck.AbstractListener() {
+        public void patternDidChange(LXDeck deck, LXPattern pattern) {
+          setKnobs(deck);
+        }
+      });
+    }
+    
+    previewChannel.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        for (int i = 0; i < 8; ++i) {
+          for (int note = 48; note <= 50; ++note) {
+            output.sendNoteOn(i, note, (previewChannel.getValuei() == i) ? GREEN : OFF);
+          }
+        }
+      }
+    });
+  }
+  
+  private void setKnobs(LXDeck deck) {
+    for (int k = 0; k < 8; ++k) {
+      int i = 8*deck.index + k;
+      if (knobs[i] != null) {
+        knobs[i].removeListener(knobListener[i]);
+        knobs[i] = null;
+      }
+    }  
+    int pi = 0;
+    for (LXParameter parameter : deck.getActivePattern().getParameters()) {
+      if (parameter instanceof LXListenableNormalizedParameter) {
+        int i = 8*deck.index + pi; 
+        knobs[i] = (LXListenableNormalizedParameter)parameter;
+        knobs[i].addListener(knobListener[i]);
+        int value = (int) (127. * knobs[i].getNormalized());
+        output.sendController(deck.index, 16+pi, value);
+        if (++pi >= 8) {
+          break;
+        }
+      }
+    }
+    while (pi < 8) {
+      output.sendController(deck.index, 16+pi, 0);
+      ++pi;
+    }
+  }
+}
+
 
 public class APC40Input {
   public APC40Input(MidiInputDevice device) {
@@ -37,14 +121,14 @@ public class APC40Input {
     case 21:
     case 22:
     case 23:
-      focusedChannel.setValue(channel);
       if (channel < 8) {
+        focusedChannel.setValue(channel);
         int paramNum = cc - 16;
         int pi = 0;
         for (LXParameter parameter : lx.engine.getDeck(channel).getActivePattern().getParameters()) {
-          if (parameter instanceof LXNormalizedParameter) {
+          if (parameter instanceof LXListenableNormalizedParameter) {
             if (pi == paramNum) {
-              ((LXNormalizedParameter) parameter).setNormalized(normalized);
+              ((LXListenableNormalizedParameter) parameter).setNormalized(normalized);
               break;
             }
             ++pi;
@@ -56,7 +140,7 @@ public class APC40Input {
     case 47:
       uiDeck.knob(value);
       break;
-    
+      
     default:
       println("cc:" + cc);
     }
@@ -66,6 +150,11 @@ public class APC40Input {
     int channel = note.getChannel();
     int number = note.getPitch();
     switch (number) {
+      case 48:
+      case 49:
+      case 50:
+        previewChannel.setValue(channel);
+        break;
       case 91:
         uiDeck.select();
         break;
@@ -91,6 +180,11 @@ public class APC40Input {
     int channel = note.getChannel();
     int number = note.getPitch();
     switch (number) {
+      case 48:
+      case 49:
+      case 50:
+        previewChannel.setValue(8);
+        break;
       case 91:
       case 94:
       case 95:
@@ -115,8 +209,9 @@ class UIChannelFaders extends UIContext {
     setBorderColor(#444444);
     int di = 0;
     final UISlider[] sliders = new UISlider[8];
+    final UIButton[] buttons = new UIButton[8];
     for (final LXDeck deck : lx.engine.getDecks()) {
-      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, 4 + deck.index*44, 4, 40, this.height - 8) {
+      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, 4 + deck.index*44, 4, 40, this.height - 24) {
         public void onFocus() {
           focusedChannel.setValue(deck.index);
         }
@@ -124,7 +219,29 @@ class UIChannelFaders extends UIContext {
       sliders[deck.index]
       .setParameter(deck.getFader())
       .addToContainer(this);
+      buttons[deck.index] = new UIButton(4 + deck.index*44, this.height - 16, 40, 12) {
+        void onToggle(boolean active) {
+          if (active) {
+            previewChannel.setValue(deck.index);
+          } else {
+            previewChannel.setValue(8);
+          }
+        }
+      };
+      buttons[deck.index]
+      .setActive(deck.index == previewChannel.getValuei())
+      .addToContainer(this);
     }
+    previewChannel.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        int channel = previewChannel.getValuei();
+        for (int i = 0; i < buttons.length; ++i) {
+          buttons[i].setActive(i == channel);
+        }
+        previewChannel.setValue(channel);
+      }
+    });
+    
     LXParameterListener listener;
     focusedChannel.addListener(listener = new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {

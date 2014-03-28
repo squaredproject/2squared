@@ -130,7 +130,13 @@ void draw() {
 }
 
 class UITrees extends UICameraComponent {
-    
+  
+  color[] previewBuffer;
+  
+  UITrees() {
+    previewBuffer = new int[lx.total];
+  }
+  
   protected void onDraw(UI ui) {
     lights();
     pointLight(0, 0, 80, model.cx, geometry.HEIGHT/2, -10*FEET);
@@ -197,7 +203,12 @@ class UITrees extends UICameraComponent {
      
   private void drawCubes(UI ui) {
     
-    color[] colors = lx.getColors();
+    color[] colors;
+    if (previewChannel.getValuei() >= 8) {
+      colors = lx.getColors();
+    } else {
+      lx.engine.getDeck(previewChannel.getValuei()).copyBuffer(colors = previewBuffer);
+    }
     noStroke();    
     noFill();
     
