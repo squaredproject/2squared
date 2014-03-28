@@ -48,7 +48,7 @@ LXDatagram datagram;
 UIMultiDeck uiDeck;
 MidiEngine midiEngine;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
-final BasicParameter dissolveTime = new BasicParameter("DSLV", 100, 50, 1000);  
+final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);  
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {

@@ -1,4 +1,4 @@
-DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", 9); 
+DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", 8); 
 
 public class MidiEngine {
   public MidiEngine() {
@@ -146,6 +146,7 @@ public class UIMultiDeck extends UIWindow {
   public final static int DEFAULT_HEIGHT = 274;
 
   final UIItemList[] patternLists;
+  final LXDeck.Listener[] lxListeners;
   final UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
@@ -153,6 +154,7 @@ public class UIMultiDeck extends UIWindow {
     int yp = TITLE_LABEL_HEIGHT;
 
     patternLists = new UIItemList[lx.engine.getDecks().size()];
+    lxListeners = new LXDeck.Listener[patternLists.length];
     for (LXDeck deck : lx.engine.getDecks()) {
       List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
       for (LXPattern p : deck.getPatterns()) {
@@ -172,7 +174,7 @@ public class UIMultiDeck extends UIWindow {
     }
      
     for (LXDeck deck : lx.engine.getDecks()) {  
-      LXDeck.Listener lxListener = new LXDeck.AbstractListener() {
+      lxListeners[deck.index] = new LXDeck.AbstractListener() {
         public void patternWillChange(LXDeck deck, LXPattern pattern,
             LXPattern nextPattern) {
           patternLists[deck.index].redraw();
@@ -204,12 +206,15 @@ public class UIMultiDeck extends UIWindow {
           }
         }
       };
-      deck.addListener(lxListener);
-      lxListener.patternDidChange(deck, deck.getActivePattern());
+      deck.addListener(lxListeners[deck.index]);
+      lxListeners[deck.index].patternDidChange(deck, deck.getActivePattern());
     }
     
     focusedChannel.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
+        LXDeck deck = lx.engine.getDecks().get(focusedChannel.getValuei()); 
+        lxListeners[deck.index].patternDidChange(deck, deck.getActivePattern());
+        
         int pi = 0;
         for (UIItemList patternList : patternLists) {
           patternList.setVisible(pi == focusedChannel.getValuei());
