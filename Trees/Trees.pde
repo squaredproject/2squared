@@ -53,6 +53,7 @@ final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
     new Twister(lx),
+    new MarkLottor(lx),
     new DoubleHelix(lx),
     new SparkleHelix(lx),
     new SparkleTakeOver(lx),

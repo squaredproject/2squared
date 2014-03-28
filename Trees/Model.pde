@@ -160,6 +160,11 @@ public static class Tree extends LXModel {
   public final List<Cube> cubes;
   
   /**
+   * index of the tree
+   */
+  public final int index;
+  
+  /**
    * x-position of center of base of tree
    */
   public final float x;
@@ -177,6 +182,7 @@ public static class Tree extends LXModel {
   Tree(int treeIndex, float x, float z, float ry) {
     super(new Fixture(treeIndex, x, z, ry));
     Fixture f = (Fixture)this.fixtures.get(0);
+    this.index = treeIndex;
     this.clusters = Collections.unmodifiableList(f.clusters);
     List<Cube> _cubes = new ArrayList<Cube>();
     for (Cluster cluster : clusters) {
