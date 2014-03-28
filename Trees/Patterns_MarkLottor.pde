@@ -52,6 +52,7 @@ class MarkLottor extends LXPattern {
         //   .x, .y, .z (absolute position in inches)
         //   .tx, .ty, .tz (position relative to tree base, in inches)
         //   .theta (angle about the center of tree, 0-360)
+        //   .size (which size cube this is, Cube.SMALL/Cube.MEDIUM/Cube.LARGE/Cube.GIANT
         
         // Color space for lx.hsb:
         //   h: 0-360
