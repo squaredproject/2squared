@@ -12,6 +12,7 @@ import heronarts.lx.ui.control.*;
 
 import ddf.minim.*;
 import processing.opengl.*;
+import rwmidi.*;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -44,14 +45,13 @@ Model model;
 LX lx;
 LXDatagramOutput output;
 LXDatagram datagram;
+UIMultiDeck uiDeck;
+MidiEngine midiEngine;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
+final BasicParameter dissolveTime = new BasicParameter("DSLV", 100, 50, 1000);  
 
-void setup() {
-  size(960, 480, OPENGL);
-  geometry = new Geometry();
-  model = new Model();
-  lx = new LX(this, model);
-  lx.setPatterns(new LXPattern[] {
+LXPattern[] patterns(LX lx) {
+  LXPattern[] patterns = new LXPattern[] {
     new Twister(lx),
     new DoubleHelix(lx),
     new SparkleHelix(lx),
@@ -68,7 +68,27 @@ void setup() {
     new Pulley(lx),
     new Springs(lx),
     new Lattice(lx),
-  });
+  };
+  LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
+  for (LXPattern p : patterns) {
+    p.setTransition(t);
+  }
+  return patterns;
+}
+
+void setup() {
+  size(960, 600, OPENGL);
+  geometry = new Geometry();
+  model = new Model();
+  lx = new LX(this, model);
+  lx.setPatterns(patterns(lx));
+  for (int i = 1; i < 8; ++i) {
+    lx.engine.addDeck(patterns(lx));
+  }
+  for (LXDeck deck : lx.engine.getDecks()) {
+    deck.goIndex(deck.index);
+    deck.setFaderTransition(new BlendTransition(lx, ADD, BlendTransition.Mode.HALF));
+  }
 
   try {
     output = new LXDatagramOutput(lx).addDatagram(
@@ -83,17 +103,23 @@ void setup() {
   lx.ui.addLayer(new UICameraLayer(lx.ui) {
       protected void beforeDraw() {
         hint(ENABLE_DEPTH_TEST);
+        pushMatrix();
+        translate(0, 6*FEET, 0);
       }
       protected void afterDraw() {
+        popMatrix();
         hint(DISABLE_DEPTH_TEST);
       }  
     }
-    .setRadius(70*FEET)
+    .setRadius(90*FEET)
     .setCenter(model.cx, model.cy, model.cz)
     .addComponent(new UITrees())
     );
-  lx.ui.addLayer(new UIPatternDeck(lx.ui, lx, 4, 4));
-  lx.ui.addLayer(new UIOutput(lx.ui, 4, 330));
+  lx.ui.addLayer(new UIChannelFaders(lx.ui));
+  lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
+  lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
+  
+  midiEngine = new MidiEngine();
   
   lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
@@ -201,11 +227,16 @@ class UITrees extends UICameraComponent {
 
 class UIOutput extends UIWindow {
   UIOutput(UI ui, float x, float y) {
-    super(ui, "LIVE OUTPUT", x, y, 140, 48);
-    new UIButton(4, UIWindow.TITLE_LABEL_HEIGHT, width-8, 20)
+    super(ui, "LIVE OUTPUT", x, y, 140, 72);
+    float yPos = UIWindow.TITLE_LABEL_HEIGHT;
+    new UIButton(4, yPos, width-8, 20)
       .setParameter(output.enabled)
       .setLabel(datagram.getAddress().toString())
       .addToContainer(this);
+    yPos += 24;
+    new UISlider(4, yPos, width-8, 20)
+    .setParameter(output.brightness)
+    .addToContainer(this);
   }
 }
 
