@@ -167,3 +167,64 @@ class Springs extends LXPattern {
   }
 }
 
+class Fire extends LXPattern {
+  final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
+  final BasicParameter flameSize = new BasicParameter("SIZE", 30, 10, 75);  
+  
+  final int initColor = lx.hsb(35, 100, 50);
+  final int endColor = lx.hsb(0, 100, 10);
+  final int numFlames = 75;
+  private SawLFO [] flameDecay;
+  private float [] flameTheta;
+  private float [] flameHeight;
+
+  Fire(LX lx) {
+    super(lx);
+    addParameter(maxHeight);
+    addParameter(flameSize);
+
+
+    flameTheta = new float[numFlames];
+    flameHeight = new float[numFlames];
+    flameDecay = new LinearEnvelope[numFlames];
+    
+    for (int i = 0; i < numFlames; ++i) {
+      setFlame(i);
+      flameDecay[i].setBasis(random(1)); 
+    }
+
+  }
+  public void setFlame(int i) {
+    flameTheta[i] = random(0, 360);
+    float speedConst = random(0.2, maxHeight.getValuef()) ;
+    flameDecay[i] = new LinearEnvelope(75, model.yMax * speedConst, 1200 * speedConst); //decays based on flameHeight
+    addModulator(flameDecay[i].start());
+  }
+
+  public void run(double deltaMs) {
+    for (int i = 0; i < numFlames; ++i) {
+      if (flameDecay[i].finished()) {
+        setFlame(i);
+      }
+    } 
+    
+    for (Cube cube: model.cubes) {
+      float yn = cube.y / model.yMax;
+      float cBrt = 0;
+      float cHue = 0;
+      float flameWidth = flameSize.getValuef();
+      for (int i = 0; i < numFlames; ++i) {
+        if (abs(flameTheta[i] - cube.theta) < (flameWidth * (1- yn))) {
+          cBrt = min(100, max(0, 100 + cBrt- 2 * abs(cube.y - flameDecay[i].getValuef()) - flameDecay[i].getBasisf() * 25)) ;
+          cHue = max(0,  (cHue + cBrt * 0.7) * 0.5);
+        }
+      }
+      colors[cube.index] = lx.hsb(
+        cHue,
+        100,
+        min(100, cBrt + (1- yn)* (1- yn) * 50)
+      );
+    }
+  }
+}
+
