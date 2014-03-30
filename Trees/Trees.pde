@@ -85,6 +85,7 @@ LXPattern[] patterns(LX lx) {
 
 void setup() {
   size(960, 600, OPENGL);
+  frameRate(90); // this will get processing 2 to actually hit around 60
   geometry = new Geometry();
   model = new Model();
   lx = new LX(this, model);
