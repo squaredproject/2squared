@@ -232,7 +232,10 @@ class Lightning extends LXPattern {
   private LightningLine[] bolts = new LightningLine[2];
   final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
-  final BasicParameter maxBoltWidth = new BasicParameter("Width", 40, 20, 120);
+  final BasicParameter maxBoltWidth = new BasicParameter("Width", 60, 20, 150);
+  final BasicParameter lightningChance = new BasicParameter("Chance", 5, 1, 10);
+  final BasicParameter forkingChance = new BasicParameter("Fork", 3, 1, 10);
+  int[] randomCheckTimeOuts = {0, 0};
   Lightning(LX lx) {
     super(lx);
     bolts[0] = makeBolt();
@@ -240,13 +243,19 @@ class Lightning extends LXPattern {
     addParameter(boltAngle);
     addParameter(propagationSpeed);
     addParameter(maxBoltWidth);
+    addParameter(lightningChance);
+    addParameter(forkingChance);
   }
   
   public void run(double deltaMs) {
     int treeIndex = 0;
+    
     for (Tree tree : model.trees){
-      if (bolts[treeIndex].isDead() && random(25) < 2){
-        bolts[treeIndex] = makeBolt();
+      if (bolts[treeIndex].isDead() && randomCheckTimeOuts[treeIndex] < millis()){
+        randomCheckTimeOuts[treeIndex] = millis() + 100;
+        if (random(15) < lightningChance.getValuef()){
+          bolts[treeIndex] = makeBolt();
+        }
       }
       for (Cube cube : tree.cubes) {
         float hueVal = 300;
@@ -273,7 +282,7 @@ class Lightning extends LXPattern {
   LightningLine makeBolt(){
     float theta = 45 * (int) random(8);
     float boltWidth = (maxBoltWidth.getValuef() + random(maxBoltWidth.getValuef())) / 2;
-    return new LightningLine (millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3);
+    return new LightningLine (millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3, forkingChance.getValuef());
   }
 }
 
@@ -290,7 +299,7 @@ class LightningLine {
   private final float lineWidth;
   private float wideningStartTime = 0;
   private ArrayList<LightningLine> forks = new ArrayList();
-  LightningLine(int startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepth){
+  LightningLine(int startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepth, float forkingChance){
     this.propagationSpeed = propagationSpeed;
     this.lineWidth = lineWidth;
     this.startY = startY;
@@ -309,8 +318,8 @@ class LightningLine {
         theta = straightLineTheta - 50 + random(100);
       }
       addKeyPoint(y, theta);
-      if (recursionDepth > 0 && y < 500 && random(20) < 2){
-        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * random(2)), propagationSpeed, (lineWidth - random(2)), recursionDepth - 1));
+      if (recursionDepth > 0 && y < 500 && random(20) < forkingChance){
+        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * random(2)), propagationSpeed, (lineWidth - random(2)), recursionDepth - 1, forkingChance));
       }
     }
   }
@@ -360,4 +369,158 @@ class LightningLine {
   public boolean isDead(){
     return lifeCycleState > 1;
   }
+}
+
+
+class IceCrystals extends LXPattern {
+  private IceCrystalTree trees;
+  IceCrystals(LX lx) {
+    super(lx);
+    trees = new IceCrystalTree(
+        millis(), 
+        300, 
+        90, 
+        300,
+        180,
+        20,
+        3,
+        60,
+        0.2,
+        0.5
+      );
+  }
+  public void run(double deltaMs) {
+    trees.updateStatus();
+    for (Cube cube : model.cubes) {
+      float brightVal = trees.getIceFactor(cube.y, cube.theta);
+      colors[cube.index] = lx.hsb(20,  100, brightVal);
+    }
+  }
+}
+
+
+
+class IceCrystalTree {
+  float upperYBound;
+  float lowerYBound;
+  float upperThetaBound;
+  float lowerThetaBound;
+  int startTime;
+  float trunkCurrentLength;
+  float trunkFinalLength;
+  float propagationSpeed;
+  int trunkAngle;
+  float startY;
+  float startTheta;
+  float thetaTan;
+  float trunkAngleSin;
+  float trunkAngleCos;
+  float thetaRange;
+  float lineWidth;
+  private ArrayList<IceCrystalTree> branches = new ArrayList();
+  IceCrystalTree(int startTime, float trunkFinalLength, int trunkAngle, float startY, float startTheta, float lineWidth, int recursionDepth, float branchStartLength, float branchLengthChange, float propagationSpeed){
+    this.startTime = startTime;
+    this.trunkFinalLength = trunkFinalLength;
+    this.trunkAngle = trunkAngle;
+    this.propagationSpeed = propagationSpeed;
+    this.startY = startY;
+    this.startTheta = startTheta;
+    this.lineWidth = lineWidth;
+    this.startTime = startTime;
+    trunkAngleSin = sin((TWO_PI/360) * trunkAngle);
+    trunkAngleCos = cos((TWO_PI/360) * trunkAngle);
+    thetaTan = tan((TWO_PI/360) * startTheta);
+    thetaRange = sqrt(1 + pow(thetaTan, 2)) * lineWidth;
+    if (recursionDepth > 0){
+      int numBranches = 6;
+      float branchAngle = 60;
+      float trunkPosition;
+      float branchStartDelay = 1000;
+      float branchLengthFactor = 1/6;
+      for (int i = 0; i < numBranches; i++){
+        trunkPosition = trunkFinalLength * ((i + 1) / numBranches);
+        branches.add(new IceCrystalTree(
+          (int)(startTime + trunkPosition * propagationSpeed + branchStartDelay), 
+          branchStartLength + branchLengthChange * trunkPosition, 
+          (int)(360 + trunkAngle + branchAngle) % 360, 
+          startY + trunkAngleCos * trunkPosition,
+          (360 + startTheta + trunkAngleSin * trunkPosition) % 360,
+          lineWidth,
+          recursionDepth - 1,
+          branchStartLength * branchLengthFactor,
+          0.2,
+          propagationSpeed
+        ));
+        branches.add(new IceCrystalTree(
+          (int)(startTime + trunkPosition * propagationSpeed + branchStartDelay), 
+          branchStartLength + branchLengthChange * trunkPosition, 
+          (int)(360 + trunkAngle - branchAngle) % 360, 
+          startY + trunkAngleCos * trunkPosition,
+          (360 + startTheta + trunkAngleSin * trunkPosition) % 360,
+          lineWidth,
+          recursionDepth - 1,
+          branchStartLength * branchLengthFactor,
+          0.2,
+          propagationSpeed
+        ));
+      }
+      
+    }
+  }
+  boolean isPointInTreeZone(float yToCheck, float thetaToCheck){
+    if (!(yToCheck >= lowerYBound && yToCheck <= upperYBound)){
+      return false;
+    }
+    if (lowerThetaBound  >  upperThetaBound){
+      if (thetaToCheck >= lowerThetaBound){
+        return (thetaToCheck <= upperThetaBound + 360);
+      }
+      else {
+        return (thetaToCheck <= upperThetaBound);
+      }
+     
+    }
+    else {
+      return ((thetaToCheck <= upperThetaBound) && (thetaToCheck >= lowerThetaBound));
+    }
+  }
+  float getIceFactor(float yToCheck, float thetaToCheck){
+    if (startTime > millis() || !isPointInTreeZone(yToCheck, thetaToCheck)){
+      return 0;
+    }
+    float result = 0;
+    if (trunkAngle == 90 || trunkAngle == 270){
+      result = (100 / lineWidth) * max(0, lineWidth - abs(yToCheck - startY));
+    }
+    else {
+      float centerTheta = (360 + startTheta + thetaTan * (startY - yToCheck)) % 360;
+      result = max(0, (100 / lineWidth) * (lineWidth - abs(LXUtils.wrapdistf(centerTheta, thetaToCheck, 360)))); 
+    }
+    for (int i = 0; i < branches.size(); i++){
+      result = max(result, branches.get(i).getIceFactor(yToCheck, thetaToCheck));
+    }
+    return result;
+  }
+  void updateStatus(){
+    if (trunkCurrentLength < trunkFinalLength){
+      trunkCurrentLength = min(trunkFinalLength, (millis() - startTime) * propagationSpeed);
+      float bound1 = startY;
+      float bound2 = startY + trunkCurrentLength * cos((TWO_PI/360) * trunkAngle);
+      float yExtra = trunkCurrentLength * (0.1 + abs(0.5 * trunkAngleSin));
+      float thetaExtra = trunkCurrentLength * (0.1 + abs(0.5 * trunkAngleCos));
+      lowerYBound = min(bound1, bound2) - yExtra;
+      upperYBound = max(bound1, bound2) + yExtra;
+      bound1 = startTheta + 360;
+      bound2 = startTheta + 360 + trunkCurrentLength * trunkAngleSin;
+      lowerThetaBound = (min(bound1, bound2) - thetaExtra) % 360;
+      upperThetaBound = (max(bound1, bound2) + thetaExtra) % 360;
+    }
+    for (int i = 0; i < branches.size(); i++){
+      branches.get(i).updateStatus();
+    }
+  }
+    
+    
+
+
 }
