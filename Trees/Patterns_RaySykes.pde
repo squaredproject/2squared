@@ -115,6 +115,9 @@ class Stripes extends LXPattern {
 }
 
 
+
+
+
 class Ripple extends LXPattern {
   final BasicParameter speed = new BasicParameter("Speed", 15000, 8000, 25000);
   final BasicParameter baseBrightness = new BasicParameter("Bright", 0, 0, 100);
@@ -222,5 +225,139 @@ class SparkleTakeOver extends LXPattern {
       }
         
     }
+  }
+}
+
+class Lightning extends LXPattern {
+  private LightningLine[] bolts = new LightningLine[2];
+  final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
+  final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
+  final BasicParameter maxBoltWidth = new BasicParameter("Width", 40, 20, 120);
+  Lightning(LX lx) {
+    super(lx);
+    bolts[0] = makeBolt();
+    bolts[1] = makeBolt();
+    addParameter(boltAngle);
+    addParameter(propagationSpeed);
+    addParameter(maxBoltWidth);
+  }
+  
+  public void run(double deltaMs) {
+    int treeIndex = 0;
+    for (Tree tree : model.trees){
+      if (bolts[treeIndex].isDead() && random(25) < 2){
+        bolts[treeIndex] = makeBolt();
+      }
+      for (Cube cube : tree.cubes) {
+        float hueVal = 300;
+        float lightningFactor = bolts[treeIndex].getLightningFactor(cube.y, cube.theta);
+        float brightVal = lightningFactor;
+        float satVal;
+        if (lightningFactor < 20){
+          hueVal = 300;
+          satVal = 100;
+        }
+        else if (lightningFactor < 50){
+          hueVal = 280;
+          satVal = 100;
+        }
+        else {
+          hueVal = 280;
+          satVal = 100 - 2 * (lightningFactor - 50);
+        }
+        colors[cube.index] = lx.hsb(hueVal,  satVal, brightVal);
+      }
+      treeIndex ++;
+    }
+  }
+  LightningLine makeBolt(){
+    float theta = 45 * (int) random(8);
+    float boltWidth = (maxBoltWidth.getValuef() + random(maxBoltWidth.getValuef())) / 2;
+    return new LightningLine (millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3);
+  }
+}
+
+
+
+class LightningLine {
+  private final float treeBottomY = 100;
+  private float[] yKeyPoints = {};
+  private float[] thetaKeyPoints = {};
+  private int lifeCycleState = 0;
+  private final int startTime;
+  private final float startY;
+  private final float propagationSpeed;
+  private final float lineWidth;
+  private float wideningStartTime = 0;
+  private ArrayList<LightningLine> forks = new ArrayList();
+  LightningLine(int startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepth){
+    this.propagationSpeed = propagationSpeed;
+    this.lineWidth = lineWidth;
+    this.startY = startY;
+    this.startTime = startTime;
+    float y = startY;
+    float theta = startTheta;
+    float straightLineTheta;
+    addKeyPoint(y, theta);
+    while (y > treeBottomY){
+      y -= (25 + random(75));
+      if (y > 450){
+        theta = startTheta - 20 + random(40);
+      }
+      else {
+        straightLineTheta = startTheta + sin((TWO_PI/360) * basicAngle) * (startY - y) * 0.9;
+        theta = straightLineTheta - 50 + random(100);
+      }
+      addKeyPoint(y, theta);
+      if (recursionDepth > 0 && y < 500 && random(20) < 2){
+        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * random(2)), propagationSpeed, (lineWidth - random(2)), recursionDepth - 1));
+      }
+    }
+  }
+  public float getLightningFactor (float yToCheck, float thetaToCheck){
+    float yLowerLimit = startY - (millis() - startTime) * (propagationSpeed);
+    if (lifeCycleState == 0 && yLowerLimit < treeBottomY){
+      lifeCycleState = 1;
+      wideningStartTime = millis();
+    }
+    if (lifeCycleState == 1 && millis() > startTime + 2000 / propagationSpeed){
+      lifeCycleState = 2;
+    }
+    if (lifeCycleState > 1 || yLowerLimit > yToCheck){
+      return 0;
+    }
+    int i = 0;
+    int keyPointIndex = -1;
+    float result = 0;
+    while (i < (yKeyPoints.length - 1)){
+      if (yKeyPoints[i] > yToCheck && yKeyPoints[i + 1] <= yToCheck){
+        keyPointIndex = i;
+        i = yKeyPoints.length;
+      }
+      i++;
+    }
+    if (keyPointIndex >= 0){
+      float targetTheta = thetaKeyPoints[keyPointIndex] + (thetaKeyPoints[keyPointIndex + 1] - thetaKeyPoints[keyPointIndex]) * (yKeyPoints[keyPointIndex] - yToCheck) /(yKeyPoints[keyPointIndex] - yKeyPoints[keyPointIndex + 1]);
+      float thetaDelta = LXUtils.wrapdistf(targetTheta, thetaToCheck, 360);
+      float thinnedLineWidth;
+      if (lifeCycleState == 0){
+        thinnedLineWidth = lineWidth / 2;
+      }
+      else {
+        thinnedLineWidth = lineWidth / (max(1, 2 - propagationSpeed * ((float)millis() - wideningStartTime) / 500));
+      }
+      result = max(0, 100 * (thinnedLineWidth - thetaDelta) / lineWidth);
+    }
+    for (i=0; i < forks.size(); i++){
+      result = max(result, forks.get(i).getLightningFactor(yToCheck, thetaToCheck));
+    }
+    return result;
+  }
+  private void addKeyPoint(float y, float theta){
+    yKeyPoints = append(yKeyPoints, y);
+    thetaKeyPoints = append(thetaKeyPoints, theta);
+  }
+  public boolean isDead(){
+    return lifeCycleState > 1;
   }
 }

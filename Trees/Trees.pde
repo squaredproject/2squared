@@ -56,6 +56,7 @@ LXPattern[] patterns(LX lx) {
     new MarkLottor(lx),
     new DoubleHelix(lx),
     new SparkleHelix(lx),
+    new Lightning(lx),
     new SparkleTakeOver(lx),
     new MultiSine(lx),
     new Ripple(lx),
