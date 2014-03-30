@@ -51,15 +51,20 @@ class SyphonPattern extends LXPattern {
   }
   
   private boolean restoreThreaded = false;
+  private int syphonCount = 0;
   
   public void onActive() {
-    if (restoreThreaded = lx.engine.isThreaded()) {
-      lx.engine.setThreaded(false);
-    } 
+    if (syphonCount == 0) {
+      if (restoreThreaded = lx.engine.isThreaded()) {
+        lx.engine.setThreaded(false);
+      }
+    }
+    ++syphonCount; 
   }
   
   public void onInactive() {
-    if (restoreThreaded) {
+    --syphonCount;
+    if ((syphonCount == 0) && restoreThreaded) {
       lx.engine.setThreaded(true);
     }
   }

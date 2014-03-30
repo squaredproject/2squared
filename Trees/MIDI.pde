@@ -2,6 +2,32 @@ DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", NUM_CHANNELS);
 DiscreteParameter previewChannel = new DiscreteParameter("PRV", NUM_CHANNELS+1);
 APC40Output apcOutput = null;
 
+final static int VOLUME = 7;
+final static int MASTER = 14;
+final static int CROSSFADER = 15;
+
+final static int ACTIVATOR = 50;
+final static int SOLO_CUE = 49;
+final static int RECORD_ARM = 48;
+final static int PLAY = 91;
+final static int BANK_UP = 94;
+final static int BANK_DOWN = 95;
+final static int BANK_RIGHT = 96;
+final static int BANK_LEFT = 97;
+final static int CUE_LEVEL = 47;
+final static int CLIP_LAUNCH = 53;
+final static int CLIP_STOP = 52;
+final static int SCENE_LAUNCH = 82;
+
+final static int SHIFT = 98;
+
+final static int DEVICE_CONTROL = 16;
+
+final static int CLIP_TRACK = 58;
+final static int DEVICE_ON_OFF = 59;
+final static int LEFT_ARROW = 60;
+final static int RIGHT_ARROW = 61;
+
 public class MidiEngine {
   public MidiEngine() {
     previewChannel.setValue(8);
@@ -21,7 +47,12 @@ public class MidiEngine {
 public class APC40Output {
   
   private static final int OFF = 0;
-  private static final int GREEN = 1; 
+  private static final int GREEN = 1;
+  private static final int GREEN_BLINK = 2;
+  private static final int RED = 3;
+  private static final int RED_BLINK = 4;
+  private static final int YELLOW = 5;
+  private static final int YELLOW_BLINK = 6;
   
   private final MidiOutput output;
   
@@ -47,18 +78,41 @@ public class APC40Output {
     }
     
     for (final LXDeck deck : lx.engine.getDecks()) {
-      setKnobs(deck);
-      setTransition(deck);
-      getFaderTransition(deck).blendMode.addListener(new LXParameterListener() {
+      final TreesTransition t = getFaderTransition(deck); 
+      t.blendMode.addListener(new LXParameterListener() {
         public void onParameterChanged(LXParameter parameter) {
-          setTransition(deck);
+          setBlendMode(deck);
+        }
+      });
+      t.left.addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          setLeft(deck.index, t.left.isOn());
+        }
+      });
+      t.right.addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          setRight(deck.index, t.right.isOn());
         }
       });
       deck.addListener(new LXDeck.AbstractListener() {
+        public void patternWillChange(LXDeck deck, LXPattern pattern, LXPattern nextPattern) {
+          setPattern(deck);
+        }
         public void patternDidChange(LXDeck deck, LXPattern pattern) {
           setKnobs(deck);
+          setPattern(deck);
         }
       });
+      uiDeck.patternLists[deck.index].scrollOffset.addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          setPattern(deck);
+        }
+      });
+      setPattern(deck);
+      setKnobs(deck);
+      setBlendMode(deck);
+      setLeft(deck.index, t.left.isOn());
+      setRight(deck.index, t.right.isOn());
     }
     
     previewChannel.addListener(new LXParameterListener() {
@@ -69,18 +123,32 @@ public class APC40Output {
     setCueButtons();
   }
   
-  private void setCueButtons() {
-    for (int i = 0; i < NUM_CHANNELS; ++i) {
-      for (int note = 48; note <= 50; ++note) {
-        output.sendNoteOn(i, note, (previewChannel.getValuei() == i) ? GREEN : OFF);
-      }
+  void setPattern(LXDeck deck) {
+    int activeIndex = deck.getActivePatternIndex() - uiDeck.patternLists[deck.index].scrollOffset.getValuei();
+    int nextIndex = deck.getNextPatternIndex() - uiDeck.patternLists[deck.index].scrollOffset.getValuei();
+    for (int i = 0; i < 5; ++i) {
+      output.sendNoteOn(deck.index, CLIP_LAUNCH + i, (i == activeIndex) ? GREEN : ((i == nextIndex) ? YELLOW : OFF));
     }
   }
   
-  void setTransition(LXDeck deck) {
+  private void setLeft(int channel, boolean on) {
+    output.sendNoteOn(channel, SOLO_CUE, on ? GREEN : OFF);
+  }
+  
+  private void setRight(int channel, boolean on) {
+    output.sendNoteOn(channel, RECORD_ARM, on ? GREEN : OFF);
+  }
+  
+  private void setCueButtons() {
+    for (int i = 0; i < NUM_CHANNELS; ++i) {
+      output.sendNoteOn(i, ACTIVATOR, (previewChannel.getValuei() == i) ? GREEN : OFF);
+    }
+  }
+  
+  void setBlendMode(LXDeck deck) {
     int blendv = getFaderTransition(deck).blendMode.getValuei();
-    for (int note = 58; note <= 61; ++note) {
-      output.sendNoteOn(deck.index, note, (blendv == (note-58)) ? GREEN : OFF);
+    for (int note = CLIP_TRACK; note <= RIGHT_ARROW; ++note) {
+      output.sendNoteOn(deck.index, note, (blendv == (note-CLIP_TRACK)) ? GREEN : OFF);
     }
   }
   
@@ -99,14 +167,14 @@ public class APC40Output {
         knobs[i] = (LXListenableNormalizedParameter)parameter;
         knobs[i].addListener(knobListener[i]);
         int value = (int) (127. * knobs[i].getNormalized());
-        output.sendController(deck.index, 16+pi, value);
+        output.sendController(deck.index, DEVICE_CONTROL+pi, value);
         if (++pi >= NUM_KNOBS) {
           break;
         }
       }
     }
     while (pi < NUM_KNOBS) {
-      output.sendController(deck.index, 16+pi, 0);
+      output.sendController(deck.index, DEVICE_CONTROL+pi, 0);
       ++pi;
     }
   }
@@ -114,6 +182,9 @@ public class APC40Output {
 
 
 public class APC40Input {
+  
+  private boolean shiftPressed = false;
+  
   public APC40Input(MidiInputDevice device) {
     device.createInput(this);
   }
@@ -130,28 +201,29 @@ public class APC40Input {
     int value = controller.getValue();
     float normalized = value / 127.;
     switch (cc) {
-    case 7:
+    case VOLUME:
       if (channel < NUM_CHANNELS) {
         setSlider(lx.engine.getDeck(channel).getFader(), normalized);
       }
       break;
-    case 14:
+    case MASTER:
       setSlider(output.brightness, normalized);
       break;
-    case 15:
+    case CROSSFADER:
       setSlider(crossfader, normalized);
       break;
-    case 16:
-    case 17:
-    case 18:
-    case 19:
-    case 20:
-    case 21:
-    case 22:
-    case 23:
+    
+    case DEVICE_CONTROL:
+    case DEVICE_CONTROL+1:
+    case DEVICE_CONTROL+2:
+    case DEVICE_CONTROL+3:
+    case DEVICE_CONTROL+4:
+    case DEVICE_CONTROL+5:
+    case DEVICE_CONTROL+6:
+    case DEVICE_CONTROL+7:
       if (channel < NUM_CHANNELS) {
         focusedChannel.setValue(channel);
-        int paramNum = cc - 16;
+        int paramNum = cc - DEVICE_CONTROL;
         int pi = 0;
         for (LXParameter parameter : lx.engine.getDeck(channel).getActivePattern().getParameters()) {
           if (parameter instanceof LXListenableNormalizedParameter) {
@@ -165,7 +237,7 @@ public class APC40Input {
       }
       break;
       
-    case 47:
+    case CUE_LEVEL:
       uiDeck.knob(value);
       break;
       
@@ -178,34 +250,62 @@ public class APC40Input {
     int channel = note.getChannel();
     int number = note.getPitch();
     switch (number) {
-      case 48:
-      case 49:
-      case 50:
+      case SHIFT:
+        shiftPressed = true;
+        break;
+      
+      case ACTIVATOR:
         previewChannel.setValue(channel);
         break;
+      case SOLO_CUE:
+        getFaderTransition(lx.engine.getDeck(channel)).left.setValue(true);
+        break;
+      case RECORD_ARM:
+        getFaderTransition(lx.engine.getDeck(channel)).right.setValue(true);
+        break;
+      
+      case CLIP_LAUNCH:
+      case CLIP_LAUNCH+1:
+      case CLIP_LAUNCH+2:
+      case CLIP_LAUNCH+3:
+      case CLIP_LAUNCH+4:
+        uiDeck.selectPattern(channel, number - CLIP_LAUNCH);        
+        break;
         
-      case 58:
-      case 59:
-      case 60:
-      case 61:
+      case SCENE_LAUNCH:
+      case SCENE_LAUNCH+1:
+      case SCENE_LAUNCH+2:
+      case SCENE_LAUNCH+3:
+      case SCENE_LAUNCH+4:
+        uiDeck.selectPattern(focusedChannel.getValuei(), number - SCENE_LAUNCH);        
+        break;
+        
+      case CLIP_STOP:
+        uiDeck.pagePatterns(channel);
+        break;
+      
+      case CLIP_TRACK:
+      case DEVICE_ON_OFF:
+      case LEFT_ARROW:
+      case RIGHT_ARROW:
         if (channel < NUM_CHANNELS) {
-          getFaderTransition(lx.engine.getDeck(channel)).blendMode.setValue(number - 58);
+          getFaderTransition(lx.engine.getDeck(channel)).blendMode.setValue(number - CLIP_TRACK);
         }
         break;
         
-      case 91:
+      case PLAY:
         uiDeck.select();
         break;
-      case 94:
+      case BANK_UP:
         uiDeck.scroll(-1);
         break;
-      case 95:
+      case BANK_DOWN:
         uiDeck.scroll(1);
         break;
-      case 96:
+      case BANK_RIGHT:
         focusedChannel.increment();
         break;
-      case 97:
+      case BANK_LEFT:
         focusedChannel.decrement();
         break;
       default:
@@ -218,30 +318,52 @@ public class APC40Input {
     int channel = note.getChannel();
     int number = note.getPitch();
     switch (number) {
-      case 48:
-      case 49:
-      case 50:
+      case SHIFT:
+        shiftPressed = false;
+        break;
+      
+      case RECORD_ARM:
+        getFaderTransition(lx.engine.getDeck(channel)).right.setValue(false);
+        break;
+      case SOLO_CUE:
+        getFaderTransition(lx.engine.getDeck(channel)).left.setValue(false);
+        break;
+      case ACTIVATOR:
         previewChannel.setValue(NUM_CHANNELS);
         break;
         
-      case 58:
-      case 59:
-      case 60:
-      case 61:
-        if (channel < NUM_CHANNELS) {
-          getFaderTransition(lx.engine.getDeck(channel)).blendMode.setValue(number - 58);
-        }
+      case CLIP_LAUNCH:
+      case CLIP_LAUNCH+1:
+      case CLIP_LAUNCH+2:
+      case CLIP_LAUNCH+3:
+      case CLIP_LAUNCH+4:
         if (apcOutput != null) {
-          apcOutput.setTransition(lx.engine.getDeck(channel));
+          apcOutput.setPattern(lx.engine.getDeck(channel));
         }
         break;
         
-      case 91:
-      case 94:
-      case 95:
-      case 96:
-      case 97:
+      case CLIP_STOP:
         break;
+        
+      case CLIP_TRACK:
+      case DEVICE_ON_OFF:
+      case LEFT_ARROW:
+      case RIGHT_ARROW:
+        if (channel < NUM_CHANNELS) {
+          getFaderTransition(lx.engine.getDeck(channel)).blendMode.setValue(number - CLIP_TRACK);
+        }
+        if (apcOutput != null) {
+          apcOutput.setBlendMode(lx.engine.getDeck(channel));
+        }
+        break;
+        
+      case PLAY:
+      case BANK_UP:
+      case BANK_DOWN:
+      case BANK_RIGHT:
+      case BANK_LEFT:
+        break;
+      
       default:
         println("noteOff: " + note);
     }
@@ -251,25 +373,28 @@ public class APC40Input {
 
 class UIChannelFaders extends UIContext {
   
-  final static int SPACER = 24;
-  final static int MASTER = 8;
+  final static int SPACER = 30;
+  final static int MASTER = 0;
   final static int PADDING = 4;
+  final static int BUTTON_HEIGHT = 14;
   final static int FADER_WIDTH = 40;
   final static int WIDTH = SPACER + PADDING + MASTER + (PADDING+FADER_WIDTH)*(NUM_CHANNELS+1);
-  final static int HEIGHT = 108;
+  final static int HEIGHT = 168;
   
   UIChannelFaders(final UI ui) {
-    super(ui, Trees.this.width/2-WIDTH/2, Trees.this.height-HEIGHT-44, WIDTH, HEIGHT);
+    super(ui, Trees.this.width/2-WIDTH/2, Trees.this.height-HEIGHT-PADDING, WIDTH, HEIGHT);
     setBackgroundColor(#292929);
     setBorderColor(#444444);
     int di = 0;
     final UISlider[] sliders = new UISlider[NUM_CHANNELS];
     final UIButton[] cues = new UIButton[NUM_CHANNELS];
+    final UIButton[] lefts = new UIButton[NUM_CHANNELS];
+    final UIButton[] rights = new UIButton[NUM_CHANNELS];
     final UILabel[] labels = new UILabel[NUM_CHANNELS];
     for (final LXDeck deck : lx.engine.getDecks()) {
-      float xPos = PADDING + deck.index*(PADDING+FADER_WIDTH) + ((deck.index >= 4) ? SPACER : 0);
+      float xPos = PADDING + deck.index*(PADDING+FADER_WIDTH) + SPACER;
       
-      cues[deck.index] = new UIButton(xPos, PADDING, FADER_WIDTH, 12) {
+      cues[deck.index] = new UIButton(xPos, PADDING, FADER_WIDTH, BUTTON_HEIGHT) {
         void onToggle(boolean active) {
           if (active) {
             previewChannel.setValue(deck.index);
@@ -279,11 +404,22 @@ class UIChannelFaders extends UIContext {
         }
       };
       cues[deck.index]
-      .setActiveColor(#993333)
       .setActive(deck.index == previewChannel.getValuei())
       .addToContainer(this);
       
-      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING + 14, FADER_WIDTH, this.height - 36) {
+      lefts[deck.index] = new UIButton(xPos, 2*PADDING+BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
+      lefts[deck.index]
+      .setParameter(getFaderTransition(deck).left)
+      .setActiveColor(ui.getSelectionColor())
+      .addToContainer(this);
+      
+      rights[deck.index] = new UIButton(xPos, 3*PADDING+2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
+      rights[deck.index]
+      .setParameter(getFaderTransition(deck).right)
+      .setActiveColor(#993333)
+      .addToContainer(this);
+      
+      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, xPos, 3*BUTTON_HEIGHT + 4*PADDING, FADER_WIDTH, this.height - 4*BUTTON_HEIGHT - 6*PADDING) {
         public void onFocus() {
           focusedChannel.setValue(deck.index);
         }
@@ -292,10 +428,9 @@ class UIChannelFaders extends UIContext {
       .setParameter(deck.getFader())
       .addToContainer(this);
             
-      labels[deck.index] = new UILabel(xPos, this.height - PADDING - 12, FADER_WIDTH, 12);
+      labels[deck.index] = new UILabel(xPos, this.height - PADDING - BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
       labels[deck.index]
       .setLabel(shortPatternName(deck.getActivePattern()))
-      .setPadding(2)
       .setAlignment(CENTER, CENTER)
       .setBackgroundColor(#292929)
       .setBorderColor(#666666)
@@ -308,8 +443,9 @@ class UIChannelFaders extends UIContext {
       });
       
     }
+    
     float xPos = this.width - FADER_WIDTH - PADDING;
-    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-22)
+    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-BUTTON_HEIGHT)
     .setParameter(output.brightness)
     .addToContainer(this);
     
@@ -333,26 +469,35 @@ class UIChannelFaders extends UIContext {
     });
     listener.onParameterChanged(focusedChannel);
     
-    float labelX = (this.width - FADER_WIDTH - PADDING - MASTER) / 2.;
+    float labelX = PADDING;
+    
     new UILabel(labelX, PADDING+1, 0, 0)
-    .setAlignment(CENTER, TOP)
-    .setColor(#666666)
-    .setLabel("CUE")
-    .addToContainer(this);
-    
-    new UILabel(labelX, this.height/2, 0, 0)
-    .setAlignment(CENTER, CENTER)
-    .setColor(#666666)
-    .setLabel("LVL")
-    .addToContainer(this);
-    
-    new UILabel(labelX, this.height-14, 0, 0)
-    .setAlignment(CENTER, TOP)
     .setColor(#666666)
     .setLabel("PTN")
     .addToContainer(this);
     
-    new UILabel(this.width - PADDING - FADER_WIDTH, this.height-16, FADER_WIDTH, 12)
+    
+    new UILabel(labelX, 2*PADDING+BUTTON_HEIGHT+1, 0, 0)
+    .setColor(#666666)
+    .setLabel("CUE")
+    .addToContainer(this);
+    
+    new UILabel(labelX, 3*PADDING+2*BUTTON_HEIGHT+1, 0, 0)
+    .setColor(#666666)
+    .setLabel("LEFT")
+    .addToContainer(this);
+    
+    new UILabel(labelX, 4*PADDING+3*BUTTON_HEIGHT+1, 0, 0)
+    .setColor(#666666)
+    .setLabel("RIGHT")
+    .addToContainer(this);
+    
+    new UILabel(labelX, this.height/2, 0, 0)
+    .setColor(#666666)
+    .setLabel("LEVEL")
+    .addToContainer(this);
+    
+    new UILabel(this.width - PADDING - FADER_WIDTH, this.height-PADDING-BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setAlignment(CENTER, CENTER)
     .setLabel("MASTER")
@@ -384,7 +529,7 @@ public class UIMultiDeck extends UIWindow {
   private final static int KNOBS_PER_ROW = 4;
   
   public final static int DEFAULT_WIDTH = 140;
-  public final static int DEFAULT_HEIGHT = 274;
+  public final static int DEFAULT_HEIGHT = 260;
 
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
@@ -416,10 +561,10 @@ public class UIMultiDeck extends UIWindow {
       knobs[ki].addToContainer(this);
     }
     
-    yp += 98;
+    yp += 100;
     for (LXDeck deck : lx.engine.getDecks()) {
-      blendModes[deck.index] = new UIToggleSet(4, yp, this.width-8, 20)
-      .setOptions(new String[] { "ADD", "MLT", "LITE", "LRP" })
+      blendModes[deck.index] = new UIToggleSet(4, yp, this.width-8, 18)
+      .setOptions(new String[] { "ADD", "MLT", "LITE", "LERP" })
       .setParameter(getFaderTransition(deck).blendMode)
       .setEvenSpacing();
       blendModes[deck.index].setVisible(deck.index == focusedChannel.getValuei());
@@ -503,6 +648,18 @@ public class UIMultiDeck extends UIWindow {
     } else if (amt < -1) {
       scroll(-1);
       amt += 1;
+    }
+  }
+  
+  void selectPattern(int channel, int index) {
+    lx.engine.getDeck(channel).goIndex(patternLists[channel].getScrollOffset() + index);
+  }
+  
+  void pagePatterns(int channel) {
+    int offset = patternLists[channel].getScrollOffset();
+    patternLists[channel].setScrollOffset(offset + 5);
+    if (patternLists[channel].getScrollOffset() == offset) {
+      patternLists[channel].setScrollOffset(0);
     }
   }
   

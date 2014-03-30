@@ -111,7 +111,7 @@ void setup() {
       protected void beforeDraw() {
         hint(ENABLE_DEPTH_TEST);
         pushMatrix();
-        translate(0, 6*FEET, 0);
+        translate(0, 12*FEET, 0);
       }
       protected void afterDraw() {
         popMatrix();
@@ -123,7 +123,6 @@ void setup() {
     .addComponent(new UITrees())
     );
   lx.ui.addLayer(new UIChannelFaders(lx.ui));
-  lx.ui.addLayer(new UICrossfader(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
   
@@ -268,11 +267,20 @@ class TreesTransition extends LXTransition {
   private final LXDeck deck;
   
   public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
+  public final BooleanParameter left = new BooleanParameter("LEFT", true);
+  public final BooleanParameter right = new BooleanParameter("RIGHT", true);
+  
+  private final DampedParameter leftLevel = new DampedParameter(left, 2);
+  private final DampedParameter rightLevel = new DampedParameter(right, 2);
  
-  private int blendType = ADD; 
+  private int blendType = ADD;
+  
+  private final color[] scaleBuffer = new color[lx.total];
   
   TreesTransition(LX lx, LXDeck deck) {
     super(lx);
+    addModulator(leftLevel.start());
+    addModulator(rightLevel.start());
     this.deck = deck;
     blendMode.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
@@ -287,22 +295,25 @@ class TreesTransition extends LXTransition {
   }
   
   protected void computeBlend(int[] c1, int[] c2, double progress) {
-    if (progress == 0) {
-      for (int i = 0; i < colors.length; ++i) {
-        colors[i] = c1[i];
-      }
-    } else if (progress == 1) {
-      for (int i = 0; i < c1.length; ++i) {
-        this.colors[i] = this.lx.applet.blendColor(c1[i], c2[i], this.blendType);
-      }
-    } else {
-      for (int i = 0; i < c1.length; ++i) {
-        this.colors[i] = this.lx.applet.lerpColor(c1[i],
-            this.lx.applet.blendColor(c1[i], c2[i], this.blendType),
-            (float) progress, PConstants.RGB);
+    for (Tree tree : model.trees) {
+      float level = ((tree.index == 0) ? leftLevel : rightLevel).getValuef();
+      float amount = (float) (progress*level);
+      if (amount == 0) {
+        for (LXPoint p : tree.points) {
+          colors[p.index] = c1[p.index];
+        }
+      } else if (amount == 1) {
+        for (LXPoint p : tree.points) {
+          colors[p.index] = this.lx.applet.blendColor(c1[p.index], c2[p.index], this.blendType);
+        }
+      } else {
+        for (LXPoint p : tree.points) {
+          this.colors[p.index] = this.lx.applet.lerpColor(c1[p.index],
+            this.lx.applet.blendColor(c1[p.index], c2[p.index], this.blendType),
+            amount, PConstants.RGB);
+        }
       }
     }
   }
-
 }
 
