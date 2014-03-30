@@ -40,6 +40,9 @@ final static int REAR_RIGHT = 5;
 final static int REAR_LEFT = 6;
 final static int FRONT_LEFT = 7;
 
+final static int NUM_CHANNELS = 8;
+final static int NUM_KNOBS = 8;
+
 static Geometry geometry = new Geometry();
 Model model;
 LX lx;
@@ -48,7 +51,8 @@ LXDatagram datagram;
 UIMultiDeck uiDeck;
 MidiEngine midiEngine;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
-final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);  
+final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
+final BasicParameter crossfader = new BasicParameter("CROSS", 0.5); 
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
@@ -90,7 +94,7 @@ void setup() {
   }
   for (LXDeck deck : lx.engine.getDecks()) {
     deck.goIndex(deck.index);
-    deck.setFaderTransition(new BlendTransition(lx, ADD, BlendTransition.Mode.HALF));
+    deck.setFaderTransition(new TreesTransition(lx, deck));
   }
 
   try {
@@ -119,6 +123,7 @@ void setup() {
     .addComponent(new UITrees())
     );
   lx.ui.addLayer(new UIChannelFaders(lx.ui));
+  lx.ui.addLayer(new UICrossfader(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
   
@@ -130,6 +135,10 @@ void setup() {
   
 void draw() {
   background(#222222);
+}
+
+TreesTransition getFaderTransition(LXDeck deck) {
+  return (TreesTransition) deck.getFaderTransition();
 }
 
 class UITrees extends UICameraComponent {
@@ -252,5 +261,48 @@ class UIOutput extends UIWindow {
     .setParameter(output.brightness)
     .addToContainer(this);
   }
+}
+
+class TreesTransition extends LXTransition {
+  
+  private final LXDeck deck;
+  
+  public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
+ 
+  private int blendType = ADD; 
+  
+  TreesTransition(LX lx, LXDeck deck) {
+    super(lx);
+    this.deck = deck;
+    blendMode.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        switch (blendMode.getValuei()) {
+        case 0: blendType = ADD; break;
+        case 1: blendType = MULTIPLY; break;
+        case 2: blendType = LIGHTEST; break;
+        case 3: blendType = BLEND; break;
+        }
+      }
+    });
+  }
+  
+  protected void computeBlend(int[] c1, int[] c2, double progress) {
+    if (progress == 0) {
+      for (int i = 0; i < colors.length; ++i) {
+        colors[i] = c1[i];
+      }
+    } else if (progress == 1) {
+      for (int i = 0; i < c1.length; ++i) {
+        this.colors[i] = this.lx.applet.blendColor(c1[i], c2[i], this.blendType);
+      }
+    } else {
+      for (int i = 0; i < c1.length; ++i) {
+        this.colors[i] = this.lx.applet.lerpColor(c1[i],
+            this.lx.applet.blendColor(c1[i], c2[i], this.blendType),
+            (float) progress, PConstants.RGB);
+      }
+    }
+  }
+
 }
 
