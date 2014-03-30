@@ -432,13 +432,23 @@ class UIChannelFaders extends UIContext {
       labels[deck.index]
       .setLabel(shortPatternName(deck.getActivePattern()))
       .setAlignment(CENTER, CENTER)
+      .setColor(#999999)
       .setBackgroundColor(#292929)
       .setBorderColor(#666666)
       .addToContainer(this);
       
       deck.addListener(new LXDeck.AbstractListener() {
+
+        void patternWillChange(LXDeck deck, LXPattern pattern, LXPattern nextPattern) {
+          labels[deck.index].setLabel(shortPatternName(nextPattern));
+          labels[deck.index].setColor(#292929);
+          labels[deck.index].setBackgroundColor(#666699);
+        }
+        
         void patternDidChange(LXDeck deck, LXPattern pattern) {
           labels[deck.index].setLabel(shortPatternName(pattern));
+          labels[deck.index].setColor(#999999);
+          labels[deck.index].setBackgroundColor(#292929);
         }
       });
       
@@ -471,30 +481,29 @@ class UIChannelFaders extends UIContext {
     
     float labelX = PADDING;
     
-    new UILabel(labelX, PADDING+1, 0, 0)
-    .setColor(#666666)
-    .setLabel("PTN")
-    .addToContainer(this);
-    
-    
-    new UILabel(labelX, 2*PADDING+BUTTON_HEIGHT+1, 0, 0)
+    new UILabel(labelX, PADDING+2, 0, 0)
     .setColor(#666666)
     .setLabel("CUE")
     .addToContainer(this);
     
-    new UILabel(labelX, 3*PADDING+2*BUTTON_HEIGHT+1, 0, 0)
+    new UILabel(labelX, 2*PADDING+1*BUTTON_HEIGHT+2, 0, 0)
     .setColor(#666666)
     .setLabel("LEFT")
     .addToContainer(this);
     
-    new UILabel(labelX, 4*PADDING+3*BUTTON_HEIGHT+1, 0, 0)
+    new UILabel(labelX, 3*PADDING+2*BUTTON_HEIGHT+2, 0, 0)
     .setColor(#666666)
     .setLabel("RIGHT")
     .addToContainer(this);
     
-    new UILabel(labelX, this.height/2, 0, 0)
+    new UILabel(labelX, 4*PADDING+3*BUTTON_HEIGHT+6, 0, 0)
     .setColor(#666666)
     .setLabel("LEVEL")
+    .addToContainer(this);
+    
+    new UILabel(labelX, this.height - PADDING - BUTTON_HEIGHT + 3, 0, 0)
+    .setColor(#666666)
+    .setLabel("PTN")
     .addToContainer(this);
     
     new UILabel(this.width - PADDING - FADER_WIDTH, this.height-PADDING-BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
@@ -506,7 +515,8 @@ class UIChannelFaders extends UIContext {
   }
   
   private String shortPatternName(LXPattern pattern) {
-    return pattern.getClass().getSimpleName().substring(0, 5);
+    String simpleName = pattern.getClass().getSimpleName(); 
+    return simpleName.substring(0, min(7, simpleName.length()));
   }
 }
 
@@ -529,7 +539,7 @@ public class UIMultiDeck extends UIWindow {
   private final static int KNOBS_PER_ROW = 4;
   
   public final static int DEFAULT_WIDTH = 140;
-  public final static int DEFAULT_HEIGHT = 260;
+  public final static int DEFAULT_HEIGHT = 258;
 
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
