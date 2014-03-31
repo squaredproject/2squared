@@ -173,7 +173,7 @@ class Fire extends LXPattern {
   
   final int initColor = lx.hsb(35, 100, 50);
   final int endColor = lx.hsb(0, 100, 10);
-  final int numFlames = 75;
+  final int numFlames = 100;
   private SawLFO [] flameDecay;
   private float [] flameTheta;
   private float [] flameHeight;
@@ -217,7 +217,7 @@ class Fire extends LXPattern {
       for (int i = 0; i < numFlames; ++i) {
         if (abs(flameTheta[i] - cube.theta) < (flameWidth * (1- yn))) {
           cBrt = min(100, max(0, 100 + cBrt- 2 * abs(cube.y - flameDecay[i].getValuef()) - flameDecay[i].getBasisf() * 25)) ;
-          cHue = max(0,  (cHue + cBrt * 0.7) * 0.5);
+          cHue = max(0, (cHue + cBrt * 0.7) * 0.5);
         }
       }
       colors[cube.index] = lx.hsb(
@@ -229,3 +229,55 @@ class Fire extends LXPattern {
   }
 }
 
+//class Bloom extends LXPattern {
+//  private float[][]
+//  Bloom(LX lx){
+//    super(lx);
+//  }
+//  
+//  public void run(double deltaMs) {
+//    for (Cube cube: model.cubes) {
+//    
+//    }
+//  }
+//}
+
+class Mondrian extends LXPattern{
+  private float [] yGrid;
+  private float [] thetaGrid;
+
+  Mondrian(LX lx) {
+    super(lx);
+    yGrid = new float[10];
+    thetaGrid = new float[10];
+    for (int i = 0; i < 10; ++i) {
+      yGrid[i] = random(100, model.yMax);
+    }
+    
+    for (int i = 0; i < 10; ++i) {
+      thetaGrid[i] = random(model.xMin, model.xMax);
+    }
+    
+    for (int i = 0; i < model.cubes.size(); ++i) {
+      colors[i] = lx.hsb(
+        100,
+        0,
+        100
+      );
+      
+    }
+  }
+  
+  public void run(double deltaMs) {
+    for (Cube cube: model.cubes) {
+      for (int i = 0; i < 10; ++i) {
+        if (abs(cube.y - yGrid[i]) < 5  || abs(cube.x - thetaGrid[i]) < 5) {
+          colors[cube.index] = lx.hsb(
+            0,
+            0,
+            0);
+        }
+      }    
+    }
+  }
+}
