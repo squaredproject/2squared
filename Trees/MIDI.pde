@@ -47,22 +47,22 @@ static interface APCConstants {
   final static int RIGHT_ARROW = 61;
 }
 
-public class MidiEngine {
-  
-   final byte[] abletonMode = {
-      (byte) 0xf0, // sysex start
-      (byte) 0x47, // manufacturers id
-      (byte) 0x00, // device id
-      (byte) 0x73, // product model id
-      (byte) 0x60, // message
-      (byte) 0x00, // bytes MSB
-      (byte) 0x04, // bytes LSB
-      (byte) 0x42, // ableton mode 2
-      (byte) 0x08, // version maj
-      (byte) 0x01, // version min
-      (byte) 0x01, // version bugfix
-      (byte) 0xf7, // sysex end
-    };
+final static byte[] APC_MODE_SYSEX = {
+  (byte) 0xf0, // sysex start
+  (byte) 0x47, // manufacturers id
+  (byte) 0x00, // device id
+  (byte) 0x73, // product model id
+  (byte) 0x60, // message
+  (byte) 0x00, // bytes MSB
+  (byte) 0x04, // bytes LSB
+  (byte) 0x42, // ableton mode 2
+  (byte) 0x08, // version maj
+  (byte) 0x01, // version min
+  (byte) 0x01, // version bugfix
+  (byte) 0xf7, // sysex end
+};
+
+class MidiEngine {
   
   public MidiEngine() {
     previewChannel.setValue(NUM_CHANNELS);
@@ -76,6 +76,7 @@ public class MidiEngine {
     for (MidiOutputDevice mid : RWMidi.getOutputDevices()) {
       if (mid.getName().contains("APC40")) {
         apcOutput = new APC40Output(mid);
+        break;
       }
     }
   }
@@ -84,7 +85,7 @@ public class MidiEngine {
     int i = 0;
     for (String info : de.humatic.mmj.MidiSystem.getOutputs()) { 
       if (info.contains("APC40")) {
-        de.humatic.mmj.MidiSystem.openMidiOutput(i).sendMidi(abletonMode);
+        de.humatic.mmj.MidiSystem.openMidiOutput(i).sendMidi(APC_MODE_SYSEX);
         break;
       }
       ++i;
@@ -109,6 +110,9 @@ public class APC40Output implements APCConstants {
   
   public APC40Output(MidiOutputDevice device) {
     output = device.createOutput();
+    
+    // NOTE: this does not work on Apple's Java MIDI implementation
+    output.sendSysex(APC_MODE_SYSEX);
     
     for (int i = 0; i < NUM_KNOBS; ++i) {
       output.sendController(0, DEVICE_CONTROL_MODE + i, 2);
