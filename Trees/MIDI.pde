@@ -2,6 +2,14 @@ DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", NUM_CHANNELS);
 DiscreteParameter previewChannel = new DiscreteParameter("PRV", NUM_CHANNELS+1);
 APC40Output apcOutput = null;
 
+int focusedChannel() {
+  return focusedChannel.getValuei();
+}
+
+LXDeck focusedDeck() {
+  return lx.engine.getDeck(focusedChannel());
+}
+
 static interface APCConstants {
   final static int VOLUME = 7;
   final static int MASTER = 14;
@@ -28,7 +36,10 @@ static interface APCConstants {
   final static int SHIFT = 98;
   
   final static int DEVICE_CONTROL = 16;
+  final static int DEVICE_CONTROL_MODE = 24;
   final static int TRACK_CONTROL = 48;
+  final static int TRACK_CONTROL_MODE = 56;
+  final static int TRACK_SELECTION = 51;
   
   final static int CLIP_TRACK = 58;
   final static int DEVICE_ON_OFF = 59;
@@ -37,17 +48,46 @@ static interface APCConstants {
 }
 
 public class MidiEngine {
+  
+   final byte[] abletonMode = {
+      (byte) 0xf0, // sysex start
+      (byte) 0x47, // manufacturers id
+      (byte) 0x00, // device id
+      (byte) 0x73, // product model id
+      (byte) 0x60, // message
+      (byte) 0x00, // bytes MSB
+      (byte) 0x04, // bytes LSB
+      (byte) 0x42, // ableton mode 2
+      (byte) 0x08, // version maj
+      (byte) 0x01, // version min
+      (byte) 0x01, // version bugfix
+      (byte) 0xf7, // sysex end
+    };
+  
   public MidiEngine() {
-    previewChannel.setValue(8);
+    previewChannel.setValue(NUM_CHANNELS);
+    setAPC40Mode();
     for (MidiInputDevice mid : RWMidi.getInputDevices()) {
       if (mid.getName().contains("APC40")) {
         new APC40Input(mid);
+        break;
       }
     }
     for (MidiOutputDevice mid : RWMidi.getOutputDevices()) {
       if (mid.getName().contains("APC40")) {
         apcOutput = new APC40Output(mid);
       }
+    }
+  }
+  
+  void setAPC40Mode() {
+    int i = 0;
+    for (String info : de.humatic.mmj.MidiSystem.getOutputs()) { 
+      if (info.contains("APC40")) {
+        de.humatic.mmj.MidiSystem.openMidiOutput(i).sendMidi(abletonMode);
+        break;
+      }
+      ++i;
     }
   }
 }
@@ -62,21 +102,28 @@ public class APC40Output implements APCConstants {
   private static final int YELLOW = 5;
   private static final int YELLOW_BLINK = 6;
   
-  private final MidiOutput output;
+  private final rwmidi.MidiOutput output;
   
   private LXListenableNormalizedParameter[] knobs = new LXListenableNormalizedParameter[NUM_CHANNELS * NUM_KNOBS];
   private final LXParameterListener[] knobListener = new LXParameterListener[NUM_CHANNELS * NUM_KNOBS];
   
   public APC40Output(MidiOutputDevice device) {
-    this.output = device.createOutput();
+    output = device.createOutput();
+    
+    for (int i = 0; i < NUM_KNOBS; ++i) {
+      output.sendController(0, DEVICE_CONTROL_MODE + i, 2);
+      output.sendController(0, TRACK_CONTROL_MODE + i, 2); 
+    }
     
     for (int i = 0; i < knobListener.length; ++i) {
       final int channel = i / NUM_KNOBS;
       final int cc = 16 + (i % NUM_KNOBS);
       knobListener[i] = new LXParameterListener() {
         public void onParameterChanged(LXParameter parameter) {
-          int normalized = (int) (127. * ((LXNormalizedParameter)parameter).getNormalized());
-          output.sendController(channel, cc, normalized);
+          if (channel == focusedChannel()) {
+            int normalized = (int) (127. * ((LXNormalizedParameter)parameter).getNormalized());
+            output.sendController(0, cc, normalized);
+          }
         }
       };
     }
@@ -117,11 +164,12 @@ public class APC40Output implements APCConstants {
         }
       });
       setPattern(deck);
-      setKnobs(deck);
-      setBlendMode(deck);
       setLeft(deck.index, t.left.isOn());
       setRight(deck.index, t.right.isOn());
     }
+    
+    setKnobs(focusedDeck());
+    setBlendMode(focusedDeck());
     
     for (int i = 0; i < effectKnobParameters.length; ++i) {
       if (effectKnobParameters[i] != null) {
@@ -135,6 +183,7 @@ public class APC40Output implements APCConstants {
         });
       }
     }
+    
     for (int i = 0; i < effectButtonParameters.length; ++i) {
       final BooleanParameter p = effectButtonParameters[i];
       final int number = PAN+i; 
@@ -145,12 +194,26 @@ public class APC40Output implements APCConstants {
       });
     }
     
+    focusedChannel.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        setFocusedChannel();
+      }
+    });
+    setFocusedChannel();
     previewChannel.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         setCueButtons();
       }
     });
     setCueButtons();
+  }
+  
+  void setFocusedChannel() {
+    for (int i = 0; i < NUM_CHANNELS; ++i) {
+      output.sendNoteOn(i, TRACK_SELECTION, (i == focusedChannel()) ? GREEN : OFF); 
+    }
+    setKnobs(focusedDeck());
+    setBlendMode(focusedDeck());
   }
   
   void setPattern(LXDeck deck) {
@@ -176,35 +239,44 @@ public class APC40Output implements APCConstants {
   }
   
   void setBlendMode(LXDeck deck) {
-    int blendv = getFaderTransition(deck).blendMode.getValuei();
-    for (int note = CLIP_TRACK; note <= RIGHT_ARROW; ++note) {
-      output.sendNoteOn(deck.index, note, (blendv == (note-CLIP_TRACK)) ? GREEN : OFF);
+    if (deck == focusedDeck()) { 
+      int blendv = getFaderTransition(deck).blendMode.getValuei();
+      for (int note = CLIP_TRACK; note <= RIGHT_ARROW; ++note) {
+        output.sendNoteOn(0, note, (blendv == (note-CLIP_TRACK)) ? GREEN : OFF);
+      }
     }
   }
   
   private void setKnobs(LXDeck deck) {
-    for (int k = 0; k < NUM_KNOBS; ++k) {
-      int i = NUM_KNOBS*deck.index + k;
-      if (knobs[i] != null) {
-        knobs[i].removeListener(knobListener[i]);
-        knobs[i] = null;
-      }
-    }  
     int pi = 0;
     for (LXParameter parameter : deck.getActivePattern().getParameters()) {
       if (parameter instanceof LXListenableNormalizedParameter) {
-        int i = NUM_KNOBS*deck.index + pi; 
-        knobs[i] = (LXListenableNormalizedParameter)parameter;
-        knobs[i].addListener(knobListener[i]);
-        int value = (int) (127. * knobs[i].getNormalized());
-        output.sendController(deck.index, DEVICE_CONTROL+pi, value);
+        int i = NUM_KNOBS*deck.index + pi;
+        if (knobs[i] != parameter) {
+          if (knobs[i] != null) {
+            knobs[i].removeListener(knobListener[i]);
+          }
+          knobs[i] = (LXListenableNormalizedParameter)parameter;
+          knobs[i].addListener(knobListener[i]);
+        }
+        if (deck == focusedDeck()) {
+          int value = (int) (127. * knobs[i].getNormalized());
+          output.sendController(0, DEVICE_CONTROL+pi, value);
+        }
         if (++pi >= NUM_KNOBS) {
           break;
         }
       }
     }
     while (pi < NUM_KNOBS) {
-      output.sendController(deck.index, DEVICE_CONTROL+pi, 0);
+      int i = NUM_KNOBS*deck.index + pi;
+      if (knobs[i] != null) {
+        knobs[i].removeListener(knobListener[i]);
+        knobs[i] = null;
+      }
+      if (deck == focusedDeck()) {
+        output.sendController(0, DEVICE_CONTROL+pi, 0);
+      }
       ++pi;
     }
   }
@@ -252,10 +324,9 @@ public class APC40Input implements APCConstants {
     case DEVICE_CONTROL+6:
     case DEVICE_CONTROL+7:
       if (channel < NUM_CHANNELS) {
-        focusedChannel.setValue(channel);
         int paramNum = cc - DEVICE_CONTROL;
         int pi = 0;
-        for (LXParameter parameter : lx.engine.getDeck(channel).getActivePattern().getParameters()) {
+        for (LXParameter parameter : focusedDeck().getActivePattern().getParameters()) {
           if (parameter instanceof LXListenableNormalizedParameter) {
             if (pi == paramNum) {
               ((LXListenableNormalizedParameter) parameter).setNormalized(normalized);
@@ -299,21 +370,29 @@ public class APC40Input implements APCConstants {
         shiftPressed = true;
         break;
       
+      case TRACK_SELECTION:
+        focusedChannel.setValue(channel);
+        break;
+      
       case ACTIVATOR:
-        previewChannel.setValue(channel);
+        if (previewChannel.getValuei() == channel) {
+          previewChannel.setValue(NUM_CHANNELS);
+        } else {
+          previewChannel.setValue(channel);
+        }
         break;
       case SOLO_CUE:
-        getFaderTransition(lx.engine.getDeck(channel)).left.setValue(true);
+        getFaderTransition(lx.engine.getDeck(channel)).left.toggle();
         break;
       case RECORD_ARM:
-        getFaderTransition(lx.engine.getDeck(channel)).right.setValue(true);
+        getFaderTransition(lx.engine.getDeck(channel)).right.toggle();
         break;
         
       case PAN:
       case SEND_A:
       case SEND_B:
       case SEND_C:
-        effectButtonParameters[number - PAN].setValue(true);
+        effectButtonParameters[number - PAN].toggle();
         break;
       
       case CLIP_LAUNCH:
@@ -329,20 +408,22 @@ public class APC40Input implements APCConstants {
       case SCENE_LAUNCH+2:
       case SCENE_LAUNCH+3:
       case SCENE_LAUNCH+4:
-        uiDeck.selectPattern(focusedChannel.getValuei(), number - SCENE_LAUNCH);        
+        uiDeck.selectPattern(focusedChannel(), number - SCENE_LAUNCH);        
         break;
         
       case CLIP_STOP:
-        uiDeck.pagePatterns(channel);
+        if (channel != focusedChannel()) {
+          focusedChannel.setValue(channel);
+        } else {
+          uiDeck.pagePatterns(channel);
+        }
         break;
       
       case CLIP_TRACK:
       case DEVICE_ON_OFF:
       case LEFT_ARROW:
       case RIGHT_ARROW:
-        if (channel < NUM_CHANNELS) {
-          getFaderTransition(lx.engine.getDeck(channel)).blendMode.setValue(number - CLIP_TRACK);
-        }
+        getFaderTransition(focusedDeck()).blendMode.setValue(number - CLIP_TRACK);
         break;
         
       case PLAY:
@@ -374,21 +455,16 @@ public class APC40Input implements APCConstants {
         shiftPressed = false;
         break;
       
+      case TRACK_SELECTION:
       case RECORD_ARM:
-        getFaderTransition(lx.engine.getDeck(channel)).right.setValue(false);
-        break;
       case SOLO_CUE:
-        getFaderTransition(lx.engine.getDeck(channel)).left.setValue(false);
-        break;
       case ACTIVATOR:
-        previewChannel.setValue(NUM_CHANNELS);
         break;
         
       case PAN:
       case SEND_A:
       case SEND_B:
       case SEND_C:
-        effectButtonParameters[number - PAN].setValue(false);
         break;
         
       case CLIP_LAUNCH:
@@ -396,9 +472,6 @@ public class APC40Input implements APCConstants {
       case CLIP_LAUNCH+2:
       case CLIP_LAUNCH+3:
       case CLIP_LAUNCH+4:
-        if (apcOutput != null) {
-          apcOutput.setPattern(lx.engine.getDeck(channel));
-        }
         break;
         
       case CLIP_STOP:
@@ -408,14 +481,8 @@ public class APC40Input implements APCConstants {
       case DEVICE_ON_OFF:
       case LEFT_ARROW:
       case RIGHT_ARROW:
-        if (channel < NUM_CHANNELS) {
-          getFaderTransition(lx.engine.getDeck(channel)).blendMode.setValue(number - CLIP_TRACK);
-        }
-        if (apcOutput != null) {
-          apcOutput.setBlendMode(lx.engine.getDeck(channel));
-        }
         break;
-        
+
       case PLAY:
       case BANK_UP:
       case BANK_DOWN:
@@ -532,7 +599,7 @@ class UIChannelFaders extends UIContext {
     focusedChannel.addListener(listener = new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         for (int i = 0; i < sliders.length; ++i) {
-          sliders[i].setBackgroundColor((i == focusedChannel.getValuei()) ? ui.getHighlightColor() : #333333);
+          sliders[i].setBackgroundColor((i == focusedChannel()) ? ui.getHighlightColor() : #333333);
         }
       }
     });
@@ -606,7 +673,7 @@ public class UIMultiDeck extends UIWindow {
   final UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
-    super(ui, "CHANNEL " + (focusedChannel.getValuei()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 4 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 4 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
     patternLists = new UIItemList[lx.engine.getDecks().size()];
@@ -618,7 +685,7 @@ public class UIMultiDeck extends UIWindow {
         items.add(new PatternScrollItem(deck, p));
       }
       patternLists[deck.index] = new UIItemList(1, yp, this.width - 2, 100).setItems(items);
-      patternLists[deck.index].setVisible(deck.index == focusedChannel.getValuei());
+      patternLists[deck.index].setVisible(deck.index == focusedChannel());
       patternLists[deck.index].addToContainer(this);      
     }
     
@@ -636,7 +703,7 @@ public class UIMultiDeck extends UIWindow {
       .setOptions(new String[] { "ADD", "MLT", "LITE", "LERP" })
       .setParameter(getFaderTransition(deck).blendMode)
       .setEvenSpacing();
-      blendModes[deck.index].setVisible(deck.index == focusedChannel.getValuei());
+      blendModes[deck.index].setVisible(deck.index == focusedChannel());
       blendModes[deck.index].addToContainer(this);
     }
      
@@ -657,7 +724,7 @@ public class UIMultiDeck extends UIWindow {
           }  
           
           patternLists[deck.index].redraw();
-          if (deck.index == focusedChannel.getValuei()) {
+          if (deck.index == focusedChannel()) {
             int pi = 0;
             for (LXParameter parameter : pattern.getParameters()) {
               if (pi >= knobs.length) {
@@ -679,7 +746,7 @@ public class UIMultiDeck extends UIWindow {
     
     focusedChannel.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        LXDeck deck = lx.engine.getDecks().get(focusedChannel.getValuei()); 
+        LXDeck deck = lx.engine.getDecks().get(focusedChannel()); 
         
         setTitle("CHANNEL " + (deck.index + 1));
         redraw();
@@ -688,12 +755,12 @@ public class UIMultiDeck extends UIWindow {
         
         int pi = 0;
         for (UIItemList patternList : patternLists) {
-          patternList.setVisible(pi == focusedChannel.getValuei());
+          patternList.setVisible(pi == focusedChannel());
           ++pi;
         }
         pi = 0;
         for (UIToggleSet blendMode : blendModes) {
-          blendMode.setVisible(pi == focusedChannel.getValuei());
+          blendMode.setVisible(pi == focusedChannel());
           ++pi;
         }
       }
@@ -702,7 +769,7 @@ public class UIMultiDeck extends UIWindow {
   }
   
   void select() {
-    patternLists[focusedChannel.getValuei()].select();
+    patternLists[focusedChannel()].select();
   }
   
   float amt = 0;
@@ -733,7 +800,7 @@ public class UIMultiDeck extends UIWindow {
   }
   
   void scroll(int delta) {
-    UIItemList list = patternLists[focusedChannel.getValuei()]; 
+    UIItemList list = patternLists[focusedChannel()]; 
     list.setFocusIndex(list.getFocusIndex() + delta);
   } 
 
