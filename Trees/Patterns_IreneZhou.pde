@@ -189,6 +189,7 @@ class Fire extends LXPattern {
     flameDecay = new LinearEnvelope[numFlames];
     
     for (int i = 0; i < numFlames; ++i) {
+      addModulator(flameDecay[i] = new LinearEnvelope(0, 0, 0));
       setFlame(i);
       flameDecay[i].setBasis(random(1)); 
     }
@@ -197,8 +198,8 @@ class Fire extends LXPattern {
   public void setFlame(int i) {
     flameTheta[i] = random(0, 360);
     float speedConst = random(0.2, maxHeight.getValuef()) ;
-    flameDecay[i] = new LinearEnvelope(75, model.yMax * speedConst, 1200 * speedConst); //decays based on flameHeight
-    addModulator(flameDecay[i].start());
+    flameDecay[i].setRange(75, model.yMax * speedConst, 1200 * speedConst); //decays based on flameHeight
+    flameDecay[i].trigger();
   }
 
   public void run(double deltaMs) {
