@@ -2,31 +2,39 @@ DiscreteParameter focusedChannel = new DiscreteParameter("CHNL", NUM_CHANNELS);
 DiscreteParameter previewChannel = new DiscreteParameter("PRV", NUM_CHANNELS+1);
 APC40Output apcOutput = null;
 
-final static int VOLUME = 7;
-final static int MASTER = 14;
-final static int CROSSFADER = 15;
-
-final static int ACTIVATOR = 50;
-final static int SOLO_CUE = 49;
-final static int RECORD_ARM = 48;
-final static int PLAY = 91;
-final static int BANK_UP = 94;
-final static int BANK_DOWN = 95;
-final static int BANK_RIGHT = 96;
-final static int BANK_LEFT = 97;
-final static int CUE_LEVEL = 47;
-final static int CLIP_LAUNCH = 53;
-final static int CLIP_STOP = 52;
-final static int SCENE_LAUNCH = 82;
-
-final static int SHIFT = 98;
-
-final static int DEVICE_CONTROL = 16;
-
-final static int CLIP_TRACK = 58;
-final static int DEVICE_ON_OFF = 59;
-final static int LEFT_ARROW = 60;
-final static int RIGHT_ARROW = 61;
+static interface APCConstants {
+  final static int VOLUME = 7;
+  final static int MASTER = 14;
+  final static int CROSSFADER = 15;
+  
+  final static int ACTIVATOR = 50;
+  final static int SOLO_CUE = 49;
+  final static int RECORD_ARM = 48;
+  final static int PLAY = 91;
+  final static int BANK_UP = 94;
+  final static int BANK_DOWN = 95;
+  final static int BANK_RIGHT = 96;
+  final static int BANK_LEFT = 97;
+  final static int CUE_LEVEL = 47;
+  final static int CLIP_LAUNCH = 53;
+  final static int CLIP_STOP = 52;
+  final static int SCENE_LAUNCH = 82;
+  
+  final static int PAN = 87;
+  final static int SEND_A = 88;
+  final static int SEND_B = 89;
+  final static int SEND_C = 90;
+  
+  final static int SHIFT = 98;
+  
+  final static int DEVICE_CONTROL = 16;
+  final static int TRACK_CONTROL = 48;
+  
+  final static int CLIP_TRACK = 58;
+  final static int DEVICE_ON_OFF = 59;
+  final static int LEFT_ARROW = 60;
+  final static int RIGHT_ARROW = 61;
+}
 
 public class MidiEngine {
   public MidiEngine() {
@@ -44,7 +52,7 @@ public class MidiEngine {
   }
 }
 
-public class APC40Output {
+public class APC40Output implements APCConstants {
   
   private static final int OFF = 0;
   private static final int GREEN = 1;
@@ -115,6 +123,28 @@ public class APC40Output {
       setRight(deck.index, t.right.isOn());
     }
     
+    for (int i = 0; i < effectKnobParameters.length; ++i) {
+      if (effectKnobParameters[i] != null) {
+        final LXListenableNormalizedParameter p = effectKnobParameters[i];
+        final int cc = TRACK_CONTROL + i; 
+        p.addListener(new LXParameterListener() {
+          public void onParameterChanged(LXParameter parameter) {
+            int value = (int) (127. * p.getNormalized());
+            output.sendController(0, cc, value);
+          }
+        });
+      }
+    }
+    for (int i = 0; i < effectButtonParameters.length; ++i) {
+      final BooleanParameter p = effectButtonParameters[i];
+      final int number = PAN+i; 
+      p.addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          output.sendNoteOn(0, number, p.isOn() ? GREEN : OFF);
+        }
+      });
+    }
+    
     previewChannel.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         setCueButtons();
@@ -181,7 +211,7 @@ public class APC40Output {
 }
 
 
-public class APC40Input {
+public class APC40Input implements APCConstants {
   
   private boolean shiftPressed = false;
   
@@ -237,6 +267,20 @@ public class APC40Input {
       }
       break;
       
+    case TRACK_CONTROL:
+    case TRACK_CONTROL+1:
+    case TRACK_CONTROL+2:
+    case TRACK_CONTROL+3:
+    case TRACK_CONTROL+4:
+    case TRACK_CONTROL+5:
+    case TRACK_CONTROL+6:
+    case TRACK_CONTROL+7:
+      LXListenableNormalizedParameter p = effectKnobParameters[cc - TRACK_CONTROL]; 
+      if (p != null) {
+        p.setNormalized(normalized);
+      }
+      break;
+      
     case CUE_LEVEL:
       uiDeck.knob(value);
       break;
@@ -251,6 +295,7 @@ public class APC40Input {
     int number = note.getPitch();
     switch (number) {
       case SHIFT:
+        uiDeck.select();
         shiftPressed = true;
         break;
       
@@ -262,6 +307,13 @@ public class APC40Input {
         break;
       case RECORD_ARM:
         getFaderTransition(lx.engine.getDeck(channel)).right.setValue(true);
+        break;
+        
+      case PAN:
+      case SEND_A:
+      case SEND_B:
+      case SEND_C:
+        effectButtonParameters[number - PAN].setValue(true);
         break;
       
       case CLIP_LAUNCH:
@@ -330,6 +382,13 @@ public class APC40Input {
         break;
       case ACTIVATOR:
         previewChannel.setValue(NUM_CHANNELS);
+        break;
+        
+      case PAN:
+      case SEND_A:
+      case SEND_B:
+      case SEND_C:
+        effectButtonParameters[number - PAN].setValue(false);
         break;
         
       case CLIP_LAUNCH:
@@ -707,5 +766,28 @@ public class UIMultiDeck extends UIWindow {
       this.deck.goPattern(this.pattern);
     }
   }
+}
+
+class UIEffects extends UIWindow {
+  
+  final int KNOBS_PER_ROW = 4;
+  
+  UIEffects(UI ui) {
+    super(ui, "MASTER EFFECTS", Trees.this.width-144, 190, 140, 144);
+    
+    int yp = TITLE_LABEL_HEIGHT;
+    for (int ki = 0; ki < 8; ++ki) {
+      new UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp + (ki / KNOBS_PER_ROW) * 48)
+      .setParameter(effectKnobParameters[ki])
+      .addToContainer(this);
+    }
+    yp += 98;
+    for (int i = 0; i < 4; ++i) {
+      new UIButton(5 + 34 * i, yp, 28, 14)
+      .setParameter(effectButtonParameters[i])
+      .addToContainer(this);
+    }
+  } 
+  
 }
 

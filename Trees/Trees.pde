@@ -48,11 +48,16 @@ Model model;
 LX lx;
 LXDatagramOutput output;
 LXDatagram datagram;
+UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
 MidiEngine midiEngine;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
-final BasicParameter crossfader = new BasicParameter("CROSS", 0.5); 
+final BasicParameter crossfader = new BasicParameter("CROSS", 0.5);
+BlurEffect blurEffect;
+ColorEffect colorEffect;
+LXListenableNormalizedParameter[] effectKnobParameters;
+BooleanParameter[] effectButtonParameters;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
@@ -98,6 +103,27 @@ void setup() {
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
 
+  lx.addEffect(blurEffect = new BlurEffect(lx));
+  lx.addEffect(colorEffect = new ColorEffect(lx));
+  
+  effectKnobParameters = new LXListenableNormalizedParameter[] {
+      colorEffect.hueShift,
+      colorEffect.rainbow,
+      colorEffect.mono,
+      colorEffect.desaturation,
+      colorEffect.sharp,
+      colorEffect.soft,
+      blurEffect.amount,
+      null,
+  };
+  
+  effectButtonParameters = new BooleanParameter[] {
+    new BooleanParameter("-", false),
+    new BooleanParameter("-", false),
+    new BooleanParameter("-", false),
+    new BooleanParameter("-", false)
+  };
+
   try {
     output = new LXDatagramOutput(lx).addDatagram(
       datagram = clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
@@ -123,8 +149,9 @@ void setup() {
     .setCenter(model.cx, model.cy, model.cz)
     .addComponent(new UITrees())
     );
-  lx.ui.addLayer(new UIChannelFaders(lx.ui));
+  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
+  lx.ui.addLayer(new UIEffects(lx.ui));
   lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
   
   midiEngine = new MidiEngine();

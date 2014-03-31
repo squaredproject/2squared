@@ -240,3 +240,81 @@ class TestCluster extends LXPattern {
   }
 }
 
+class ColorEffect extends LXEffect {
+  
+  final BasicParameter desaturation = new BasicParameter("WHT", 0);
+  final BasicParameter hueShift = new BasicParameter("HUE", 0, 360);
+  final BasicParameter sharp = new BasicParameter("SHRP", 0);
+  final BasicParameter soft = new BasicParameter("SOFT", 0);
+  final BasicParameter mono = new BasicParameter("MON", 0);
+  final BasicParameter rainbow = new BasicParameter("ACID", 0);
+  
+  private final DampedParameter hueShiftd = new DampedParameter(hueShift, 180);
+  private final DampedParameter rainbowd = new DampedParameter(rainbow, 1);
+  
+  private float[] hsb = new float[3];
+  
+  ColorEffect(LX lx) {
+    super(lx);
+    addParameter(desaturation);
+    addParameter(hueShift);
+    addParameter(sharp);
+    addParameter(soft);
+    addParameter(mono);
+    addParameter(rainbow);
+    
+    addModulator(hueShiftd.start());
+    addModulator(rainbowd.start());
+  }
+  
+  protected void apply(int[] colors) {
+    float desatf = desaturation.getValuef();
+    float huef = hueShiftd.getValuef();
+    float sharpf = sharp.getValuef();
+    float softf = soft.getValuef();
+    float monof = mono.getValuef();
+    float rainbowf = rainbowd.getValuef();
+    if (desatf > 0 || huef > 0 || sharpf > 0 || softf > 0 || monof > 0 || rainbowf > 0) {
+      float pSharp = 1/(1-.99*sharpf);
+      for (int i = 0; i < colors.length; ++i) {
+        float b = lx.b(colors[i]) / 100.;
+        float bOrig = b;
+        if (sharpf > 0) {
+          if (b < .5) {
+            b = pow(b, pSharp);
+          } else {
+            b = 1-pow(1-b, pSharp);
+          }
+        }
+        if (softf > 0) {
+          if (b > 0.5) {
+            b = lerp(b, 0.5 + 2 * (b-0.5)*(b-0.5), softf);
+          } else {
+            b = lerp(b, 0.5 * sqrt(2*b), softf);
+          }
+        }
+        
+        float h = lx.h(colors[i]);
+        float bh = lx.getBaseHuef();
+        if (rainbowf > 0) {
+          h = bh + (h - bh) * (1+3*rainbowf);
+          h = (h + 5*360) % 360;
+        }
+        if (abs(h - bh) > 180) {
+          if (h > bh) {
+            bh += 360;
+          } else {
+            h += 360;
+          }
+        }
+        
+        colors[i] = lx.hsb(
+          (lerp(h, bh, monof) + huef) % 360,
+          lx.s(colors[i]) * (1 - desatf),
+          100*b
+        );
+      }
+    }
+  }
+}
+
