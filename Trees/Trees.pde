@@ -6,6 +6,7 @@ import heronarts.lx.parameter.*;
 import heronarts.lx.pattern.*;
 import heronarts.lx.transform.*;
 import heronarts.lx.transition.*;
+import heronarts.lx.midi.*;
 import heronarts.lx.modulator.*;
 import heronarts.lx.ui.*;
 import heronarts.lx.ui.control.*;
@@ -50,10 +51,8 @@ LXDatagramOutput output;
 LXDatagram datagram;
 UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
-MidiEngine midiEngine;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
-final BasicParameter crossfader = new BasicParameter("CROSS", 0.5);
 BlurEffect blurEffect;
 ColorEffect colorEffect;
 LXListenableNormalizedParameter[] effectKnobParameters;
@@ -103,6 +102,7 @@ void setup() {
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
 
+  // Effects
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   
@@ -124,6 +124,7 @@ void setup() {
     new BooleanParameter("-", false)
   };
 
+  // Output stage
   try {
     output = new LXDatagramOutput(lx).addDatagram(
       datagram = clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
@@ -134,6 +135,7 @@ void setup() {
     println(x);
   }
   
+  // UI initialization
   lx.ui.addLayer(new UICameraLayer(lx.ui) {
       protected void beforeDraw() {
         hint(ENABLE_DEPTH_TEST);
@@ -148,14 +150,16 @@ void setup() {
     .setRadius(90*FEET)
     .setCenter(model.cx, model.cy, model.cz)
     .addComponent(new UITrees())
-    );
+  );
   lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UIEffects(lx.ui));
   lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
   
-  midiEngine = new MidiEngine();
+  // MIDI control
+  new MidiEngine();
   
+  // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
 }
