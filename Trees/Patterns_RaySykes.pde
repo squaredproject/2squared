@@ -114,10 +114,6 @@ class Stripes extends LXPattern {
   }
 }
 
-
-
-
-
 class Ripple extends LXPattern {
   final BasicParameter speed = new BasicParameter("Speed", 15000, 8000, 25000);
   final BasicParameter baseBrightness = new BasicParameter("Bright", 0, 0, 100);
@@ -299,7 +295,7 @@ class LightningLine {
   private final float lineWidth;
   private float wideningStartTime = 0;
   private ArrayList<LightningLine> forks = new ArrayList();
-  LightningLine(int startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepth, float forkingChance){
+  LightningLine(int startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepthLeft, float forkingChance){
     this.propagationSpeed = propagationSpeed;
     this.lineWidth = lineWidth;
     this.startY = startY;
@@ -318,8 +314,8 @@ class LightningLine {
         theta = straightLineTheta - 50 + random(100);
       }
       addKeyPoint(y, theta);
-      if (recursionDepth > 0 && y < 500 && random(20) < forkingChance){
-        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * random(2)), propagationSpeed, (lineWidth - random(2)), recursionDepth - 1, forkingChance));
+      if (recursionDepthLeft > 0 && y < 500 && random(20) < forkingChance){
+        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * random(2)), propagationSpeed, (lineWidth - random(2)), recursionDepthLeft - 1, forkingChance));
       }
     }
   }
@@ -373,154 +369,204 @@ class LightningLine {
 
 
 class IceCrystals extends LXPattern {
-  private IceCrystalTree trees;
+  private IceCrystalLine crystal;
+  final BasicParameter propagationSpeed = new BasicParameter("Speed", 5, 1, 20);
+  final BasicParameter lineWidth = new BasicParameter("Width", 60, 20, 150);
   IceCrystals(LX lx) {
     super(lx);
-    trees = new IceCrystalTree(
-        millis(), 
-        300, 
-        90, 
-        300,
-        180,
-        20,
-        3,
-        60,
-        0.2,
-        0.5
-      );
+    addParameter(propagationSpeed);
+    addParameter(lineWidth);
+    crystal = makeLine();
   }
   public void run(double deltaMs) {
-    trees.updateStatus();
-    for (Cube cube : model.cubes) {
-      float brightVal = trees.getIceFactor(cube.y, cube.theta);
-      colors[cube.index] = lx.hsb(20,  100, brightVal);
+    if (crystal.isDone()){
+      crystal = makeLine();
     }
+    crystal.doUpdate();
+    for (Cube cube : model.cubes) {
+      float lineFactor = crystal.getLineFactor(cube.y, cube.theta);
+      if (lineFactor > 110) {
+        lineFactor = 200 - lineFactor;  
+      }
+      float hueVal;
+      float satVal;
+      float brightVal = min(100, 20 + lineFactor);
+      if (lineFactor > 100){
+        brightVal = 100;
+        hueVal = 180;
+        satVal = 0;
+      }
+      else if (lineFactor < 20){
+        hueVal = 220;
+        satVal = 100;
+      }
+      else if (lineFactor < 50){
+        hueVal = 240;
+        satVal = 60;
+      }
+      else {
+        hueVal = 240;
+        satVal = 60 - 60 * (lineFactor / 100);
+      }
+      colors[cube.index] = lx.hsb(hueVal,  satVal, brightVal);
+    }
+  }
+  IceCrystalLine makeLine(){
+    return new IceCrystalLine (millis(), 100, random(360), (7 + int(random(2.9))) % 8, 150, propagationSpeed.getValuef(), lineWidth.getValuef(), 10);
   }
 }
 
-
-
-class IceCrystalTree {
-  float upperYBound;
-  float lowerYBound;
-  float upperThetaBound;
-  float lowerThetaBound;
-  int startTime;
-  float trunkCurrentLength;
-  float trunkFinalLength;
-  float propagationSpeed;
-  int trunkAngle;
-  float startY;
-  float startTheta;
-  float thetaTan;
-  float trunkAngleSin;
-  float trunkAngleCos;
-  float thetaRange;
-  float lineWidth;
-  private ArrayList<IceCrystalTree> branches = new ArrayList();
-  IceCrystalTree(int startTime, float trunkFinalLength, int trunkAngle, float startY, float startTheta, float lineWidth, int recursionDepth, float branchStartLength, float branchLengthChange, float propagationSpeed){
-    this.startTime = startTime;
-    this.trunkFinalLength = trunkFinalLength;
-    this.trunkAngle = trunkAngle;
+class IceCrystalLine {
+  protected int lifeCycleState = 0;
+  private int recursionDepthLeft;
+  private final int startTime;
+  private final float startY;
+  private final float startTheta;
+  private float endY;
+  private float endTheta;
+  private final float propagationSpeed;
+  private final float lineLength;
+  private final float lineWidth;
+  private final int angleIndex;
+  private int lifeCycleStateChangeTime;
+  private final float[][] angleFactors = {{0, 1}, {0.7071, 0.7071}, {1, 0}, {0.7071, -0.7071}, {0, -1}, {-0.7071, -0.7071}, {-1, 0}, {-0.7071, 0.7071}};
+  private IceCrystalLine[] children = new IceCrystalLine[2];
+  protected float[][] applicableRange = {{0, 0}, {0, 0}};
+  private float nodeMeltRadius;
+  protected boolean hasChildren = false;
+  IceCrystalLine(int startTime, float startY, float startTheta, int angleIndex, float lineLength, float propagationSpeed, float lineWidth, int recursionDepthLeft){
     this.propagationSpeed = propagationSpeed;
     this.startY = startY;
-    this.startTheta = startTheta;
-    this.lineWidth = lineWidth;
+    this.startTheta = 360 + (startTheta % 360);
     this.startTime = startTime;
-    trunkAngleSin = sin((TWO_PI/360) * trunkAngle);
-    trunkAngleCos = cos((TWO_PI/360) * trunkAngle);
-    thetaTan = tan((TWO_PI/360) * startTheta);
-    thetaRange = sqrt(1 + pow(thetaTan, 2)) * lineWidth;
-    if (recursionDepth > 0){
-      int numBranches = 6;
-      float branchAngle = 60;
-      float trunkPosition;
-      float branchStartDelay = 1000;
-      float branchLengthFactor = 1/6;
-      for (int i = 0; i < numBranches; i++){
-        trunkPosition = trunkFinalLength * ((i + 1) / numBranches);
-        branches.add(new IceCrystalTree(
-          (int)(startTime + trunkPosition * propagationSpeed + branchStartDelay), 
-          branchStartLength + branchLengthChange * trunkPosition, 
-          (int)(360 + trunkAngle + branchAngle) % 360, 
-          startY + trunkAngleCos * trunkPosition,
-          (360 + startTheta + trunkAngleSin * trunkPosition) % 360,
-          lineWidth,
-          recursionDepth - 1,
-          branchStartLength * branchLengthFactor,
-          0.2,
-          propagationSpeed
-        ));
-        branches.add(new IceCrystalTree(
-          (int)(startTime + trunkPosition * propagationSpeed + branchStartDelay), 
-          branchStartLength + branchLengthChange * trunkPosition, 
-          (int)(360 + trunkAngle - branchAngle) % 360, 
-          startY + trunkAngleCos * trunkPosition,
-          (360 + startTheta + trunkAngleSin * trunkPosition) % 360,
-          lineWidth,
-          recursionDepth - 1,
-          branchStartLength * branchLengthFactor,
-          0.2,
-          propagationSpeed
-        ));
+    this.lineLength = lineLength;
+    this.lineWidth = lineWidth;
+    this.angleIndex = angleIndex;
+    this.recursionDepthLeft = recursionDepthLeft;
+  }
+  public void doUpdate(){
+    switch(lifeCycleState){
+      case 0: //this line is growing
+        float currentLineLength = (millis() - startTime) * propagationSpeed / 10;
+        if (currentLineLength > lineLength) {
+          currentLineLength = lineLength;
+          changeLifeCycleState(recursionDepthLeft == 0 ? 3 : 1);
+        }
+        endTheta = startTheta + angleFactors[angleIndex][0] * currentLineLength;
+        endY = startY + angleFactors[angleIndex][1] * currentLineLength;
+        applicableRange[0][0] = min(startTheta, endTheta) - lineWidth / 2;
+        applicableRange[0][1] = max(startTheta, endTheta) + lineWidth / 2;
+        applicableRange[1][0] = min(startY, endY) - lineWidth / 2;
+        applicableRange[1][1] = max(startY, endY) + lineWidth / 2;
+      break;
+      case 1: // creating children (wohoo!)
+        float childLineLength = lineLength * 0.8;
+        children[0] = new IceCrystalLine(millis(), endY, endTheta % 360, (8 + angleIndex - 1) % 8, childLineLength, propagationSpeed * 0.8 , lineWidth * 0.9, recursionDepthLeft - 1);
+        children[1] = new IceCrystalLine(millis(), endY, endTheta % 360, (angleIndex + 1) % 8, childLineLength, propagationSpeed * 0.8, lineWidth * 0.9, recursionDepthLeft - 1);
+        changeLifeCycleState(2);
+        hasChildren = true;
+      break;
+      case 2: //has children that are growing
+        checkRangeOfChildren();
+      break;
+      case 3: // frozen
+        if (recursionDepthLeft == 7 && lifeCycleStateChangeTime < (millis() - 8000 / propagationSpeed)){
+          changeLifeCycleState(4);
+        }
+      break;
+      case 4: // melting
+        if (lifeCycleStateChangeTime < (millis() - 22000 / propagationSpeed)){
+          changeLifeCycleState(5);
+          children = new IceCrystalLine[2];
+          hasChildren = false;
+        }
+        nodeMeltRadius = pow(recursionDepthLeft * (millis() - lifeCycleStateChangeTime) * propagationSpeed  / 7000, 2) ;
+        applicableRange[0][0] = min(applicableRange[0][0], max(0, endTheta - nodeMeltRadius));
+        applicableRange[0][1] = max(applicableRange[0][1], min(720, endTheta + nodeMeltRadius));
+        applicableRange[1][0] = min(applicableRange[1][0], max(100, (endY - nodeMeltRadius)));
+        applicableRange[1][1] = max(applicableRange[1][1], min(700, (endY + nodeMeltRadius)));
+      break;
+      case 5: //water
+        if (lifeCycleStateChangeTime < (millis() - 8000 / propagationSpeed)){
+          changeLifeCycleState(6);
+        }
+      break;
+      case 6: // done
+      break;
+    }
+    if (hasChildren && lifeCycleState >= 2 && lifeCycleState <= 4){
+      children[0].doUpdate();
+      children[1].doUpdate();
+      if (children[0].lifeCycleState == children[1].lifeCycleState && lifeCycleState < children[0].lifeCycleState){
+        changeLifeCycleState(children[0].lifeCycleState);
       }
-      
     }
   }
-  boolean isPointInTreeZone(float yToCheck, float thetaToCheck){
-    if (!(yToCheck >= lowerYBound && yToCheck <= upperYBound)){
-      return false;
-    }
-    if (lowerThetaBound  >  upperThetaBound){
-      if (thetaToCheck >= lowerThetaBound){
-        return (thetaToCheck <= upperThetaBound + 360);
-      }
-      else {
-        return (thetaToCheck <= upperThetaBound);
-      }
-     
-    }
-    else {
-      return ((thetaToCheck <= upperThetaBound) && (thetaToCheck >= lowerThetaBound));
-    }
-  }
-  float getIceFactor(float yToCheck, float thetaToCheck){
-    if (startTime > millis() || !isPointInTreeZone(yToCheck, thetaToCheck)){
-      return 0;
-    }
+  public float getLineFactor (float yToCheck, float thetaToCheck){
     float result = 0;
-    if (trunkAngle == 90 || trunkAngle == 270){
-      result = (100 / lineWidth) * max(0, lineWidth - abs(yToCheck - startY));
+    if (lifeCycleState >= 5){
+      return 200;
+    }
+    if (yToCheck <= applicableRange[1][0] || yToCheck >= applicableRange[1][1]){
+      return result;
+    }
+    float adjustedTheta = thetaToCheck < applicableRange[0][0] ? thetaToCheck + 360 : thetaToCheck;
+    if (!(adjustedTheta >= applicableRange[0][0] && adjustedTheta <= applicableRange[0][1])){
+      return result;
+    }
+    if (lifeCycleState == 4){
+      float distFromNode = sqrt(pow(abs(endY - yToCheck), 2) + pow(LXUtils.wrapdistf(endTheta, thetaToCheck, 360), 2));
+      if (distFromNode < nodeMeltRadius){
+        result = min(200, 100 + 150 * (nodeMeltRadius - distFromNode) / nodeMeltRadius);
+      }
+    }
+    float lowestY = min(startY, endY);
+    float highestY = max(startY, endY);
+    if (abs(angleFactors[angleIndex][1]) > 0){
+     if (yToCheck >= lowestY && yToCheck <= highestY){
+        float targetTheta = startTheta + (endTheta - startTheta) * (yToCheck - startY) / (endY - startY);
+        float lineThetaWidth = lineWidth / (2 * abs(angleFactors[angleIndex][1]));
+        result = max(result, 100 * max(0, (lineThetaWidth - abs(LXUtils.wrapdistf(targetTheta, thetaToCheck, 360)))) / lineThetaWidth);
+      }
     }
     else {
-      float centerTheta = (360 + startTheta + thetaTan * (startY - yToCheck)) % 360;
-      result = max(0, (100 / lineWidth) * (lineWidth - abs(LXUtils.wrapdistf(centerTheta, thetaToCheck, 360)))); 
+      float lowestTheta = min(startTheta, endTheta);
+      float highestTheta = max(startTheta, endTheta);
+      if (thetaToCheck < lowestTheta) {
+        thetaToCheck += 360;
+      }
+      if (thetaToCheck >= lowestTheta && thetaToCheck <= highestTheta){
+        if (yToCheck <= lowestY && yToCheck >= lowestY - lineWidth / 2){
+          result = max(result, 100 * (lineWidth / 2 - (lowestY - yToCheck)) / (lineWidth / 2));
+        }
+        if (yToCheck >= highestY && yToCheck <= highestY + lineWidth / 2){
+          result = max(result, 100 * (lineWidth / 2 - (yToCheck - highestY)) / (lineWidth / 2));
+        }
+      }
     }
-    for (int i = 0; i < branches.size(); i++){
-      result = max(result, branches.get(i).getIceFactor(yToCheck, thetaToCheck));
+    if (lifeCycleState >= 2 && hasChildren){
+      result = max(result, max(children[0].getLineFactor(yToCheck, thetaToCheck % 360), children[1].getLineFactor(yToCheck, thetaToCheck % 360)));
     }
     return result;
   }
-  void updateStatus(){
-    if (trunkCurrentLength < trunkFinalLength){
-      trunkCurrentLength = min(trunkFinalLength, (millis() - startTime) * propagationSpeed);
-      float bound1 = startY;
-      float bound2 = startY + trunkCurrentLength * cos((TWO_PI/360) * trunkAngle);
-      float yExtra = trunkCurrentLength * (0.1 + abs(0.5 * trunkAngleSin));
-      float thetaExtra = trunkCurrentLength * (0.1 + abs(0.5 * trunkAngleCos));
-      lowerYBound = min(bound1, bound2) - yExtra;
-      upperYBound = max(bound1, bound2) + yExtra;
-      bound1 = startTheta + 360;
-      bound2 = startTheta + 360 + trunkCurrentLength * trunkAngleSin;
-      lowerThetaBound = (min(bound1, bound2) - thetaExtra) % 360;
-      upperThetaBound = (max(bound1, bound2) + thetaExtra) % 360;
-    }
-    for (int i = 0; i < branches.size(); i++){
-      branches.get(i).updateStatus();
+  public void checkRangeOfChildren(){
+    if (hasChildren){
+      for (int i = 0; i < children.length; i++){
+        for (int j = 0; j < 2; j++){
+          applicableRange[j][0] = min(applicableRange[j][0], children[i].applicableRange[j][0]);
+          applicableRange[j][1] = max(applicableRange[j][1], children[i].applicableRange[j][1]);
+        }
+      }
     }
   }
-    
-    
-
-
+  void changeLifeCycleState(int lifeCycleStateIn){
+    lifeCycleStateChangeTime = millis();
+    this.lifeCycleState = lifeCycleStateIn;
+  }
+  public boolean isDone(){
+    return lifeCycleState == 6;
+  
+  }
 }
+
+
