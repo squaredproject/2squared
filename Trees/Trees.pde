@@ -44,7 +44,11 @@ final static int FRONT_LEFT = 7;
 final static int NUM_CHANNELS = 8;
 final static int NUM_KNOBS = 8;
 
+final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
+
+static JSONArray clusterConfig;
 static Geometry geometry = new Geometry();
+
 Model model;
 LX lx;
 LXDatagramOutput output;
@@ -55,6 +59,7 @@ final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
 BlurEffect blurEffect;
 ColorEffect colorEffect;
+MappingTool mappingTool;
 LXListenableNormalizedParameter[] effectKnobParameters;
 BooleanParameter[] effectButtonParameters;
 
@@ -91,8 +96,13 @@ LXPattern[] patterns(LX lx) {
 void setup() {
   size(960, 600, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
+  
+  clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
   model = new Model();
+  
+  // saveJSONArray(clusterConfig, CLUSTER_CONFIG_FILE);
+    
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
   for (int i = 1; i < 8; ++i) {
@@ -102,10 +112,11 @@ void setup() {
     deck.goIndex(deck.index);
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
-
+  
   // Effects
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
+  lx.addEffect(mappingTool = new MappingTool(lx));
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -156,6 +167,7 @@ void setup() {
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UIEffects(lx.ui));
   lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
+  lx.ui.addLayer(new UIMapping(lx.ui));
   
   // MIDI control
   new MidiEngine();
@@ -195,7 +207,7 @@ class UITrees extends UICameraComponent {
     endShape(CLOSE);
 
     drawTrees(ui);
-    drawCubes(ui);
+    drawLights(ui);
   }
   
   private void drawTrees(UI ui) {
@@ -245,7 +257,7 @@ class UITrees extends UICameraComponent {
     }    
   }
      
-  private void drawCubes(UI ui) {
+  private void drawLights(UI ui) {
     
     color[] colors;
     if (previewChannel.getValuei() >= 8) {
@@ -256,27 +268,83 @@ class UITrees extends UICameraComponent {
     noStroke();    
     noFill();
     
-    for (Tree tree : model.trees) {
-      for (Cluster cluster : tree.clusters) {
-        pushMatrix();
-        translate(cluster.x, cluster.y, cluster.z);
-        rotateY(-cluster.ry * PI / 180);
-        rotateX(-cluster.rx * PI / 180);
-        for (Cube cube : cluster.cubes) {
-          pushMatrix();
-          fill(colors[cube.index]);
-          translate(cube.lx, cube.ly, cube.lz);
-          rotateY(-cube.ry * PI / 180);
-          rotateX(-cube.rx * PI / 180);
-          rotateZ(-cube.rz * PI / 180);
-          box(cube.size, cube.size, cube.size);
-          popMatrix();
-        }
-        popMatrix();
+    if (mappingTool.isEnabled()) {
+      Cluster cluster = mappingTool.getCluster();
+      JSONObject config = mappingTool.getConfig();
+      Tree tree = model.trees.get(config.getInt("treeIndex"));
+      
+      pushMatrix();
+      translate(tree.x, 0, tree.z);
+      rotateY(-tree.ry * PI / 180);
+      
+      // This is some bad duplicated code from Model, hack for now
+      int clusterLevel = config.getInt("level");
+      int clusterFace = config.getInt("face");
+      float clusterOffset = config.getFloat("offset");
+      float clusterMountPoint = config.getFloat("mountPoint");
+      float cry = 0;
+      switch (clusterFace) {
+        // Could be math, but this way it's readable!
+        case FRONT: case FRONT_RIGHT:                  break;
+        case RIGHT: case REAR_RIGHT:  cry = HALF_PI;   break;
+        case REAR:  case REAR_LEFT:   cry = PI;        break;
+        case LEFT:  case FRONT_LEFT:  cry = 3*HALF_PI; break;
+      }
+      switch (clusterFace) {
+        case FRONT_RIGHT:
+        case REAR_RIGHT:
+        case REAR_LEFT:
+        case FRONT_LEFT:
+          clusterOffset = 0;
+          break;
+      }
+      rotateY(-cry);
+      translate(clusterOffset * geometry.distances[clusterLevel], geometry.heights[clusterLevel] + clusterMountPoint, -geometry.distances[clusterLevel]);
+      
+      switch (clusterFace) {
+        case FRONT_RIGHT:
+        case REAR_RIGHT:
+        case REAR_LEFT:
+        case FRONT_LEFT:
+          translate(geometry.distances[clusterLevel], 0, 0);
+          rotateY(-QUARTER_PI);
+          cry += QUARTER_PI;
+          break;
+      }
+      
+      rotateX(-geometry.angleFromAxis(geometry.heights[clusterLevel]));      
+      drawCubes(cluster, colors);
+      
+      popMatrix();
+    } else {
+      for (Cluster cluster : model.clusters) {
+        drawCluster(cluster, colors);
       }
     }
-
+    
     noLights();
+  }
+  
+  void drawCluster(Cluster cluster, color[] colors) {
+    pushMatrix();
+    translate(cluster.x, cluster.y, cluster.z);
+    rotateY(-cluster.ry * PI / 180);
+    rotateX(-cluster.rx * PI / 180);
+    drawCubes(cluster, colors);
+    popMatrix();
+  }
+  
+  void drawCubes(Cluster cluster, color[] colors) {
+    for (Cube cube : cluster.cubes) {
+      pushMatrix();
+      fill(colors[cube.index]);
+      translate(cube.lx, cube.ly, cube.lz);
+      rotateY(-cube.ry * PI / 180);
+      rotateX(-cube.rx * PI / 180);
+      rotateZ(-cube.rz * PI / 180);
+      box(cube.size, cube.size, cube.size);
+      popMatrix();
+    }
   }
 }
 

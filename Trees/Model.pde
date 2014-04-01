@@ -206,57 +206,48 @@ public static class Tree extends LXModel {
       t.translate(x, 0, z);
       t.rotateY(ry * PI / 180);
       
-      for (CP cp : CLUSTER_POSITIONS) {
-        if (cp.treeIndex == treeIndex) {
+      for (int i = 0; i < clusterConfig.size(); ++i) {
+        JSONObject cp = clusterConfig.getJSONObject(i);
+        if (cp.getInt("treeIndex") == treeIndex) {
+          int clusterLevel = cp.getInt("level");
+          int clusterFace = cp.getInt("face");
+          float clusterOffset = cp.getFloat("offset");
+          float clusterMountPoint = cp.getFloat("mountPoint");
+          
           t.push();
           float cry = 0;
-          switch (cp.face) {
+          switch (clusterFace) {
             // Could be math, but this way it's readable!
             case FRONT: case FRONT_RIGHT:                  break;
             case RIGHT: case REAR_RIGHT:  cry = HALF_PI;   break;
             case REAR:  case REAR_LEFT:   cry = PI;        break;
             case LEFT:  case FRONT_LEFT:  cry = 3*HALF_PI; break;
           }
-          t.rotateY(cry);
-          t.translate(cp.offset, geometry.heights[cp.level] + cp.mountPoint, -geometry.distances[cp.level]);
-          
-          switch (cp.face) {
+          switch (clusterFace) {
             case FRONT_RIGHT:
             case REAR_RIGHT:
             case REAR_LEFT:
             case FRONT_LEFT:
-              t.translate(geometry.distances[cp.level], 0, 0);
+              clusterOffset = 0;
+              break;
+          }
+          t.rotateY(cry);
+          t.translate(clusterOffset * geometry.distances[clusterLevel], geometry.heights[clusterLevel] + clusterMountPoint, -geometry.distances[clusterLevel]);
+          
+          switch (clusterFace) {
+            case FRONT_RIGHT:
+            case REAR_RIGHT:
+            case REAR_LEFT:
+            case FRONT_LEFT:
+              t.translate(geometry.distances[clusterLevel], 0, 0);
               t.rotateY(QUARTER_PI);
               cry += QUARTER_PI;
               break;
           }
-          clusters.add(new Cluster(treeCenter, t, cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
+          clusters.add(new Cluster(treeCenter, t, ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
           t.pop();
         }
       }
-      
-      // Mock clusters algorithm
-      /*
-      for (int y = 3; y < 10; ++y) {
-        for (int i = 0; i < 4; ++i) {
-          float distance = geometry.distances[y];
-          t.push();
-          t.translate(0, geometry.heights[y], -distance - 1*FEET);
-          if (y < 6) {
-            t.translate(((y % 2) == 0) ? (-distance/2) : (distance/2), 0, 0);
-            clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + i*90));
-          } else {
-            if ((y % 2) == 0) t.translate(distance/4., 0, 0);
-            t.translate(-distance/2, 0, 0);
-            clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + i*90));
-            t.translate(distance, 0, 0);
-            clusters.add(new Cluster(treeCenter, t.x(), t.y(), t.z(), ry + i*90));
-          }
-          t.pop();
-          t.rotateY(PI/2);
-        }
-      }
-      */
 
       for (Cluster cluster : this.clusters) {
         for (LXPoint p : cluster.points) {
@@ -360,7 +351,6 @@ public static class Cluster extends LXModel {
     
     Fixture(PVector treeCenter, LXTransform transform, float ry, float rx) {
       transform.push();
-      transform.rotateY(ry * PI / 180);
       transform.rotateX(rx * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
         new Cube( 1, treeCenter, transform, Cube.SMALL,   -7, -98, -10,  -5,  18, -18),
