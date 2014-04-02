@@ -370,18 +370,22 @@ class IceCrystals extends LXPattern {
   private IceCrystalLine crystal;
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 5, 1, 20);
   final BasicParameter lineWidth = new BasicParameter("Width", 60, 20, 150);
-  final DiscreteParameter recursionDepth = new DiscreteParameter("Levels", 10, 12);
+  final DiscreteParameter recursionDepth = new DiscreteParameter("Danger", 7, 12);
+  final IceCrystalSettings settingsObj; 
+
   IceCrystals(LX lx) {
     super(lx);
     addParameter(propagationSpeed);
     addParameter(lineWidth);
     addParameter(recursionDepth);
     recursionDepth.setRange(5, 14);
-    crystal = makeLine();
+    settingsObj = new IceCrystalSettings(14);
+    crystal = new IceCrystalLine(0, settingsObj);
+    startCrystal();
   }
   public void run(double deltaMs) {
     if (crystal.isDone()){
-      crystal = makeLine();
+      startCrystal();
     }
     crystal.doUpdate();
     for (Cube cube : model.cubes) {
@@ -412,9 +416,10 @@ class IceCrystals extends LXPattern {
       colors[cube.index] = lx.hsb(hueVal,  satVal, brightVal);
     }
   }
-  IceCrystalLine makeLine(){
-    IceCrystalSettings settingsObj = new IceCrystalSettings(recursionDepth.getValuei(), lineWidth.getValuef(), 150, propagationSpeed.getValuef());
-    return new IceCrystalLine (100, random(360), (7 + int(random(2.9))) % 8, 0, settingsObj);
+  void startCrystal(){
+    crystal.doReset();
+    settingsObj.doSettings(recursionDepth.getValuei(), lineWidth.getValuef(), 150, propagationSpeed.getValuef());
+    crystal.doStart(100, random(360), (7 + int(random(2.9))) % 8);
   }
 }
 class IceCrystalSettings {
@@ -425,16 +430,23 @@ class IceCrystalSettings {
   protected float[] lineLengths;
   protected boolean growthFinished = false;
   protected int growthFinishedTime = 0;
-  IceCrystalSettings(int totalRecursionDepth, float baseLineWidth, float baseLineLength, float basePropagationSpeed) {
+  protected final int maxRecursionDepth;
+  IceCrystalSettings(int maxRecursionDepth){
+    this.maxRecursionDepth = maxRecursionDepth;
+  }
+  public void doSettings(int totalRecursionDepth, float baseLineWidth, float baseLineLength, float basePropagationSpeed) {
     this.totalRecursionDepth = totalRecursionDepth;
     this.baseLineWidth = baseLineWidth;
     this.baseLineLength = baseLineLength;
     this.basePropagationSpeed = basePropagationSpeed;
+    growthFinishedTime = 0;
+    growthFinished = false;
     lineLengths = new float[totalRecursionDepth + 1];
     for (int i=0; i <= totalRecursionDepth; i++){
       lineLengths[i] =  pow(0.9, i) * (0.5 + random(1)) * baseLineLength;
     }
   }
+  
   public float getLineWidth(int recursionDepth){
     return baseLineWidth * pow(0.9, recursionDepth);
   }
@@ -452,17 +464,17 @@ class IceCrystalSettings {
   }
 }
 class IceCrystalLine {
-  protected int lifeCycleState = 0;
-  private int recursionDepth;
-  private final int startTime;
-  private final float startY;
-  private final float startTheta;
+  protected int lifeCycleState = -1;
+  private final int recursionDepth;
+  private int startTime;
+  private float startY;
+  private float startTheta;
   private float endY;
   private float endTheta;
-  private final float propagationSpeed;
-  private final float lineLength;
-  private final float lineWidth;
-  private final int angleIndex;
+  private float propagationSpeed;
+  private float lineLength;
+  private float lineWidth;
+  private int angleIndex;
   private int lifeCycleStateChangeTime;
   private final float[][] angleFactors = {{0, 1}, {0.7071, 0.7071}, {1, 0}, {0.7071, -0.7071}, {0, -1}, {-0.7071, -0.7071}, {-1, 0}, {-0.7071, 0.7071}};
   private IceCrystalLine[] children = new IceCrystalLine[2];
@@ -470,17 +482,35 @@ class IceCrystalLine {
   private float nodeMeltRadius;
   protected boolean hasChildren = false;
   private IceCrystalSettings settings;
-  IceCrystalLine(float startY, float startTheta, int angleIndex, int recursionDepth, IceCrystalSettings settings){
-    this.propagationSpeed = settings.getPropagationSpeed(recursionDepth);
-    this.startY = startY;
-    this.startTheta = 360 + (startTheta % 360);
-    this.startTime = millis();
-    this.lineLength = settings.getLineLength(recursionDepth);
-    this.lineWidth = settings.getLineWidth(recursionDepth);
-    this.angleIndex = angleIndex;
+  IceCrystalLine(int recursionDepth, IceCrystalSettings settings){
     this.recursionDepth = recursionDepth;
     this.settings = settings;
+    if (recursionDepth < settings.maxRecursionDepth){
+      children[0] = new IceCrystalLine(recursionDepth + 1,  settings);
+      children[1] = new IceCrystalLine(recursionDepth + 1,  settings);
+    }
   }
+  public void doStart(float startY, float startTheta, int angleIndex){
+    lifeCycleState = 0;
+    this.angleIndex = angleIndex;
+    this.startY = startY;
+    this.startTheta = 360 + (startTheta % 360);
+    this.propagationSpeed = settings.getPropagationSpeed(recursionDepth);
+    lineLength = settings.getLineLength(recursionDepth);
+    lineWidth = settings.getLineWidth(recursionDepth);
+    startTime = millis();
+    doUpdate();
+  }
+  public void doReset(){
+    lifeCycleState = -1;
+    hasChildren = false;
+    nodeMeltRadius = 0;
+    if (recursionDepth < settings.maxRecursionDepth){
+      children[0].doReset();
+      children[1].doReset();
+    }
+  }
+  
   public void doUpdate(){
     switch(lifeCycleState){
       case 0: //this line is growing
@@ -503,8 +533,8 @@ class IceCrystalLine {
         applicableRange[1][1] = max(startY, endY) + lineWidth / 2;
       break;
       case 1: // creating children (wohoo!)
-        children[0] = new IceCrystalLine(endY, endTheta % 360, (8 + angleIndex - 1) % 8, recursionDepth + 1,  settings);
-        children[1] = new IceCrystalLine(endY, endTheta % 360, (angleIndex + 1) % 8, recursionDepth + 1,  settings);
+        children[0].doStart(endY, endTheta % 360, (8 + angleIndex - 1) % 8);
+        children[1].doStart(endY, endTheta % 360, (angleIndex + 1) % 8);
         changeLifeCycleState(2);
         hasChildren = true;
       break;
@@ -524,9 +554,9 @@ class IceCrystalLine {
         applicableRange[1][1] = max(applicableRange[1][1], min(700, (endY + nodeMeltRadius)));
         if (lifeCycleStateChangeTime < (millis() - 27000 / propagationSpeed)){
           changeLifeCycleState(5);
-          children = null;
+          children[0].doReset();
+          children[1].doReset();
           hasChildren = false;
-          settings = null;
         }
       break;
       case 5: //water
