@@ -44,6 +44,17 @@ final static int FRONT_LEFT = 7;
 final static int NUM_CHANNELS = 8;
 final static int NUM_KNOBS = 8;
 
+/**
+ * This defines the positions of the trees, which are
+ * x (left to right), z (front to back), and rotation
+ * in degrees.
+ */
+final static float[][] TREE_POSITIONS = {
+  /*  X-pos    Y-pos    Rot  */
+  {  15*FEET,  15*FEET,   0  },
+  {  90*FEET,  15*FEET, -45  }
+};
+
 final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 
 static JSONArray clusterConfig;
