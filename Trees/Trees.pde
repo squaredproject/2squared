@@ -76,8 +76,6 @@ BooleanParameter[] effectButtonParameters;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
-    new Mondrian(lx),
-//    new Rain(lx),
     new Twister(lx),
     new MarkLottor(lx),
     new DoubleHelix(lx),
@@ -430,4 +428,3 @@ class TreesTransition extends LXTransition {
     }
   }
 }
-
