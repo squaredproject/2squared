@@ -376,7 +376,7 @@ class IceCrystals extends LXPattern {
     addParameter(propagationSpeed);
     addParameter(lineWidth);
     addParameter(recursionDepth);
-    recursionDepth.setRange(5, 12);
+    recursionDepth.setRange(5, 14);
     crystal = makeLine();
   }
   public void run(double deltaMs) {
@@ -422,23 +422,34 @@ class IceCrystalSettings {
   protected float baseLineWidth;
   protected float baseLineLength;
   protected float basePropagationSpeed;
-  
+  protected float[] lineLengths;
+  protected boolean growthFinished = false;
+  protected int growthFinishedTime = 0;
   IceCrystalSettings(int totalRecursionDepth, float baseLineWidth, float baseLineLength, float basePropagationSpeed) {
     this.totalRecursionDepth = totalRecursionDepth;
     this.baseLineWidth = baseLineWidth;
     this.baseLineLength = baseLineLength;
     this.basePropagationSpeed = basePropagationSpeed;
+    lineLengths = new float[totalRecursionDepth + 1];
+    for (int i=0; i <= totalRecursionDepth; i++){
+      lineLengths[i] =  pow(0.9, i) * (0.5 + random(1)) * baseLineLength;
+    }
   }
   public float getLineWidth(int recursionDepth){
     return baseLineWidth * pow(0.9, recursionDepth);
   }
   public float getLineLength(int recursionDepth){
-    return baseLineLength * pow(0.9, recursionDepth);
+    return lineLengths[recursionDepth];
   }
   public float getPropagationSpeed(int recursionDepth){
     return basePropagationSpeed * pow(0.8, recursionDepth);
   }
-
+  public void setGrowthFinished(){
+    if (!growthFinished){
+      growthFinishedTime = millis();
+    }
+    growthFinished = true;
+  }
 }
 class IceCrystalLine {
   protected int lifeCycleState = 0;
@@ -458,7 +469,7 @@ class IceCrystalLine {
   protected float[][] applicableRange = {{0, 0}, {0, 0}};
   private float nodeMeltRadius;
   protected boolean hasChildren = false;
-  private final IceCrystalSettings settings;
+  private IceCrystalSettings settings;
   IceCrystalLine(float startY, float startTheta, int angleIndex, int recursionDepth, IceCrystalSettings settings){
     this.propagationSpeed = settings.getPropagationSpeed(recursionDepth);
     this.startY = startY;
@@ -476,11 +487,12 @@ class IceCrystalLine {
         float currentLineLength = (millis() - startTime) * propagationSpeed / 10;
         if (currentLineLength > lineLength) {
           currentLineLength = lineLength;
-          if (recursionDepth >= settings.totalRecursionDepth  || endY < 0 || endY >  800){
+          if (recursionDepth >= settings.totalRecursionDepth){
+            settings.setGrowthFinished();
             changeLifeCycleState(3);
           }
           else {
-            changeLifeCycleState(1);
+            changeLifeCycleState((endY < 0 || endY >  800) ? 3 : 1);
           }
         }
         endTheta = startTheta + angleFactors[angleIndex][0] * currentLineLength;
@@ -500,21 +512,22 @@ class IceCrystalLine {
         checkRangeOfChildren();
       break;
       case 3: // frozen
-        if ((recursionDepth <= 3) && lifeCycleStateChangeTime < (millis() - 8000 / propagationSpeed)){
+        if (recursionDepth <= 3 && settings.growthFinished && settings.growthFinishedTime < (millis() - 8000 / propagationSpeed)){
           changeLifeCycleState(4);
         }
       break;
       case 4: // melting
-        if (lifeCycleStateChangeTime < (millis() - 22000 / propagationSpeed)){
-          changeLifeCycleState(5);
-          children = new IceCrystalLine[2];
-          hasChildren = false;
-        }
         nodeMeltRadius = pow((settings.totalRecursionDepth - recursionDepth) * (millis() - lifeCycleStateChangeTime) * propagationSpeed  / 7000, 2) ;
         applicableRange[0][0] = min(applicableRange[0][0], max(0, endTheta - nodeMeltRadius));
         applicableRange[0][1] = max(applicableRange[0][1], min(720, endTheta + nodeMeltRadius));
         applicableRange[1][0] = min(applicableRange[1][0], max(100, (endY - nodeMeltRadius)));
         applicableRange[1][1] = max(applicableRange[1][1], min(700, (endY + nodeMeltRadius)));
+        if (lifeCycleStateChangeTime < (millis() - 27000 / propagationSpeed)){
+          changeLifeCycleState(5);
+          children = null;
+          hasChildren = false;
+          settings = null;
+        }
       break;
       case 5: //water
         if (lifeCycleStateChangeTime < (millis() - 8000 / propagationSpeed)){
