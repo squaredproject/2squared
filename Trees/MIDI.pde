@@ -337,7 +337,7 @@ class UIChannelFaders extends UIContext {
     .setLabel("CPU")
     .addToContainer(this);
     
-    new UILabel(this.width - PADDING - FADER_WIDTH, this.height-PADDING-BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - PADDING - FADER_WIDTH, this.height-2*PADDING-2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setAlignment(CENTER, CENTER)
     .setLabel("MASTER")
@@ -356,11 +356,11 @@ class UIChannelFaders extends UIContext {
   
   class UIPerfMeters extends UIObject {
     
-    DampedParameter dampers[] = new DampedParameter[NUM_CHANNELS];
-    BasicParameter perfs[] = new BasicParameter[NUM_CHANNELS];
+    DampedParameter dampers[] = new DampedParameter[NUM_CHANNELS+1];
+    BasicParameter perfs[] = new BasicParameter[NUM_CHANNELS+1];
    
     UIPerfMeters() {
-      for (int i = 0; i < NUM_CHANNELS; ++i) {
+      for (int i = 0; i < NUM_CHANNELS+1; ++i) {
         lx.addModulator((dampers[i] = new DampedParameter(perfs[i] = new BasicParameter("PERF", 0), 3)).start());
       }
     } 
@@ -371,14 +371,18 @@ class UIChannelFaders extends UIContext {
         float goMillis = pattern.timer.goNanos / 1000000.;
         float fps60 = 1000 / 60. / 3.;
         perfs[deck.index].setValue(constrain((goMillis-1) / fps60, 0, 1));
+      }
+      float engMillis = lx.engine.timer.runNanos / 1000000.;
+      perfs[NUM_CHANNELS].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
         
-        float val = dampers[deck.index].getValuef();
+      for (int i = 0; i < NUM_CHANNELS + 1; ++i) {
+        float val = dampers[i].getValuef();
         pg.stroke(#666666);
         pg.fill(#292929);
-        pg.rect(deck.index*(PADDING + FADER_WIDTH), 0, FADER_WIDTH-1, BUTTON_HEIGHT-1); 
+        pg.rect(i*(PADDING + FADER_WIDTH), 0, FADER_WIDTH-1, BUTTON_HEIGHT-1); 
         pg.fill(lx.hsb(120*(1-val), 50, 80));
         pg.noStroke();
-        pg.rect(deck.index*(PADDING + FADER_WIDTH)+1, 1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
+        pg.rect(i*(PADDING + FADER_WIDTH)+1, 1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
       }
       redraw();
     }
