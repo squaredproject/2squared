@@ -205,7 +205,7 @@ class UIChannelFaders extends UIContext {
   final static int BUTTON_HEIGHT = 14;
   final static int FADER_WIDTH = 40;
   final static int WIDTH = SPACER + PADDING + MASTER + (PADDING+FADER_WIDTH)*(NUM_CHANNELS+1);
-  final static int HEIGHT = 168;
+  final static int HEIGHT = 176;
   
   UIChannelFaders(final UI ui) {
     super(ui, Trees.this.width/2-WIDTH/2, Trees.this.height-HEIGHT-PADDING, WIDTH, HEIGHT);
@@ -245,7 +245,7 @@ class UIChannelFaders extends UIContext {
       .setActiveColor(#993333)
       .addToContainer(this);
       
-      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, xPos, 3*BUTTON_HEIGHT + 4*PADDING, FADER_WIDTH, this.height - 4*BUTTON_HEIGHT - 6*PADDING) {
+      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, xPos, 3*BUTTON_HEIGHT + 4*PADDING, FADER_WIDTH, this.height - 5*BUTTON_HEIGHT - 7*PADDING) {
         public void onFocus() {
           lx.engine.focusedDeck.setValue(deck.index);
         }
@@ -254,7 +254,7 @@ class UIChannelFaders extends UIContext {
       .setParameter(deck.getFader())
       .addToContainer(this);
             
-      labels[deck.index] = new UILabel(xPos, this.height - PADDING - BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
+      labels[deck.index] = new UILabel(xPos, this.height - 2*PADDING - 2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
       labels[deck.index]
       .setLabel(shortPatternName(deck.getActivePattern()))
       .setAlignment(CENTER, CENTER)
@@ -327,9 +327,14 @@ class UIChannelFaders extends UIContext {
     .setLabel("LEVEL")
     .addToContainer(this);
     
-    new UILabel(labelX, this.height - PADDING - BUTTON_HEIGHT + 3, 0, 0)
+    new UILabel(labelX, this.height - 2*PADDING - 2*BUTTON_HEIGHT + 3, 0, 0)
     .setColor(#666666)
     .setLabel("PTN")
+    .addToContainer(this);
+    
+    new UILabel(labelX, this.height - PADDING - BUTTON_HEIGHT + 3, 0, 0)
+    .setColor(#666666)
+    .setLabel("CPU")
     .addToContainer(this);
     
     new UILabel(this.width - PADDING - FADER_WIDTH, this.height-PADDING-BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
@@ -338,11 +343,32 @@ class UIChannelFaders extends UIContext {
     .setLabel("MASTER")
     .addToContainer(this);
     
+    new UIPerfMeters()
+    .setPosition(SPACER+PADDING, this.height-PADDING-BUTTON_HEIGHT)
+    .addToContainer(this);
+    
   }
   
   private String shortPatternName(LXPattern pattern) {
     String simpleName = pattern.getClass().getSimpleName(); 
     return simpleName.substring(0, min(7, simpleName.length()));
+  }
+  
+  class UIPerfMeters extends UIObject {
+    public void onDraw(UI ui, PGraphics pg) {
+      for (LXDeck deck : lx.engine.getDecks()) {
+        LXPattern pattern = deck.getActivePattern();
+        float goMillis = pattern.timer.goNanos / 1000000.;
+        float fps60 = 1000 / 60. / 3.;
+        pg.stroke(#666666);
+        pg.fill(#292929);
+        pg.rect(deck.index*(PADDING + FADER_WIDTH), 0, FADER_WIDTH-1, BUTTON_HEIGHT-1); 
+        pg.fill(lx.hsb(max(0, 120 - 120 * (goMillis / fps60)), 50, 80));
+        pg.noStroke();
+        pg.rect(deck.index*(PADDING + FADER_WIDTH)+1, 1, min(1, goMillis / fps60) * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
+      }
+      redraw();
+    }
   }
 }
 
