@@ -355,17 +355,30 @@ class UIChannelFaders extends UIContext {
   }
   
   class UIPerfMeters extends UIObject {
+    
+    DampedParameter dampers[] = new DampedParameter[NUM_CHANNELS];
+    BasicParameter perfs[] = new BasicParameter[NUM_CHANNELS];
+   
+    UIPerfMeters() {
+      for (int i = 0; i < NUM_CHANNELS; ++i) {
+        lx.addModulator((dampers[i] = new DampedParameter(perfs[i] = new BasicParameter("PERF", 0), 3)).start());
+      }
+    } 
+    
     public void onDraw(UI ui, PGraphics pg) {
       for (LXDeck deck : lx.engine.getDecks()) {
         LXPattern pattern = deck.getActivePattern();
         float goMillis = pattern.timer.goNanos / 1000000.;
         float fps60 = 1000 / 60. / 3.;
+        perfs[deck.index].setValue(constrain((goMillis-1) / fps60, 0, 1));
+        
+        float val = dampers[deck.index].getValuef();
         pg.stroke(#666666);
         pg.fill(#292929);
         pg.rect(deck.index*(PADDING + FADER_WIDTH), 0, FADER_WIDTH-1, BUTTON_HEIGHT-1); 
-        pg.fill(lx.hsb(max(0, 120 - 120 * (goMillis / fps60)), 50, 80));
+        pg.fill(lx.hsb(120*(1-val), 50, 80));
         pg.noStroke();
-        pg.rect(deck.index*(PADDING + FADER_WIDTH)+1, 1, min(1, goMillis / fps60) * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
+        pg.rect(deck.index*(PADDING + FADER_WIDTH)+1, 1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
       }
       redraw();
     }
