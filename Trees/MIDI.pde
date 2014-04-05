@@ -281,7 +281,7 @@ class UIChannelFaders extends UIContext {
     }
     
     float xPos = this.width - FADER_WIDTH - PADDING;
-    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-BUTTON_HEIGHT)
+    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-4*PADDING-2*BUTTON_HEIGHT)
     .setParameter(output.brightness)
     .addToContainer(this);
     
