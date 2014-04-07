@@ -346,6 +346,27 @@ class Fade extends LXPattern {
   }
 }
 
+class OrderTest extends LXPattern {
+  
+  SawLFO sweep = new SawLFO(0, 15.999, 8000);
+  int[] order = new int[] { 1, 2, 3, 4, 5, 6, 9, 8, 10, 11, 12, 13, 14, 16, 15, 7 };
+  
+  OrderTest(LX lx) {
+    super(lx);
+    addModulator(sweep.start());
+  }
+  
+  public void run(double deltaMs) {
+    for (Cube cube : model.cubes) {
+      colors[cube.index] = lx.hsb(
+        240,
+        100,
+        cube.clusterPosition == order[floor(sweep.getValuef())] ? 100 : 0
+      );
+    }
+  }
+}
+
 class Palette extends LXPattern {
   
   Palette(LX lx) {

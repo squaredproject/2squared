@@ -92,6 +92,7 @@ LXPattern[] patterns(LX lx) {
     new SyphonPattern(lx, this),
     new TestPattern(lx).setEligible(false),
     new TestCluster(lx).setEligible(false),
+    new OrderTest(lx),
     new Pulley(lx),
     new Springs(lx),
     new Lattice(lx),
