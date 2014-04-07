@@ -209,6 +209,7 @@ public static class Tree extends LXModel {
       for (int i = 0; i < clusterConfig.size(); ++i) {
         JSONObject cp = clusterConfig.getJSONObject(i);
         if (cp.getInt("treeIndex") == treeIndex) {
+          String ipAddress = cp.getString("ipAddress");
           int clusterLevel = cp.getInt("level");
           int clusterFace = cp.getInt("face");
           float clusterOffset = cp.getFloat("offset");
@@ -244,7 +245,7 @@ public static class Tree extends LXModel {
               cry += QUARTER_PI;
               break;
           }
-          clusters.add(new Cluster(treeCenter, t, ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
+          clusters.add(new Cluster(ipAddress, treeCenter, t, ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
           t.pop();
         }
       }
@@ -327,13 +328,19 @@ public static class Cluster extends LXModel {
    */ 
   public final float rx;
   
-  Cluster(PVector treeCenter, LXTransform transform, float ry) {
-    this(treeCenter, transform, ry, 0);
+  /**
+   * IP address of the cluster NDB
+   */
+  public final String ipAddress;
+  
+  Cluster(String ipAddress, PVector treeCenter, LXTransform transform, float ry) {
+    this(ipAddress, treeCenter, transform, ry, 0);
   }
   
-  Cluster(PVector treeCenter, LXTransform transform, float ry, float rx) {
+  Cluster(String ipAddress, PVector treeCenter, LXTransform transform, float ry, float rx) {
     super(new Fixture(treeCenter, transform, ry, rx));
     Fixture f = (Fixture) this.fixtures.get(0);
+    this.ipAddress = ipAddress;
     this.cubes = Collections.unmodifiableList(f.cubes);
     this.x = transform.x();
     this.y = transform.y();

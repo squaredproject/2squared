@@ -63,7 +63,7 @@ static Geometry geometry = new Geometry();
 Model model;
 LX lx;
 LXDatagramOutput output;
-LXDatagram datagram;
+LXDatagram[] datagrams;
 UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
@@ -154,9 +154,12 @@ void setup() {
 
   // Output stage
   try {
-    output = new LXDatagramOutput(lx).addDatagram(
-      datagram = clusterDatagram(model.clusters.get(0)).setAddress("10.0.0.105")
-    );
+    output = new LXDatagramOutput(lx);
+    datagrams = new LXDatagram[model.clusters.size()];
+    int ci = 0;
+    for (Cluster cluster : model.clusters) {
+      output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
+    }
     output.enabled.setValue(false);
     lx.addOutput(output);
   } catch (Exception x) {
@@ -182,7 +185,7 @@ void setup() {
   lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UIEffects(lx.ui));
-  lx.ui.addLayer(new UIOutput(lx.ui, width-144, 4));
+  lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   lx.ui.addLayer(new UIMapping(lx.ui));
   
   // MIDI control
@@ -366,16 +369,53 @@ class UITrees extends UICameraComponent {
 
 class UIOutput extends UIWindow {
   UIOutput(UI ui, float x, float y) {
-    super(ui, "LIVE OUTPUT", x, y, 140, 72);
+    super(ui, "LIVE OUTPUT", x, y, 140, 72 + 240);
     float yPos = UIWindow.TITLE_LABEL_HEIGHT;
     new UIButton(4, yPos, width-8, 20)
       .setParameter(output.enabled)
-      .setLabel(datagram.getAddress().toString())
+      .setLabel("Output Enabled")
       .addToContainer(this);
     yPos += 24;
+    
     new UISlider(4, yPos, width-8, 20)
     .setParameter(output.brightness)
     .addToContainer(this);
+    yPos += 24;
+    
+    List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
+    for (LXDatagram datagram : datagrams) {
+      items.add(new DatagramItem(datagram));
+    }
+    new UIItemList(1, yPos, width-2, 240)
+    .setItems(items)
+    .setBackgroundColor(#ff0000)
+    .addToContainer(this);
+  }
+  
+  class DatagramItem extends UIItemList.AbstractItem {
+    
+    final LXDatagram datagram;
+    
+    DatagramItem(LXDatagram datagram) {
+      this.datagram = datagram;
+      datagram.enabled.addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          redraw();
+        }
+      });
+    }
+    
+    String getLabel() {
+      return datagram.getAddress().toString();
+    }
+    
+    boolean isSelected() {
+      return datagram.enabled.isOn();
+    }
+    
+    void onMousePressed() {
+      datagram.enabled.toggle();
+    }
   }
 }
 
@@ -431,5 +471,15 @@ class TreesTransition extends LXTransition {
         }
       }
     }
+  }
+}
+
+void keyPressed() {
+  switch (key) {
+    case 'a':
+      for (LXDatagram datagram : datagrams) {
+        datagram.enabled.toggle();
+      }
+      break;
   }
 }
