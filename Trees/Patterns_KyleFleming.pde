@@ -39,26 +39,8 @@ class Whisps extends LXPattern {
     pauseTimerCountdown -= deltaMs;
     if (pauseTimerCountdown <= 0) {
       pauseTimerCountdown = 10000 / frequency.getValuef() / speed.getValuef() + LXUtils.random(-200, 200);
-      
-      Whisp whisp = new Whisp();
-      whisp.runningTimer = 0;
-      whisp.runningTimerEnd = 5000 / speed.getValuef();
-      whisp.decayTime = whisp.runningTimerEnd;
-      float pathDirection = (float)(direction.getValuef()
-          + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
-      whisp.pathDist = (float)LXUtils.random(80, min(450, 140 / max(0.01, abs(cos(PI * pathDirection / 180)))));
-      whisp.startTheta = random(360);
-      whisp.startY = (float)LXUtils.random(max(model.yMin, model.yMin - whisp.pathDist
-                                                           * sin(PI * pathDirection / 180)),
-                                           min(model.yMax, model.yMax - whisp.pathDist
-                                                           * sin(PI * pathDirection / 180)));
-      whisp.startPoint = new KFPoint(whisp.startTheta, whisp.startY);
-      whisp.endTheta = whisp.startTheta + whisp.pathDist * cos(PI * pathDirection / 180);
-      whisp.endY = whisp.startY + whisp.pathDist * sin(PI * pathDirection / 180);
-      whisp.displayColor = (int)(baseColor.getValuef()
-          + LXUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
-      whisp.thickness = thickness.getValuef() + (float)LXUtils.random(-.3, .3);
-      whisps.add(whisp);
+
+      whisps.add(generateWhisp());
     }
     
     Iterator<Whisp> iter = whisps.iterator();
@@ -70,11 +52,34 @@ class Whisps extends LXPattern {
       }
     }
     for (Cube cube : model.cubes) {
-      KFPoint cubePoint = new KFPoint(cube.theta, cube.y);
+      PVector cubePoint = new PVector(cube.theta, cube.y);
       for (Whisp whisp : whisps) {
         addColor(cube.index, lx.hsb(whisp.displayColor, 100, whisp.getBrightnessForCube(cubePoint)));
       }
     }
+  }
+    
+  Whisp generateWhisp() {
+    Whisp whisp = new Whisp();
+    whisp.runningTimer = 0;
+    whisp.runningTimerEnd = 5000 / speed.getValuef();
+    whisp.decayTime = whisp.runningTimerEnd;
+    float pathDirection = (float)(direction.getValuef()
+      + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
+    whisp.pathDist = (float)LXUtils.random(80, min(450, 140 / max(0.01, abs(cos(PI * pathDirection / 180)))));
+    whisp.startTheta = random(360);
+    whisp.startY = (float)LXUtils.random(max(model.yMin, model.yMin - whisp.pathDist
+      * sin(PI * pathDirection / 180)), 
+    min(model.yMax, model.yMax - whisp.pathDist
+      * sin(PI * pathDirection / 180)));
+    whisp.startPoint = new PVector(whisp.startTheta, whisp.startY);
+    whisp.endTheta = whisp.startTheta + whisp.pathDist * cos(PI * pathDirection / 180);
+    whisp.endY = whisp.startY + whisp.pathDist * sin(PI * pathDirection / 180);
+    whisp.displayColor = (int)(baseColor.getValuef()
+      + LXUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
+    whisp.thickness = thickness.getValuef() + (float)LXUtils.random(-.3, .3);
+    
+    return whisp;
   }
 }
 
@@ -86,7 +91,7 @@ class Whisp {
   float runningTimerEnd;
   float decayTime;
   
-  KFPoint startPoint;
+  PVector startPoint;
   float startTheta;
   float startY;
   float endTheta;
@@ -97,7 +102,7 @@ class Whisp {
   float thickness;
   
   float percentDone;
-  KFPoint currentPoint;
+  PVector currentPoint;
   float currentTheta;
   float currentY;
   float globalFadeFactor;
@@ -111,14 +116,14 @@ class Whisp {
         percentDone = min(runningTimer, runningTimerEnd) / runningTimerEnd;
         currentTheta = (float)LXUtils.lerp(startTheta, endTheta, percentDone);
         currentY = (float)LXUtils.lerp(startY, endY, percentDone);
-        currentPoint = new KFPoint(currentTheta, currentY);
+        currentPoint = new PVector(currentTheta, currentY);
         globalFadeFactor = max((runningTimer - runningTimerEnd) / decayTime, 0);
       }
     }
   }
   
-  float getBrightnessForCube(KFPoint cubePoint) {
-    KFPoint closestPointToTrail = getClosestPointOnLineOnCylinder(startPoint, currentPoint, cubePoint);
+  float getBrightnessForCube(PVector cubePoint) {
+    PVector closestPointToTrail = getClosestPointOnLineOnCylinder(startPoint, currentPoint, cubePoint);
     float distFromSource = (float)LXUtils.distance(currentTheta, currentY,
       closestPointToTrail.x, closestPointToTrail.y);
     
@@ -126,17 +131,6 @@ class Whisp {
                          + pow(closestPointToTrail.y - cubePoint.y, 2));
     float tailFadeFactor = distFromSource / pathDist;
     return max(0, (100 - 10 * distFromTrail / thickness) * max(0, 1 - tailFadeFactor - globalFadeFactor));
-  }
-}
-
-class KFPoint {
-  
-  float x;
-  float y;
-  
-  KFPoint(float xParam, float yParam) {
-    x = xParam;
-    y = yParam;
   }
 }
 
@@ -154,38 +148,38 @@ float moveThetaToSamePlane(float thetaA, float thetaB) {
 
 // Gets the closest point on a line segment [a, b] to another point p
 // Assumes points are in the form (theta, y) and are on a cylinder.
-KFPoint getClosestPointOnLineOnCylinder(KFPoint a, KFPoint b, KFPoint p) {
+PVector getClosestPointOnLineOnCylinder(PVector a, PVector b, PVector p) {
   // Unwrap the cylinder at 0 degrees to calculate
   // Assume a and b are already on the same plane (aka theta would be negative already)
   
   // Move p onto the same plane as a, if needed
-  KFPoint pPrime = new KFPoint(moveThetaToSamePlane(a.x, p.x), p.y);
+  PVector pPrime = new PVector(moveThetaToSamePlane(a.x, p.x), p.y);
   
   return getClosestPointOnLine(a, b, pPrime);
 }
 
 // Gets the closest point on a line segment [a, b] to another point p
 // Assumes points are in the form (theta, y)
-KFPoint getClosestPointOnLine(KFPoint a, KFPoint b, KFPoint p) {
+PVector getClosestPointOnLine(PVector a, PVector b, PVector p) {
   
   // adapted from http://stackoverflow.com/a/3122532
   
   // Storing vector A->P
-  KFPoint a_to_p = new KFPoint(p.x - a.x, p.y - a.y);
+  PVector a_to_p = PVector.sub(p, a);
   // Storing vector A->B
-  KFPoint a_to_b = new KFPoint(b.x - a.x, b.y - a.y);
+  PVector a_to_b = PVector.sub(b, a);
 
   //   Basically finding the squared magnitude of a_to_b
-  float atb2 = pow(a_to_b.x, 2) + pow(a_to_b.y, 2);
+  float atb2 = a_to_b.magSq();
 
   // The dot product of a_to_p and a_to_b
-  float atp_dot_atb = a_to_p.x*a_to_b.x + a_to_p.y*a_to_b.y;
+  float atp_dot_atb = a_to_p.dot(a_to_b);
 
   // The normalized "distance" from a to your closest point
   float t = LXUtils.constrainf(atp_dot_atb / atb2, 0, 1);
 
   // Add the distance to A, moving towards B
-  return new KFPoint(a.x + a_to_b.x*t, a.y + a_to_b.y*t);
+  return PVector.lerp(a, b, t);
 }
 
 class Bubbles extends LXPattern {
