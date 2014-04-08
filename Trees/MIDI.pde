@@ -173,25 +173,8 @@ class MidiEngine {
         0,
         new int[] { APC40.CLIP_TRACK, APC40.DEVICE_ON_OFF, APC40.LEFT_ARROW, APC40.RIGHT_ARROW }
       );
-      apc40.bindNotes(
-        automationSlot,
-        0,
-        new int[] { APC40.DETAIL_VIEW, APC40.REC_QUANTIZATION, APC40.MIDI_OVERDUB, APC40.METRONOME }
-      );
-      automationSlot.addListener(new LXParameterListener() {
-        public void onParameterChanged(LXParameter parameter) {
-          setAutomation(apc40);
-        }
-      });
-      setAutomation(apc40);
+      
     }
-  }
-  
-  void setAutomation(APC40 apc40) {
-    LXAutomationRecorder auto = automation[automationSlot.getValuei()];
-    apc40.bindNoteOn(auto.isRunning, 0, APC40.PLAY, LXMidiDevice.TOGGLE);
-    apc40.bindNoteOn(auto.armRecord, 0, APC40.REC, LXMidiDevice.TOGGLE);
-    apc40.bindNote(automationStop[automationSlot.getValuei()], 0, APC40.STOP, LXMidiDevice.DIRECT);
   }
   
   void setPattern(APC40 apc40, LXDeck deck) {
@@ -419,7 +402,7 @@ public class UIMultiDeck extends UIWindow {
   final UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
-    super(ui, "CHANNEL " + (focusedDeck()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 108 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    super(ui, "CHANNEL " + (focusedDeck()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 4 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
     patternLists = new UIItemList[lx.engine.getDecks().size()];
@@ -446,7 +429,7 @@ public class UIMultiDeck extends UIWindow {
     yp += 100;
     for (LXDeck deck : lx.engine.getDecks()) {
       blendModes[deck.index] = new UIToggleSet(4, yp, this.width-8, 18)
-      .setOptions(new String[] { "ADD", "MLT", "LITE", "SUBT" })
+      .setOptions(new String[] { "ADD", "MLT", "LITE", "LERP" })
       .setParameter(getFaderTransition(deck).blendMode)
       .setEvenSpacing();
       blendModes[deck.index].setVisible(deck.index == focusedDeck());
@@ -586,7 +569,7 @@ class UIEffects extends UIWindow {
   final int KNOBS_PER_ROW = 4;
   
   UIEffects(UI ui) {
-    super(ui, "MASTER EFFECTS", Trees.this.width-144, 86, 140, 144);
+    super(ui, "MASTER EFFECTS", Trees.this.width-144, 190, 140, 144);
     
     int yp = TITLE_LABEL_HEIGHT;
     for (int ki = 0; ki < 8; ++ki) {

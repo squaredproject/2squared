@@ -37,7 +37,7 @@ class UIMapping extends UIWindow {
   final UISlider mountPoint;
   
   UIMapping(UI ui) {
-    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 270, 140, 266);
     
     final UIIntegerBox clusterIndex = new UIIntegerBox().setParameter(mappingTool.clusterIndex);
     
@@ -91,8 +91,7 @@ class UIMapping extends UIWindow {
         }
       }
     }
-    .setInactiveLabel("Disabled")
-    .setActiveLabel("Enabled")
+    .setLabel("MAPPING MODE")
     .setParameter(mappingTool.enabled)
     .addToContainer(this);
     yPos += 24;

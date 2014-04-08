@@ -237,38 +237,22 @@ class Bubbles extends LXPattern {
 
 class Strobe extends LXPattern {
   
-  final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
-  final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
-
-  int timer = 0;
-  boolean on = false;
-  
-  int WHITE;
-  int BLACK;
+  final BasicParameter speed = new BasicParameter("DELA", 100, 30, 2000);
+  final SquareLFO toggle = new SquareLFO(0, 100, speed);
   
   Strobe(LX lx) {
     super(lx);
-    
     addParameter(speed);
-    addParameter(balance);
-    
-    WHITE = java.awt.Color.WHITE.getRGB();
-    BLACK = java.awt.Color.BLACK.getRGB();
+    addModulator(toggle.start());
   }
   
   public void run(double deltaMs) {
-    
-    timer += deltaMs;
-    
-    if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
-      timer = 0;
-      on = !on;
-    }
-    
-    int colorVal = on ? WHITE : BLACK;
-    
     for (Cube cube : model.cubes) {
-      colors[cube.index] = colorVal;
+      colors[cube.index] = lx.hsb(
+        0,
+        toggle.getValuef(),
+        100 - toggle.getValuef()
+      );
     }
   }
 }
@@ -340,23 +324,18 @@ class RandomColorGlitch extends LXPattern {
 
 class Fade extends LXPattern {
   
-  final BasicParameter speed = new BasicParameter("SPEE", 11000, 100000, 1000, BasicParameter.Scaling.QUAD_OUT);
-  final BasicParameter smoothness = new BasicParameter("SMOO", 100, 1, 100, BasicParameter.Scaling.QUAD_IN);
-
-  final SinLFO colr = new SinLFO(0, 360, speed);
-
+  final SinLFO colr = new SinLFO(0, 360, 11000);
+  
   Fade(LX lx) {
     super(lx);
-    addParameter(speed);
-    addParameter(smoothness);
     addModulator(colr.start());
   }
   
   public void run(double deltaMs) {
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
-        (int)((int)colr.getValuef() * smoothness.getValuef() / 100) * 100 / smoothness.getValuef(), 
-        100, 
+        (int)colr.getValuef(),
+        100,
         100
       );
     }
