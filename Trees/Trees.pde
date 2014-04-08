@@ -44,7 +44,6 @@ final static int FRONT_LEFT = 7;
 
 final static int NUM_CHANNELS = 8;
 final static int NUM_KNOBS = 8;
-final static int NUM_AUTOMATION = 4;
 
 /**
  * This defines the positions of the trees, which are
@@ -75,9 +74,6 @@ ColorEffect colorEffect;
 MappingTool mappingTool;
 LXListenableNormalizedParameter[] effectKnobParameters;
 BooleanParameter[] effectButtonParameters;
-LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
-BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
-DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
@@ -86,12 +82,12 @@ LXPattern[] patterns(LX lx) {
     new DoubleHelix(lx),
     new SparkleHelix(lx),
     new Lightning(lx),
+    new IceCrystals(lx),
     new SparkleTakeOver(lx),
     new MultiSine(lx),
     new Ripple(lx),
     new SeeSaw(lx),
     new SweepPattern(lx),
-    new IceCrystals(lx),
     new ColoredLeaves(lx),
     new Stripes(lx),
     new SyphonPattern(lx, this),
@@ -158,22 +154,6 @@ void setup() {
     new BooleanParameter("-", false)
   };
 
-  // Automation recorders
-  for (int i = 0; i < automation.length; ++i) {
-    final int ii = i;
-    automation[i] = new LXAutomationRecorder(lx.engine);
-    lx.addModulator(automation[i]);
-    automationStop[i] = new BooleanParameter("STOP", false);
-    automationStop[i].addListener(new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        if (parameter.getValue() > 0) {
-          automation[ii].reset();
-          automation[ii].armRecord.setValue(false);
-        }
-      }
-    });
-  }
-
   // Output stage
   try {
     output = new LXDatagramOutput(lx);
@@ -204,12 +184,11 @@ void setup() {
     .setCenter(model.cx, model.cy, model.cz)
     .addComponent(new UITrees())
   );
+  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
+  lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
+  lx.ui.addLayer(new UIEffects(lx.ui));
   lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   lx.ui.addLayer(new UIMapping(lx.ui));
-  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
-  lx.ui.addLayer(new UIEffects(lx.ui));
-  lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
-  lx.ui.addLayer(new UILoopRecorder(lx.ui));
   
   // MIDI control
   new MidiEngine();
@@ -392,12 +371,11 @@ class UITrees extends UICameraComponent {
 
 class UIOutput extends UIWindow {
   UIOutput(UI ui, float x, float y) {
-    super(ui, "LIVE OUTPUT", x, y, 140, 72 + 278);
-    float yPos = UIWindow.TITLE_LABEL_HEIGHT - 2;
+    super(ui, "LIVE OUTPUT", x, y, 140, 72 + 240);
+    float yPos = UIWindow.TITLE_LABEL_HEIGHT;
     new UIButton(4, yPos, width-8, 20)
       .setParameter(output.enabled)
-      .setActiveLabel("Enabled")
-      .setInactiveLabel("Disabled")
+      .setLabel("Output Enabled")
       .addToContainer(this);
     yPos += 24;
     
@@ -410,7 +388,7 @@ class UIOutput extends UIWindow {
     for (LXDatagram datagram : datagrams) {
       items.add(new DatagramItem(datagram));
     }
-    new UIItemList(1, yPos, width-2, 280)
+    new UIItemList(1, yPos, width-2, 240)
     .setItems(items)
     .setBackgroundColor(#ff0000)
     .addToContainer(this);
@@ -443,54 +421,6 @@ class UIOutput extends UIWindow {
   }
 }
 
-class UILoopRecorder extends UIWindow {
-  UILoopRecorder(UI ui) {
-    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 104, 140, 100);
-    float yPos = TITLE_LABEL_HEIGHT;
-    new UIToggleSet(4, yPos, this.width-8, 20)
-    .setOptions(new String[] { "A", "B", "C", "D" })
-    .setParameter(automationSlot)
-    .addToContainer(this);
-    yPos += 26;
-    
-    final UIButton playButton = new UIButton(6, yPos, 40, 20);
-    playButton
-    .setLabel("PLAY")
-    .addToContainer(this);
-      
-    final UIButton stopButton = new UIButton(6 + (this.width-8)/3, yPos, 40, 20);
-    stopButton
-    .setMomentary(true)
-    .setLabel("STOP")
-    .addToContainer(this);
-      
-    final UIButton armButton = new UIButton(6 + 2*(this.width-8)/3, yPos, 40, 20);
-    armButton
-    .setLabel("ARM")
-    .setActiveColor(#cc3333)
-    .addToContainer(this);
-    
-    yPos += 24;
-    final UIButton loopButton = new UIButton(4, yPos, this.width-8, 20);
-    loopButton
-    .setInactiveLabel("One-shot")
-    .setActiveLabel("Looping")
-    .addToContainer(this);
-    
-    final LXParameterListener listener;
-    automationSlot.addListener(listener = new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        LXAutomationRecorder auto = automation[automationSlot.getValuei()];
-        stopButton.setParameter(automationStop[automationSlot.getValuei()]);
-        playButton.setParameter(auto.isRunning);
-        armButton.setParameter(auto.armRecord);
-        loopButton.setParameter(auto.looping);
-      }
-    });
-    listener.onParameterChanged(null);
-  }
-}
-
 class TreesTransition extends LXTransition {
   
   private final LXDeck deck;
@@ -508,10 +438,6 @@ class TreesTransition extends LXTransition {
   
   TreesTransition(LX lx, LXDeck deck) {
     super(lx);
-    addParameter(blendMode);
-    addParameter(left);
-    addParameter(right);
-    
     addModulator(leftLevel.start());
     addModulator(rightLevel.start());
     this.deck = deck;
@@ -521,7 +447,7 @@ class TreesTransition extends LXTransition {
         case 0: blendType = ADD; break;
         case 1: blendType = MULTIPLY; break;
         case 2: blendType = LIGHTEST; break;
-        case 3: blendType = SUBTRACT; break;
+        case 3: blendType = BLEND; break;
         }
       }
     });
@@ -537,14 +463,12 @@ class TreesTransition extends LXTransition {
         }
       } else if (amount == 1) {
         for (LXPoint p : tree.points) {
-          int color2 = blendType == SUBTRACT ? LX.hsb(0, 0, LX.b(c2[p.index])) : c2[p.index]; 
-          colors[p.index] = this.lx.applet.blendColor(c1[p.index], color2, this.blendType);
+          colors[p.index] = this.lx.applet.blendColor(c1[p.index], c2[p.index], this.blendType);
         }
       } else {
         for (LXPoint p : tree.points) {
-          int color2 = blendType == SUBTRACT ? LX.hsb(0, 0, LX.b(c2[p.index])) : c2[p.index];
           this.colors[p.index] = this.lx.applet.lerpColor(c1[p.index],
-            this.lx.applet.blendColor(c1[p.index], color2, this.blendType),
+            this.lx.applet.blendColor(c1[p.index], c2[p.index], this.blendType),
             amount, PConstants.RGB);
         }
       }
