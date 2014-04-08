@@ -337,18 +337,23 @@ class RandomColorGlitch extends LXPattern {
 
 class Fade extends LXPattern {
   
-  final SinLFO colr = new SinLFO(0, 360, 11000);
-  
+  final BasicParameter speed = new BasicParameter("SPEE", 11000, 100000, 1000, BasicParameter.Scaling.QUAD_OUT);
+  final BasicParameter smoothness = new BasicParameter("SMOO", 100, 1, 100, BasicParameter.Scaling.QUAD_IN);
+
+  final SinLFO colr = new SinLFO(0, 360, speed);
+
   Fade(LX lx) {
     super(lx);
+    addParameter(speed);
+    addParameter(smoothness);
     addModulator(colr.start());
   }
   
   public void run(double deltaMs) {
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
-        (int)colr.getValuef(),
-        100,
+        (int)((int)colr.getValuef() * smoothness.getValuef() / 100) * 100 / smoothness.getValuef(), 
+        100, 
         100
       );
     }
