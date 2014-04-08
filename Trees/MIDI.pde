@@ -429,7 +429,7 @@ public class UIMultiDeck extends UIWindow {
     yp += 100;
     for (LXDeck deck : lx.engine.getDecks()) {
       blendModes[deck.index] = new UIToggleSet(4, yp, this.width-8, 18)
-      .setOptions(new String[] { "ADD", "MLT", "LITE", "LERP" })
+      .setOptions(new String[] { "ADD", "MLT", "LITE", "SUBT" })
       .setParameter(getFaderTransition(deck).blendMode)
       .setEvenSpacing();
       blendModes[deck.index].setVisible(deck.index == focusedDeck());

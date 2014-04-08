@@ -447,7 +447,7 @@ class TreesTransition extends LXTransition {
         case 0: blendType = ADD; break;
         case 1: blendType = MULTIPLY; break;
         case 2: blendType = LIGHTEST; break;
-        case 3: blendType = BLEND; break;
+        case 3: blendType = SUBTRACT; break;
         }
       }
     });
@@ -463,12 +463,14 @@ class TreesTransition extends LXTransition {
         }
       } else if (amount == 1) {
         for (LXPoint p : tree.points) {
-          colors[p.index] = this.lx.applet.blendColor(c1[p.index], c2[p.index], this.blendType);
+          int color2 = blendType == SUBTRACT ? LX.hsb(0, 0, LX.b(c2[p.index])) : c2[p.index]; 
+          colors[p.index] = this.lx.applet.blendColor(c1[p.index], color2, this.blendType);
         }
       } else {
         for (LXPoint p : tree.points) {
+          int color2 = blendType == SUBTRACT ? LX.hsb(0, 0, LX.b(c2[p.index])) : c2[p.index];
           this.colors[p.index] = this.lx.applet.lerpColor(c1[p.index],
-            this.lx.applet.blendColor(c1[p.index], c2[p.index], this.blendType),
+            this.lx.applet.blendColor(c1[p.index], color2, this.blendType),
             amount, PConstants.RGB);
         }
       }
