@@ -299,21 +299,14 @@ class RandomColor extends LXPattern {
   }
 }
 
-class RandomColorSync extends LXPattern {
+class RandomColorAll extends LXPattern {
   
-  RandomColorSync(LX lx) {
+  RandomColorAll(LX lx) {
     super(lx);
   }
   
   public void run(double deltaMs) {
-    int colr = (int)random(360);
-    for (Cube cube : model.cubes) {
-      colors[cube.index] = lx.hsb(
-        colr,
-        100,
-        100
-      );
-    }
+    setColors(lx.hsb(random(360), 100, 100));
   }
 }
 

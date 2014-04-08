@@ -106,7 +106,7 @@ LXPattern[] patterns(LX lx) {
     new Fade(lx),
     new Strobe(lx),
     new RandomColor(lx),
-    new RandomColorSync(lx),
+    new RandomColorAll(lx),
   };
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
   for (LXPattern p : patterns) {
