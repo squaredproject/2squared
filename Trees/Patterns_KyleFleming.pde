@@ -243,22 +243,38 @@ class Bubbles extends LXPattern {
 
 class Strobe extends LXPattern {
   
-  final BasicParameter speed = new BasicParameter("DELA", 100, 30, 2000);
-  final SquareLFO toggle = new SquareLFO(0, 100, speed);
+  final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
+  final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
+
+  int timer = 0;
+  boolean on = false;
+  
+  int WHITE;
+  int BLACK;
   
   Strobe(LX lx) {
     super(lx);
+    
     addParameter(speed);
-    addModulator(toggle.start());
+    addParameter(balance);
+    
+    WHITE = java.awt.Color.WHITE.getRGB();
+    BLACK = java.awt.Color.BLACK.getRGB();
   }
   
   public void run(double deltaMs) {
+    
+    timer += deltaMs;
+    
+    if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
+      timer = 0;
+      on = !on;
+    }
+    
+    int colorVal = on ? WHITE : BLACK;
+    
     for (Cube cube : model.cubes) {
-      colors[cube.index] = lx.hsb(
-        0,
-        toggle.getValuef(),
-        100 - toggle.getValuef()
-      );
+      colors[cube.index] = colorVal;
     }
   }
 }
