@@ -10,8 +10,8 @@ class SyphonPattern extends LXPattern {
   float xscale, yscale = 0f;
   int[] xpoints, ypoints;
 
-  final DiscreteParameter getWidth = new DiscreteParameter("GW", 1, 10);
-  final DiscreteParameter mode = new DiscreteParameter("MODE", 1, 10);
+  final DiscreteParameter getWidth = new DiscreteParameter("GW", 1, 20);
+  final DiscreteParameter mode = new DiscreteParameter("MODE", 1, 5);
 
   SyphonPattern(LX lx, PApplet applet) {
     super(lx);
@@ -33,6 +33,14 @@ class SyphonPattern extends LXPattern {
     }
   }
 
+  private color mode1(Cube cube, int cubeIdx) {
+    return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
+  }
+  
+  private color mode2(Cube cube, int cubeIdx) {
+    return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
+  }
+  
   public void run(double deltaMs) {
     if (client.available()) {
 
@@ -42,8 +50,15 @@ class SyphonPattern extends LXPattern {
         generateMap(buffer.width, buffer.height);
       }
       int cubeIdx = 0;
+      color c = 0;
       for (Cube cube : model.cubes) {
-        color c = weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
+        switch (mode.getValuei()) {
+          case 1: c = mode1(cube, cubeIdx);
+                  break;
+          case 2: c = mode2(cube, cubeIdx);
+                  break;          
+        }
+        
         setColor(cube, c);
         cubeIdx++;
       }
