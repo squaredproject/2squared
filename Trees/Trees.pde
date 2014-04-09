@@ -62,6 +62,7 @@ final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 static JSONArray clusterConfig;
 static Geometry geometry = new Geometry();
 
+MidiInputDevice drumpad = null;
 Model model;
 LX lx;
 LXDatagramOutput output;
@@ -88,6 +89,7 @@ LXPattern[] patterns(LX lx) {
     new Lightning(lx),
     new SparkleTakeOver(lx),
     new MultiSine(lx),
+    new DrumpadPattern(lx),
     new Ripple(lx),
     new SeeSaw(lx),
     new SweepPattern(lx),
@@ -120,6 +122,15 @@ LXPattern[] patterns(LX lx) {
 void setup() {
   size(960, 600, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
+  
+  // TODO(kyle): implement your device here
+  for (MidiInputDevice mid : RWMidi.getInputDevices()) {
+    println(mid.getName()); // remove this line after you figure out your device name
+    if (mid.getName().contains("YOUR DEVICE")) { // update that to identify your device
+      drumpad = mid;
+      break;
+    }
+  }
   
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
