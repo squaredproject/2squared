@@ -19,18 +19,51 @@ final static byte[] APC_MODE_SYSEX = {
   (byte) 0xf7, // sysex end
 };
 
+final static int MPK25_PAD_CHANNEL = 1;
+final static int MPK25_PAD1_PITCH = 60;
+final static int MPK25_PAD2_PITCH = 62;
+final static int MPK25_PAD3_PITCH = 64;
+final static int MPK25_PAD4_PITCH = 65;
+final static int MPK25_PAD5_PITCH = 67;
+final static int MPK25_PAD6_PITCH = 69;
+final static int MPK25_PAD7_PITCH = 71;
+final static int MPK25_PAD8_PITCH = 72;
+final static int MPK25_PAD9_PITCH = 74;
+final static int MPK25_PAD10_PITCH = 76;
+final static int MPK25_PAD11_PITCH = 77;
+final static int MPK25_PAD12_PITCH = 78;
+
+final static int[] MPK25_PAD_PITCHES = {
+  MPK25_PAD1_PITCH,
+  MPK25_PAD2_PITCH,
+  MPK25_PAD3_PITCH,
+  MPK25_PAD4_PITCH,
+  MPK25_PAD5_PITCH,
+  MPK25_PAD6_PITCH,
+  MPK25_PAD7_PITCH,
+  MPK25_PAD8_PITCH,
+  MPK25_PAD9_PITCH,
+  MPK25_PAD10_PITCH,
+  MPK25_PAD11_PITCH,
+  MPK25_PAD12_PITCH
+};
+
 class MidiEngine {
+  
+  final LXMidiDevice mpk25;
   
   public MidiEngine() {
     previewChannel.setValue(NUM_CHANNELS);
     setAPC40Mode();
     MidiInputDevice input = null;
     MidiOutputDevice output = null;
+    MidiInputDevice mpkInput = null;
     
     for (MidiInputDevice mid : RWMidi.getInputDevices()) {
-      if (mid.getName().contains("APC40")) {
+      if (input == null && mid.getName().contains("APC40")) {
         input = mid;
-        break;
+      } else if (mpkInput == null && mid.getName().contains("MPK25")) {
+        mpkInput = mid;
       }
     }
     for (MidiOutputDevice mod : RWMidi.getOutputDevices()) {
@@ -184,6 +217,13 @@ class MidiEngine {
         }
       });
       setAutomation(apc40);
+    }
+    
+    if (mpkInput != null) {
+      mpk25 = new LXMidiDevice(mpkInput) {
+      };
+    } else {
+      mpk25 = null;
     }
   }
   

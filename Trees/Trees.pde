@@ -81,6 +81,7 @@ BooleanParameter[] effectButtonParameters;
 LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
 BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
+MidiEngine midiEngine;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
@@ -220,7 +221,7 @@ void setup() {
   lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4));
   
   // MIDI control
-  new MidiEngine();
+  midiEngine = new MidiEngine();
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
