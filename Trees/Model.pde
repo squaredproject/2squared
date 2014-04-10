@@ -502,12 +502,12 @@ public static class Cube extends LXModel {
     this.lx = x;
     this.ly = y;
     this.lz = z;
-    this.tx = x - treeCenter.x;
-    this.ty = y - treeCenter.y;
-    this.tz = z - treeCenter.z;
     this.x = transform.x();
     this.y = transform.y();
     this.z = transform.z();
+    this.tx = this.x - treeCenter.x;
+    this.ty = this.y - treeCenter.y;
+    this.tz = this.z - treeCenter.z;
 
     this.r = dist(treeCenter.x, treeCenter.z, this.x, this.z);
     this.theta = 180 + 180/PI*atan2(this.z - treeCenter.z, this.x - treeCenter.x);
