@@ -134,11 +134,15 @@ void setup() {
     
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
-  for (int i = 1; i < 8; ++i) {
+  for (int i = 1; i < NUM_CHANNELS; ++i) {
     lx.engine.addDeck(patterns(lx));
   }
   for (LXDeck deck : lx.engine.getDecks()) {
-    deck.goIndex(deck.index);
+    if (deck.index == 0) {
+      deck.goIndex(deck.index);
+    } else {
+      deck.goIndex(28);
+    }
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
   

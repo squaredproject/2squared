@@ -145,7 +145,8 @@ class MidiEngine {
       // Cue activators
       apc40.bindNotes(previewChannel, channels, APC40.ACTIVATOR, NUM_CHANNELS);
       
-      for (final LXDeck deck : lx.engine.getDecks()) {
+      for (int i = 0; i < NUM_CHANNELS; i++) {
+        final LXDeck deck = lx.engine.getDeck(i);
         deck.addListener(new LXDeck.AbstractListener() {
           public void patternWillChange(LXDeck deck, LXPattern pattern, LXPattern nextPattern) {
             setPattern(apc40, deck);
@@ -274,7 +275,8 @@ class UIChannelFaders extends UIContext {
     final UIButton[] lefts = new UIButton[NUM_CHANNELS];
     final UIButton[] rights = new UIButton[NUM_CHANNELS];
     final UILabel[] labels = new UILabel[NUM_CHANNELS];
-    for (final LXDeck deck : lx.engine.getDecks()) {
+    for (int i = 0; i < NUM_CHANNELS; i++) {
+      final LXDeck deck = lx.engine.getDeck(i);
       float xPos = PADDING + deck.index*(PADDING+FADER_WIDTH) + SPACER;
       
       cues[deck.index] = new UIButton(xPos, PADDING, FADER_WIDTH, BUTTON_HEIGHT) {
@@ -423,7 +425,8 @@ class UIChannelFaders extends UIContext {
     } 
     
     public void onDraw(UI ui, PGraphics pg) {
-      for (LXDeck deck : lx.engine.getDecks()) {
+      for (int i = 0; i < NUM_CHANNELS; i++) {
+        LXDeck deck = lx.engine.getDeck(i);
         LXPattern pattern = deck.getActivePattern();
         float goMillis = pattern.timer.goNanos / 1000000.;
         float fps60 = 1000 / 60. / 3.;
@@ -462,10 +465,11 @@ public class UIMultiDeck extends UIWindow {
     super(ui, "CHANNEL " + (focusedDeck()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 108 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
-    patternLists = new UIItemList[lx.engine.getDecks().size()];
-    blendModes = new UIToggleSet[lx.engine.getDecks().size()];
+    patternLists = new UIItemList[NUM_CHANNELS];
+    blendModes = new UIToggleSet[NUM_CHANNELS];
     lxListeners = new LXDeck.Listener[patternLists.length];
-    for (LXDeck deck : lx.engine.getDecks()) {
+    for (int i = 0; i < NUM_CHANNELS; i++) {
+      LXDeck deck = lx.engine.getDeck(i);
       List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
       for (LXPattern p : deck.getPatterns()) {
         items.add(new PatternScrollItem(deck, p));
@@ -484,7 +488,8 @@ public class UIMultiDeck extends UIWindow {
     }
     
     yp += 100;
-    for (LXDeck deck : lx.engine.getDecks()) {
+    for (int i = 0; i < NUM_CHANNELS; i++) {
+      LXDeck deck = lx.engine.getDeck(i);
       blendModes[deck.index] = new UIToggleSet(4, yp, this.width-8, 18)
       .setOptions(new String[] { "ADD", "MLT", "LITE", "SUBT" })
       .setParameter(getFaderTransition(deck).blendMode)
@@ -493,7 +498,8 @@ public class UIMultiDeck extends UIWindow {
       blendModes[deck.index].addToContainer(this);
     }
      
-    for (LXDeck deck : lx.engine.getDecks()) {  
+    for (int i = 0; i < NUM_CHANNELS; i++) {
+      LXDeck deck = lx.engine.getDeck(i); 
       lxListeners[deck.index] = new LXDeck.AbstractListener() {
         public void patternWillChange(LXDeck deck, LXPattern pattern,
             LXPattern nextPattern) {
