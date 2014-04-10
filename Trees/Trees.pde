@@ -1,3 +1,4 @@
+import heronarts.lx.ui.component.*;
 import heronarts.lx.*;
 import heronarts.lx.effect.*;
 import heronarts.lx.model.*;
@@ -10,6 +11,7 @@ import heronarts.lx.midi.*;
 import heronarts.lx.modulator.*;
 import heronarts.lx.ui.*;
 import heronarts.lx.ui.control.*;
+
 
 import ddf.minim.*;
 import processing.opengl.*;
@@ -223,6 +225,7 @@ void setup() {
   lx.ui.addLayer(new UIEffects(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UILoopRecorder(lx.ui));
+  lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4));
   
   // MIDI control
   new MidiEngine();
@@ -453,6 +456,21 @@ class UIOutput extends UIWindow {
     void onMousePressed() {
       datagram.enabled.toggle();
     }
+  }
+}
+
+class UIMasterBpm extends UIWindow {
+  UILabel bpmLabel;
+  
+  UIMasterBpm(UI ui, float x, float y) {
+    super(ui, "Master BPM", x, y, 140, 78);
+    (bpmLabel = new UILabel(4, TITLE_LABEL_HEIGHT - 3, 12 * 3, 20))
+    .setLabel("120")
+    .setAlignment(CENTER, CENTER)
+    .setBorderColor(#666666)
+    .setBackgroundColor(#292929)
+    .addToContainer(this);
+    
   }
 }
 
