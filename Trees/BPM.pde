@@ -1,13 +1,42 @@
 class UIMasterBpm extends UIWindow {
-  UILabel bpmLabel;
+  
+  final static int BUTT_WIDTH = 12 * 3;
+  final static int BUTT_HEIGHT = 20;
+  final static int SPACING = 4;
   
   UIMasterBpm(UI ui, float x, float y) {
     super(ui, "MASTER BPM", x, y, 140, 78);
-    (bpmLabel = new UILabel(4, TITLE_LABEL_HEIGHT - 3, 12 * 3, 20))
-    .setLabel("120")
-    .setAlignment(CENTER, CENTER)
-    .setBorderColor(#666666)
-    .setBackgroundColor(#292929)
+    int yPos = TITLE_LABEL_HEIGHT - 3;
+    int xPos = SPACING;
+
+    new UILabel(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    .setLabel("BPM: ")
+    .setAlignment(LEFT, CENTER);
+    .addToContainer(this);
+    
+    xPos += BUTT_WIDTH + SPACING;
+  
+    new UIIntegerBox(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    .addToContainer(this);
+    yPos += BUTT_HEIGHT + SPACING;
+
+    new UIButton(SPACING, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    .setLabel("TAP")
+    .setMomentary(true)
+    .addToContainer(this);
+    
+    xPos = SPACING + BUTT_WIDTH + SPACING;
+    
+    new UIButton(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    .setLabel("+")
+    .setMomentary(true)
+    .addToContainer(this);
+    
+    xPos += BUTT_WIDTH + SPACING;
+    
+    new UIButton(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    .setLabel("-")
+    .setMomentary(true)
     .addToContainer(this);
     
   }
