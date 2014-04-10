@@ -1,55 +1,6 @@
 int WHITE = java.awt.Color.WHITE.getRGB();
 int BLACK = java.awt.Color.BLACK.getRGB();
 
-public class DrumpadPattern extends LXPattern {
-  
-  final BasicParameter attack = new BasicParameter("ATK", 10, 1, 1000);
-  final BasicParameter release = new BasicParameter("REL", 1000, 50, 5000);
-  final BasicParameter width = new BasicParameter("WIDTH", 5*FEET, 2*FEET, 40*FEET);
-  
-  final LinearEnvelope level = new LinearEnvelope(0, 0, 0); 
-  
-  public DrumpadPattern(LX lx) {
-    super(lx);
-    addParameter(attack);
-    addParameter(release);
-    addParameter(width);
-    addModulator(level.start());
-    
-    if (drumpad != null) {
-      drumpad.createInput(this);
-    }
-  }
-  
-  public void run(double deltaMs) {
-    for (LXPoint p : model.points) {
-      colors[p.index] = lx.hsb(
-        lx.getBaseHuef(),
-        100,
-        max(0, 100 - (100/width.getValuef()) * abs(p.y - level.getValuef())) 
-      );
-    }
-  }
-  
-  private int noteCount = 0;
-  
-  public void noteOnReceived(Note note) {
-    int pitch = note.getPitch(); // from 0 to 127
-    int velocity = note.getVelocity(); // from 0 to 127
-    
-    // TODO - different effects for different pads in here
-    
-    level.setRangeFromHereTo(lerp(model.yMax/2, model.yMax, pitch / 127.), attack.getValuef()).start();
-    ++noteCount;
-  }
-  
-  public void noteOffReceived(Note note) {
-    if (--noteCount == 0) {
-      level.setRangeFromHereTo(-30, release.getValuef()).start();
-    }
-  }
-}
-
 class BassSlam extends LXPattern {
   
   final static int SLAM_STATE_1 = 1 << 0;
