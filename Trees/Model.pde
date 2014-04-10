@@ -214,6 +214,7 @@ public static class Tree extends LXModel {
           int clusterFace = cp.getInt("face");
           float clusterOffset = cp.getFloat("offset");
           float clusterMountPoint = cp.getFloat("mountPoint");
+          float clusterSkew = cp.getFloat("skew", 0);
           
           t.push();
           float cry = 0;
@@ -245,7 +246,7 @@ public static class Tree extends LXModel {
               cry += QUARTER_PI;
               break;
           }
-          clusters.add(new Cluster(ipAddress, treeCenter, t, ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y())));
+          clusters.add(new Cluster(ipAddress, treeCenter, t, ry + cry*180/PI, 180/PI*geometry.angleFromAxis(t.y()), clusterSkew));
           t.pop();
         }
       }
@@ -329,16 +330,17 @@ public static class Cluster extends LXModel {
   public final float rx;
   
   /**
+   * Skew about the mount point.
+   */
+  public final float skew;
+  
+  /**
    * IP address of the cluster NDB
    */
   public final String ipAddress;
   
-  Cluster(String ipAddress, PVector treeCenter, LXTransform transform, float ry) {
-    this(ipAddress, treeCenter, transform, ry, 0);
-  }
-  
-  Cluster(String ipAddress, PVector treeCenter, LXTransform transform, float ry, float rx) {
-    super(new Fixture(treeCenter, transform, ry, rx));
+  Cluster(String ipAddress, PVector treeCenter, LXTransform transform, float ry, float rx, float skew) {
+    super(new Fixture(treeCenter, transform, ry, rx, skew));
     Fixture f = (Fixture) this.fixtures.get(0);
     this.ipAddress = ipAddress;
     this.cubes = Collections.unmodifiableList(f.cubes);
@@ -350,15 +352,17 @@ public static class Cluster extends LXModel {
     this.tz = this.z - treeCenter.z;
     this.ry = ry;
     this.rx = rx;
+    this.skew = skew;
   }
   
   private static class Fixture extends LXAbstractFixture {
 
     final List<Cube> cubes;
     
-    Fixture(PVector treeCenter, LXTransform transform, float ry, float rx) {
+    Fixture(PVector treeCenter, LXTransform transform, float ry, float rx, float skew) {
       transform.push();
       transform.rotateX(rx * PI / 180);
+      transform.rotateZ(skew * PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
         new Cube( 1, treeCenter, transform, Cube.SMALL,   -7, -98, -10,  -5,  18, -18),
         new Cube( 2, treeCenter, transform, Cube.SMALL,   -4, -87,  -9,  -3,  20, -20),

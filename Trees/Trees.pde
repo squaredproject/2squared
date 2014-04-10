@@ -340,6 +340,7 @@ class UITrees extends UICameraComponent {
       int clusterFace = config.getInt("face");
       float clusterOffset = config.getFloat("offset");
       float clusterMountPoint = config.getFloat("mountPoint");
+      float clusterSkew = config.getFloat("skew", 0);
       float cry = 0;
       switch (clusterFace) {
         // Could be math, but this way it's readable!
@@ -370,7 +371,8 @@ class UITrees extends UICameraComponent {
           break;
       }
       
-      rotateX(-geometry.angleFromAxis(geometry.heights[clusterLevel]));      
+      rotateX(-geometry.angleFromAxis(geometry.heights[clusterLevel]));
+      rotateZ(-clusterSkew * PI / 180);
       drawCubes(cluster, colors);
       
       popMatrix();
@@ -388,6 +390,7 @@ class UITrees extends UICameraComponent {
     translate(cluster.x, cluster.y, cluster.z);
     rotateY(-cluster.ry * PI / 180);
     rotateX(-cluster.rx * PI / 180);
+    rotateZ(-cluster.skew * PI / 180);
     drawCubes(cluster, colors);
     popMatrix();
   }
@@ -408,25 +411,20 @@ class UITrees extends UICameraComponent {
 
 class UIOutput extends UIWindow {
   UIOutput(UI ui, float x, float y) {
-    super(ui, "LIVE OUTPUT", x, y, 140, 72 + 278);
+    super(ui, "LIVE OUTPUT", x, y, 140, 72 + 239);
     float yPos = UIWindow.TITLE_LABEL_HEIGHT - 2;
     new UIButton(4, yPos, width-8, 20)
       .setParameter(output.enabled)
       .setActiveLabel("Enabled")
       .setInactiveLabel("Disabled")
       .addToContainer(this);
-    yPos += 24;
-    
-    new UISlider(4, yPos, width-8, 20)
-    .setParameter(output.brightness)
-    .addToContainer(this);
-    yPos += 24;
+    yPos += 28;
     
     List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
     for (LXDatagram datagram : datagrams) {
       items.add(new DatagramItem(datagram));
     }
-    new UIItemList(1, yPos, width-2, 280)
+    new UIItemList(1, yPos, width-2, 260)
     .setItems(items)
     .setBackgroundColor(#ff0000)
     .addToContainer(this);

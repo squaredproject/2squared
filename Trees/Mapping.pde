@@ -35,9 +35,10 @@ class UIMapping extends UIWindow {
   final UIToggleSet face;
   final UISlider offset;
   final UISlider mountPoint;
+  final UISlider skew;
   
   UIMapping(UI ui) {
-    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 268, 140, 264);
     
     final UIIntegerBox clusterIndex = new UIIntegerBox().setParameter(mappingTool.clusterIndex);
     
@@ -77,6 +78,14 @@ class UIMapping extends UIWindow {
       }
     });
     
+    BasicParameter skewParameter;
+    (skew = new UISlider()).setParameter(skewParameter = new BasicParameter("SKEW", 0, 30, -30));
+    skewParameter.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        mappingTool.getConfig().setFloat("skew", parameter.getValuef());
+      }
+    });
+    
     mappingTool.clusterIndex.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         setCluster();
@@ -105,6 +114,7 @@ class UIMapping extends UIWindow {
     yPos = labelRow(yPos, "FACE", face);
     yPos = labelRow(yPos, "OFFSET", offset);
     yPos = labelRow(yPos, "MOUNT", mountPoint);
+    yPos = labelRow(yPos, "SKEW", skew);
     
     new UIButton(4, yPos, this.width-8, 20) {
       void onToggle(boolean active) {
@@ -140,5 +150,6 @@ class UIMapping extends UIWindow {
     face.setValue(cp.getInt("face"));
     offset.getParameter().setValue(cp.getFloat("offset"));
     mountPoint.getParameter().setValue(cp.getFloat("mountPoint"));
+    skew.getParameter().setValue(cp.getFloat("skew", 0));
   }
 }
