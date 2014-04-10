@@ -1,3 +1,6 @@
+int WHITE = java.awt.Color.WHITE.getRGB();
+int BLACK = java.awt.Color.BLACK.getRGB();
+
 public class DrumpadPattern extends LXPattern {
   
   final BasicParameter attack = new BasicParameter("ATK", 10, 1, 1000);
@@ -47,6 +50,51 @@ public class DrumpadPattern extends LXPattern {
   }
 }
 
+class BassSlam extends LXPattern {
+  
+  final static int SLAM_STATE_1 = 1 << 0;
+  final static int SLAM_STATE_2 = 1 << 1;
+  
+  int state = SLAM_STATE_1;
+  double timer = 0;
+  
+  BassSlam(LX lx) {
+    super(lx);
+  }
+  
+  public void run(double deltaMs) {
+    timer += deltaMs;
+    switch(state) {
+      case SLAM_STATE_1:
+        float time = (float)(timer / 500);
+        float y;
+        if (time < 1) {
+          y = 1 + pow(time + 0.16, 2) * sin(18 * (time + 0.16)) / 4;
+        } else {
+          y = 1.32 - 20 * pow(time - 1, 2);
+        }
+        y = 100 * (y - 1) + 250;
+        if (y <= 0) {
+          state = SLAM_STATE_2;
+          timer = 0;
+          y = 0;
+        }
+        
+        for (Cube cube : model.cubes) {
+          setColor(cube.index, lx.hsb(200, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.y), 0, 100)));
+        }
+        break;
+      case SLAM_STATE_2:
+        if (timer >= 20) {
+          state = SLAM_STATE_1;
+          timer = 0;
+        }
+        setColors(lx.hsb(200, 100, 100));
+        break;
+    }
+  }
+}
+
 abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern {
   
   BasicParameter frequency;
@@ -69,7 +117,6 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
   }
   
   public void run(double deltaMs) {
-    clearColors();
     
     if (objects.size() < ceil(frequency.getValuef())) {
       int missing = ceil(frequency.getValuef()) - objects.size();
@@ -95,6 +142,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
     }
     
     for (Cube cube : model.cubes) {
+      blendColor(cube.index, lx.hsb(0, 0, 10), SUBTRACT);
       PVector cubePoint = new PVector(cube.theta, cube.y);
       for (ObjectType object : objects) {
         addColor(cube.index, object.getColorForCube(cubePoint));
@@ -139,21 +187,24 @@ class Explosion extends MultiObject {
   final static int EXPLOSION_STATE_IMPLOSION_EXPAND = 1 << 0;
   final static int EXPLOSION_STATE_IMPLOSION_WAIT = 1 << 1;
   final static int EXPLOSION_STATE_IMPLOSION_CONTRACT = 1 << 2;
-  final static int EXPLOSION_STATE_EXPLOSION = 1 << 3;
+  final static int EXPLOSION_STATE_FLASH = 1 << 3;
+  final static int EXPLOSION_STATE_EXPLOSION = 1 << 4;
   
   PVector origin;
   int hue;
   
-  float accelOfImplosion;
+  float accelOfImplosion = 3000;
   Accelerator implosionRadius;
   float implosionWaitTimer = 100;
   Accelerator explosionRadius;
   LXModulator explosionFade;
+  float explosionThetaOffset;
+  float flashTimer = 50;
   
   int state = EXPLOSION_STATE_IMPLOSION_EXPAND;
   
   void init() {
-    accelOfImplosion = 3000;
+    explosionThetaOffset = random(360);
     implosionRadius = new Accelerator(0, 700, -accelOfImplosion);
     lx.addModulator(implosionRadius.start());
     explosionFade = new LinearEnvelope(1, 0, 1000);
@@ -177,8 +228,14 @@ class Explosion extends MultiObject {
         break;
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         if (implosionRadius.getValuef() < 0) {
-          state = EXPLOSION_STATE_EXPLOSION;
+          state = EXPLOSION_STATE_FLASH;
           lx.removeModulator(implosionRadius.stop());
+        }
+        break;
+      case EXPLOSION_STATE_FLASH:
+        flashTimer -= deltaMs;
+        if (flashTimer <= 0) {
+          state = EXPLOSION_STATE_EXPLOSION;
           explosionRadius = new Accelerator(0, -implosionRadius.getVelocityf(), -300);
           lx.addModulator(explosionRadius.start());
           lx.addModulator(explosionFade.start());
@@ -202,8 +259,10 @@ class Explosion extends MultiObject {
       case EXPLOSION_STATE_IMPLOSION_WAIT:
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         return lx.hsb(hue, 100, 100 * LXUtils.constrainf((implosionRadius.getValuef() - dist) / 10, 0, 1));
+      case EXPLOSION_STATE_FLASH:
+        return lx.hsb(hue, 100, 20);
       default:
-        float theta = PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
+        float theta = explosionThetaOffset + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
         return lx.hsb(hue, 100, 100
             * LXUtils.constrainf(1 - (dist - explosionRadius.getValuef()) / 10, 0, 1)
             * LXUtils.constrainf(1 - (explosionRadius.getValuef() - dist) / 200, 0, 1)
@@ -307,6 +366,12 @@ class Wisp extends MultiObject {
   }
   
   float getBrightnessForCube(PVector cubePoint) {
+//    float distFromSource = PVector.dist(cubePoint, currentPoint);
+//    float tailFadeFactor = distFromSource / pathDist;
+//    return max(0, (100 - 10 * distFromSource / thickness));
+//    float dist = (float)LXUtils.distance(currentTheta, currentY,
+//      closestPointToTrail.x, closestPointToTrail.y);
+//    return max(0, (100 - 10 * distFromTrail / thickness) * max(0, 1 - tailFadeFactor - globalFadeFactor));
     PVector closestPointToTrail = getClosestPointOnLineOnCylinder(startPoint, currentPoint, cubePoint);
     float distFromSource = (float)LXUtils.distance(currentTheta, currentY,
       closestPointToTrail.x, closestPointToTrail.y);
@@ -317,6 +382,10 @@ class Wisp extends MultiObject {
     return max(0, (100 - 10 * distFromTrail / thickness) * max(0, 1 - tailFadeFactor - globalFadeFactor));
   }
 }
+
+//float wrapDist2d(PVector a, PVector b) {
+//  
+//}
 
 PVector movePointToSamePlane(PVector reference, PVector point) {
   return new PVector(moveThetaToSamePlane(reference.x, point.x), point.y);
@@ -465,17 +534,11 @@ class Strobe extends LXPattern {
   int timer = 0;
   boolean on = false;
   
-  int WHITE;
-  int BLACK;
-  
   Strobe(LX lx) {
     super(lx);
     
     addParameter(speed);
     addParameter(balance);
-    
-    WHITE = java.awt.Color.WHITE.getRGB();
-    BLACK = java.awt.Color.BLACK.getRGB();
   }
   
   public void run(double deltaMs) {

@@ -109,6 +109,7 @@ LXPattern[] patterns(LX lx) {
     new Fire(lx),
     new Wisps(lx),
     new Explosions(lx),
+    new BassSlam(lx),
     new Rain(lx),
     new Fade(lx),
     new Strobe(lx),
