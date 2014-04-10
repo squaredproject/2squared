@@ -64,7 +64,6 @@ final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 static JSONArray clusterConfig;
 static Geometry geometry = new Geometry();
 
-MidiInputDevice drumpad = null;
 Model model;
 LX lx;
 LXDatagramOutput output;
@@ -76,6 +75,7 @@ final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
 BlurEffect blurEffect;
 ColorEffect colorEffect;
 MappingTool mappingTool;
+BPMTool bpmTool;
 LXListenableNormalizedParameter[] effectKnobParameters;
 BooleanParameter[] effectButtonParameters;
 LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
@@ -91,7 +91,6 @@ LXPattern[] patterns(LX lx) {
     new Lightning(lx),
     new SparkleTakeOver(lx),
     new MultiSine(lx),
-    new DrumpadPattern(lx),
     new Ripple(lx),
     new SeeSaw(lx),
     new SweepPattern(lx),
@@ -125,15 +124,6 @@ void setup() {
   size(960, 600, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
-  // TODO(kyle): implement your device here
-  for (MidiInputDevice mid : RWMidi.getInputDevices()) {
-    println(mid.getName()); // remove this line after you figure out your device name
-    if (mid.getName().contains("YOUR DEVICE")) { // update that to identify your device
-      drumpad = mid;
-      break;
-    }
-  }
-  
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
   model = new Model();
@@ -154,6 +144,7 @@ void setup() {
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
+  lx.addEffect(bpmTool = new BPMTool(lx));
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -456,21 +447,6 @@ class UIOutput extends UIWindow {
     void onMousePressed() {
       datagram.enabled.toggle();
     }
-  }
-}
-
-class UIMasterBpm extends UIWindow {
-  UILabel bpmLabel;
-  
-  UIMasterBpm(UI ui, float x, float y) {
-    super(ui, "Master BPM", x, y, 140, 78);
-    (bpmLabel = new UILabel(4, TITLE_LABEL_HEIGHT - 3, 12 * 3, 20))
-    .setLabel("120")
-    .setAlignment(CENTER, CENTER)
-    .setBorderColor(#666666)
-    .setBackgroundColor(#292929)
-    .addToContainer(this);
-    
   }
 }
 
