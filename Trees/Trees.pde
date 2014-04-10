@@ -227,6 +227,9 @@ void setup() {
   // MIDI control
   midiEngine = new MidiEngine();
   
+  // Drumpad
+  setupDrumpad();
+  
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
