@@ -46,69 +46,107 @@ class BassSlam extends LXPattern {
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TriggerablePattern {
   
   BasicParameter frequency;
   
-  ArrayList<ObjectType> objects;
+  final boolean shouldAutofade;
   
+  final ArrayList<ObjectType> objects;
   double pauseTimerCountdown = 0;
+//  BasicParameter fadeLength
   
   MultiObjectPattern(LX lx) {
+    this(lx, true);
+  }
+  
+  MultiObjectPattern(LX lx, boolean shouldAutofade) {
     super(lx);
     
     frequency = getFrequencyParameter();
     addParameter(frequency);
     
+    this.shouldAutofade = shouldAutofade;
+//    if (shouldAutofade) {
+      
+    
     objects = new ArrayList<ObjectType>();
   }
   
   BasicParameter getFrequencyParameter() {
-    return new BasicParameter("FREQ", 40, .1, 40, BasicParameter.Scaling.QUAD_IN);
+    return new BasicParameter("FREQ", .5, .1, 40, BasicParameter.Scaling.QUAD_IN);
   }
   
-  public void run(double deltaMs) {
-    
-    if (objects.size() < ceil(frequency.getValuef())) {
+//  BasicParameter getAutofadeParameter() {
+//    return new BasicParameter("TAIL", 
+//  }
+  
+  public void doRun(double deltaMs) {
+    if (triggered.getValueb() && objects.size() < ceil(frequency.getValuef())) {
       int missing = ceil(frequency.getValuef()) - objects.size();
       pauseTimerCountdown -= deltaMs;
       if (pauseTimerCountdown <= 0 || missing >= 5) {
         pauseTimerCountdown = (frequency.getValuef() < 1 ? 500 * (1 / frequency.getValuef() - 1) : 0)
                               + (missing == 1 ? random(200) : random(50));
         for (int i = ceil(missing / 3.); i > 0; i--) {
-          ObjectType object = generateObject();
-          object.init();
-          objects.add(object);
+          makeObject();
         }
       }
     }
     
-    Iterator<ObjectType> iter = objects.iterator();
-    while (iter.hasNext()) {
-      ObjectType object = iter.next();
-      object.run(deltaMs);
-      if (!object.running) {
-        iter.remove();
+    if (shouldAutofade) {
+      for (Cube cube : model.cubes) {
+        blendColor(cube.index, lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / 1000))), MULTIPLY);
       }
+    } else {
+      clearColors();
     }
     
-    for (Cube cube : model.cubes) {
-      blendColor(cube.index, lx.hsb(0, 0, 10), SUBTRACT);
-      PVector cubePoint = new PVector(cube.theta, cube.y);
-      for (ObjectType object : objects) {
-        addColor(cube.index, object.getColorForCube(cubePoint));
+    if (objects.size() > 0) {
+      Iterator<ObjectType> iter = objects.iterator();
+      while (iter.hasNext()) {
+        ObjectType object = iter.next();
+        if (!object.running) {
+          layers.remove(object);
+          iter.remove();
+        }
       }
     }
+  }
+  
+  void makeObject() {
+    ObjectType object = generateObject();
+    object.init();
+    addLayer(object);
+    objects.add(object);
+  }
+  
+  void onTriggerOn(float strength) {
+    makeObject();
   }
   
   abstract ObjectType generateObject();
 }
 
-abstract class MultiObject {
+abstract class MultiObject extends LXLayer {
+  
   boolean running = true;
-  abstract public void run(double deltaMs);
-  abstract int getColorForCube(PVector cubePoint);
+  
+  public void run(double deltaMs, int[] colors) {
+    if (running) {
+      run(deltaMs);
+      if (running) {
+        for (Cube cube : model.cubes) {
+          colors[cube.index] = blendColor(colors[cube.index], getColorForCube(cube), LIGHTEST);
+        }
+      }
+    }
+  }
+  
   void init() { }
+  void run(double deltaMs) { }
+  int getColorForCube(Cube cube) { return BLACK; }
+  float getRunningTimeEstimate() { return 1000; }
 }
 
 class Explosions extends MultiObjectPattern<Explosion> {
@@ -116,13 +154,13 @@ class Explosions extends MultiObjectPattern<Explosion> {
   ArrayList<Explosion> explosions;
   
   Explosions(LX lx) {
-    super(lx);
+    super(lx, false);
     
     explosions = new ArrayList<Explosion>();
   }
   
   BasicParameter getFrequencyParameter() {
-    return new BasicParameter("FREQ", .50, .1, 40, BasicParameter.Scaling.QUAD_IN);
+    return new BasicParameter("FREQ", .50, .1, 20, BasicParameter.Scaling.QUAD_IN);
   }
   
   Explosion generateObject() {
@@ -161,7 +199,7 @@ class Explosion extends MultiObject {
     explosionFade = new LinearEnvelope(1, 0, 1000);
   }
   
-  void run(double deltaMs) {
+  public void run(double deltaMs) {
     switch (state) {
       case EXPLOSION_STATE_IMPLOSION_EXPAND:
         if (implosionRadius.getVelocityf() <= 0) {
@@ -179,8 +217,12 @@ class Explosion extends MultiObject {
         break;
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         if (implosionRadius.getValuef() < 0) {
-          state = EXPLOSION_STATE_FLASH;
+//          state = EXPLOSION_STATE_FLASH;
           lx.removeModulator(implosionRadius.stop());
+          state = EXPLOSION_STATE_EXPLOSION;
+          explosionRadius = new Accelerator(0, -implosionRadius.getVelocityf(), -300);
+          lx.addModulator(explosionRadius.start());
+          lx.addModulator(explosionFade.start());
         }
         break;
       case EXPLOSION_STATE_FLASH:
@@ -202,8 +244,8 @@ class Explosion extends MultiObject {
     }
   }
   
-  int getColorForCube(PVector cubePoint) {
-    PVector cubePointPrime = movePointToSamePlane(origin, cubePoint);
+  int getColorForCube(Cube cube) {
+    PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);
     float dist = origin.dist(cubePointPrime);
     switch (state) {
       case EXPLOSION_STATE_IMPLOSION_EXPAND:
@@ -229,8 +271,8 @@ class Wisps extends MultiObjectPattern<Wisp> {
   final BasicParameter colorVariability = new BasicParameter("CVAR", 10, 180);
   final BasicParameter direction = new BasicParameter("DIR", 90, 360);
   final BasicParameter directionVariability = new BasicParameter("DVAR", 20, 180);
-  final BasicParameter thickness = new BasicParameter("WIDT", 1.5, 1, 20, BasicParameter.Scaling.QUAD_IN);
-  final BasicParameter speed = new BasicParameter("SPEE", 60, 1, 100, BasicParameter.Scaling.QUAD_IN);
+  final BasicParameter thickness = new BasicParameter("WIDT", 3.5, 1, 20, BasicParameter.Scaling.QUAD_IN);
+  final BasicParameter speed = new BasicParameter("SPEE", 10, 1, 20, BasicParameter.Scaling.QUAD_IN);
 
   // Possible other parameters:
   //  Distance
@@ -255,21 +297,19 @@ class Wisps extends MultiObjectPattern<Wisp> {
     Wisp wisp = new Wisp();
     wisp.runningTimer = 0;
     wisp.runningTimerEnd = 5000 / speed.getValuef();
-    wisp.decayTime = wisp.runningTimerEnd;
     float pathDirection = (float)(direction.getValuef()
       + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
-    wisp.pathDist = (float)LXUtils.random(80, min(450, 140 / max(0.01, abs(cos(PI * pathDirection / 180)))));
-    wisp.startTheta = random(360);
-    wisp.startY = (float)LXUtils.random(max(model.yMin, model.yMin - wisp.pathDist
-      * sin(PI * pathDirection / 180)), 
-    min(model.yMax, model.yMax - wisp.pathDist
-      * sin(PI * pathDirection / 180)));
-    wisp.startPoint = new PVector(wisp.startTheta, wisp.startY);
-    wisp.endTheta = wisp.startTheta + wisp.pathDist * cos(PI * pathDirection / 180);
-    wisp.endY = wisp.startY + wisp.pathDist * sin(PI * pathDirection / 180);
+    float pathDist = (float)LXUtils.random(80, min(450, 140 / max(0.01, abs(cos(PI * pathDirection / 180)))));
+    float startTheta = random(360);
+    float startY = (float)LXUtils.random(max(model.yMin, model.yMin - pathDist * sin(PI * pathDirection / 180)), 
+      min(model.yMax, model.yMax - pathDist * sin(PI * pathDirection / 180)));
+    wisp.startPoint = new PVector(startTheta, startY);
+    wisp.endPoint = PVector.fromAngle(pathDirection * PI / 180);
+    wisp.endPoint.mult(pathDist);
+    wisp.endPoint.add(wisp.startPoint);
     wisp.displayColor = (int)(baseColor.getValuef()
       + LXUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
-    wisp.thickness = thickness.getValuef() + (float)LXUtils.random(-.3, .3);
+    wisp.thickness = 10 * thickness.getValuef() + (float)LXUtils.random(-3, 3);
     
     return wisp;
   }
@@ -279,64 +319,48 @@ class Wisp extends MultiObject {
   
   float runningTimer;
   float runningTimerEnd;
-  float decayTime;
   
   PVector startPoint;
-  float startTheta;
-  float startY;
-  float endTheta;
-  float endY;
-  float pathDist;
+  PVector endPoint;
   
   int displayColor;
   float thickness;
   
-  float percentDone;
   PVector currentPoint;
-  float currentTheta;
-  float currentY;
-  float globalFadeFactor;
   
   public void run(double deltaMs) {
     if (running) {
       runningTimer += deltaMs;
-      if (runningTimer >= runningTimerEnd + decayTime) {
+      if (runningTimer >= runningTimerEnd) {
         running = false;
       } else {
-        percentDone = min(runningTimer, runningTimerEnd) / runningTimerEnd;
-        currentTheta = (float)LXUtils.lerp(startTheta, endTheta, percentDone);
-        currentY = (float)LXUtils.lerp(startY, endY, percentDone);
-        currentPoint = new PVector(currentTheta, currentY);
-        globalFadeFactor = max((runningTimer - runningTimerEnd) / decayTime, 0);
+        currentPoint = PVector.lerp(startPoint, endPoint, runningTimer / runningTimerEnd);
       }
     }
   }
   
-  int getColorForCube(PVector cubePoint) {
-    return lx.hsb(displayColor, 100, getBrightnessForCube(cubePoint));
+  int getColorForCube(Cube cube) {
+    return lx.hsb(displayColor, 100, getBrightnessForCube(cube));
   }
   
-  float getBrightnessForCube(PVector cubePoint) {
-//    float distFromSource = PVector.dist(cubePoint, currentPoint);
-//    float tailFadeFactor = distFromSource / pathDist;
-//    return max(0, (100 - 10 * distFromSource / thickness));
-//    float dist = (float)LXUtils.distance(currentTheta, currentY,
-//      closestPointToTrail.x, closestPointToTrail.y);
-//    return max(0, (100 - 10 * distFromTrail / thickness) * max(0, 1 - tailFadeFactor - globalFadeFactor));
-    PVector closestPointToTrail = getClosestPointOnLineOnCylinder(startPoint, currentPoint, cubePoint);
-    float distFromSource = (float)LXUtils.distance(currentTheta, currentY,
-      closestPointToTrail.x, closestPointToTrail.y);
-    
-    float distFromTrail = sqrt(pow(LXUtils.wrapdistf(closestPointToTrail.x, cubePoint.x, 360), 2)
-                         + pow(closestPointToTrail.y - cubePoint.y, 2));
-    float tailFadeFactor = distFromSource / pathDist;
-    return max(0, (100 - 10 * distFromTrail / thickness) * max(0, 1 - tailFadeFactor - globalFadeFactor));
+  float getBrightnessForCube(Cube cube) {
+    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
+    if (insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness)) {
+      float dist = PVector.dist(cubePointPrime, currentPoint);
+      return 100 * max(0, (1 - dist / thickness));
+    } else {
+      return 0;
+    }
   }
 }
 
-//float wrapDist2d(PVector a, PVector b) {
-//  
-//}
+boolean insideOfBoundingBox(PVector origin, PVector point, float xTolerance, float yTolerance) {
+  return abs(origin.x - point.x) <= xTolerance && abs(origin.y - point.y) <= yTolerance;
+}
+
+float wrapDist2d(PVector a, PVector b) {
+  return sqrt(pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + pow(a.y - b.y, 2));
+}
 
 PVector movePointToSamePlane(PVector reference, PVector point) {
   return new PVector(moveThetaToSamePlane(reference.x, point.x), point.y);
@@ -470,14 +494,15 @@ class RainDrop extends MultiObject {
     }
   }
   
-  int getColorForCube(PVector cubePoint) {
-    float distFromSource = PVector.dist(cubePoint, currentPoint);
+  int getColorForCube(Cube cube) {
+    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
+    float distFromSource = PVector.dist(cubePointPrime, currentPoint);
     float tailFadeFactor = distFromSource / pathDist;
     return lx.hsb(displayColor, 100, max(0, (100 - 10 * distFromSource / thickness)));
   }
 }
 
-class Strobe extends LXPattern {
+class Strobe extends TriggerablePattern {
   
   final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
   final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
@@ -492,14 +517,44 @@ class Strobe extends LXPattern {
     addParameter(balance);
   }
   
-  public void run(double deltaMs) {
-    timer += deltaMs;
-    if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
-      timer = 0;
-      on = !on;
+  public void doRun(double deltaMs) {
+    if (triggered.getValueb()) {
+      timer += deltaMs;
+      if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
+        timer = 0;
+        on = !on;
+      }
+      
+      setColors(on ? WHITE : BLACK);
     }
-    
-    setColors(on ? WHITE : BLACK);
+  }
+  
+  public void onTriggerOn(float strength) {
+    on = true;
+  }
+  
+  public void onTriggerOff() {
+    timer = 0;
+    on = false;
+    setColors(BLACK);
+  }
+}
+
+class Brightness extends TriggerablePattern {
+  
+  Brightness(LX lx) {
+    super(lx);
+  }
+  
+  public void doRun(double deltaMs) {
+  }
+  
+  public void onTriggerOn(float strength) {
+    setColors(lx.hsb(0, 0, 100 * strength));
+  }
+  
+  public void onTriggerOff() {
+    setColors(BLACK);
   }
 }
 

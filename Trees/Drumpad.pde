@@ -4,6 +4,9 @@ int drumpadDeckIndexEnd;
 
 TriggerablePattern[] drumpadPatterns(LX lx) {
   TriggerablePattern[] patterns = new TriggerablePattern[] {
+    new Brightness(lx),
+    new Explosions(lx),
+    new Wisps(lx),
   };
   return patterns;
 }
