@@ -481,6 +481,11 @@ public static class Cube extends LXModel {
    * Angle in degrees from cube center to center of tree in x-z plane
    */
   public final float theta;
+  
+  /**
+   * Point of the cube in the form (theta, y) relative to center of tree base
+   */
+   public final PVector cylinderPoint;
 
   Cube(int clusterPosition, PVector treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
     super(Arrays.asList(new LXPoint[] {
@@ -511,6 +516,7 @@ public static class Cube extends LXModel {
 
     this.r = dist(treeCenter.x, treeCenter.z, this.x, this.z);
     this.theta = 180 + 180/PI*atan2(this.z - treeCenter.z, this.x - treeCenter.x);
+    this.cylinderPoint = new PVector(this.theta, this.ty);
     
     transform.pop();
   }
