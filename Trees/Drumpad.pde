@@ -1,3 +1,5 @@
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 TriggerablePattern[] drumpadPatterns;
 int drumpadDeckIndexStart;
 int drumpadDeckIndexEnd;
@@ -42,38 +44,28 @@ abstract class TriggerablePattern extends LXPattern {
   
   BasicParameter strength = new BasicParameter("strength");
   BooleanParameter triggered = new BooleanParameter("triggered", true);
-  private final List<LXParameter> pendingParameterChanges = new ArrayList<LXParameter>();
+  private final ConcurrentLinkedQueue<LXParameter> pendingParameterChanges = new ConcurrentLinkedQueue<LXParameter>();
   
   TriggerablePattern(LX lx) {
     super(lx);
     
     strength.addListener(new LXParameterListener() {
       void onParameterChanged(LXParameter parameter) {
-        synchronized(pendingParameterChanges) {
-          pendingParameterChanges.add(parameter);
-        }
+        pendingParameterChanges.add(parameter);
       }
     });
   }
   
   public final void run(double deltaMs) {
-    ArrayList<LXParameter> parameterChanges = null;
-    synchronized(pendingParameterChanges) {
-      if (pendingParameterChanges.size() > 0) {
-        parameterChanges = new ArrayList<LXParameter>(pendingParameterChanges);
-        pendingParameterChanges.clear();
-      }
-    }
-    if (parameterChanges != null) {
-      for (LXParameter parameterChange : parameterChanges) {
-        boolean isOn = parameterChange.getValue() != 0;
-        if (triggered.getValueb() != isOn) {
-          triggered.setValue(isOn);
-          if (isOn) {
-            onTriggerOn(parameterChange.getValuef());
-          } else {
-            onTriggerOff();
-          }
+    LXParameter parameterChange;
+    while ((parameterChange = pendingParameterChanges.poll()) != null) {
+      boolean isOn = parameterChange.getValue() != 0;
+      if (triggered.getValueb() != isOn) {
+        triggered.setValue(isOn);
+        if (isOn) {
+          onTriggerOn(parameterChange.getValuef());
+        } else {
+          onTriggerOff();
         }
       }
     }
