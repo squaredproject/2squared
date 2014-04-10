@@ -1,3 +1,11 @@
+SinLFO bpmSinLfo = new SinLFO(0, 1, 0);
+SawLFO bpmSawLfo = new SawLFO(0, 1, 0);
+SquareLFO bpmSquareLfo = new SquareLFO(0, 1, 0);
+TriangleLFO bpmTriangleLfo = new TriangleLFO(0, 1, 0);
+QuadraticEnvelope bpmQuadraticLfo = new QuadraticEnvelope(0, 1, 0);
+
+LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmSquareLfo, bpmTriangleLfo, bpmQuadraticLfo};
+
 class UIMasterBpm extends UIWindow {
   
   final static int BUTT_WIDTH = 12 * 3;
@@ -53,12 +61,36 @@ class UIMasterBpm extends UIWindow {
   }
 }
 
+class bpmListener implements LXParameterListener {
+  
+  public void onParameterChanged(LXParameter parameter) {
+    double periodMs = 60000.0 / parameter.getValuef();
+    for (LXRangeModulator modulator : BPM_MODULATORS) {
+      modulator.setPeriod(periodMs);      
+    }    
+  }
+}
+
+public void startBpmModulators() {
+  for (LXRangeModulator modulator : BPM_MODULATORS) {
+      modulator.start();      
+    } 
+}
+
+public void stopBpmModulators() {
+  for (LXRangeModulator modulator : BPM_MODULATORS) {
+      modulator.stop();      
+    } 
+}
+
 class BPMTool extends LXEffect {
 
   final DiscreteParameter bpm = new DiscreteParameter("BPM", 0, 300); 
   
   BPMTool(LX lx) {
     super(lx);
+    bpm.addListener(new bpmListener());
+    
   }
   
 
