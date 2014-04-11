@@ -169,6 +169,7 @@ void setup() {
   };
   
   bpmTool = new BPMTool();
+  bpmTool.AddBPMListener(lx.getPatterns());
 
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {

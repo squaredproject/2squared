@@ -129,10 +129,14 @@ class BPMTool {
     }    
   }
   
-
-  public void apply(int[] colors) {
-    if (isEnabled()) {
-      // No-op
+  public void AddBPMListener(LXPattern[] patterns) {
+    for (LXPattern pattern : patterns) {
+      for (LXParameter parameter : pattern.getParameters()) {        
+        if (parameter instanceof LXListenableParameter) {
+          //((LXListenableParameter)parameter).addListener()
+          println("Param is listenable " + parameter.getLabel());
+        }
+      }
     }
   }
 }
