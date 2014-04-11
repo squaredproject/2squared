@@ -212,6 +212,12 @@ interface Drumpad {
   public void padReleased(int index);
 }
 
+interface Keyboard {
+  public void noteOn(LXMidiNote note);
+  public void noteOff(LXMidiNote note);
+  public void modWheelChanged(int value);
+}
+
 class MPK25 extends LXMidiDevice {
   
   final static int PAD_CHANNEL = 1;
@@ -244,7 +250,15 @@ class MPK25 extends LXMidiDevice {
     PAD12_PITCH
   };
   
+  final static int KEYBOARD_CHANNEL = 1;
+  final static int KEYBOARD_PITCH_FIRST = 0;
+  final static int KEYBOARD_PITCH_LAST = 120;
+  
+  final static int MODWHEEL_CHANNEL = 0;
+  final static int MODWHEEL_CC = 1;
+  
   private Drumpad drumpad = null;
+  private Keyboard keyboard = null;
   
   public MPK25(LXMidiInput input) {
     this(input, null);
@@ -258,6 +272,10 @@ class MPK25 extends LXMidiDevice {
     this.drumpad = drumpad;
   }
   
+  public void setKeyboard(Keyboard keyoard) {
+    this.keyboard = keyboard;
+  }
+  
   private int getPadIndex(LXMidiNote note) {
     if (note.getChannel() == PAD_CHANNEL) {
       for (int i = 0; i < PAD_PITCHES.length; i++) {
@@ -269,12 +287,21 @@ class MPK25 extends LXMidiDevice {
     return -1;
   }
   
+  private boolean isKeyboard(LXMidiNote note) {
+    return note.getChannel() == KEYBOARD_CHANNEL
+        && note.getPitch() >= KEYBOARD_PITCH_FIRST
+        && note.getPitch() <= KEYBOARD_PITCH_LAST;
+  }
+  
   protected void noteOn(LXMidiNote note) {
     if (drumpad != null) {
       int padIndex = getPadIndex(note);
       if (padIndex != -1) {
         drumpad.padTriggered(padIndex, note.getVelocity());
       }
+    }
+    if (keyboard != null && isKeyboard(note)) {
+      keyboard.noteOn(note);
     }
   }
 
@@ -285,9 +312,15 @@ class MPK25 extends LXMidiDevice {
         drumpad.padReleased(padIndex);
       }
     }
+    if (keyboard != null && isKeyboard(note)) {
+      keyboard.noteOff(note);
+    }
   }
 
   protected void controlChange(LXMidiControlChange controlChange) {
+    if (controlChange.getChannel() == MODWHEEL_CHANNEL && controlChange.getCC() == MODWHEEL_CC) {
+      keyboard.modWheelChanged(controlChange.getValue());
+    }
   }
 }
 
