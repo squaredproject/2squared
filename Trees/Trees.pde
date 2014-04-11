@@ -151,6 +151,8 @@ void setup() {
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
+  GhostEffect ghostEffect = new GhostEffect(lx);
+  lx.addEffect(ghostEffect);
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -160,7 +162,7 @@ void setup() {
       colorEffect.sharp,
       colorEffect.soft,
       blurEffect.amount,
-      null,
+      ghostEffect.amount,
   };
   
   effectButtonParameters = new BooleanParameter[] {

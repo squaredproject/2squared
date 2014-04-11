@@ -706,3 +706,92 @@ class Palette extends LXPattern {
   }
 }
 
+class GhostEffect extends LXEffect {
+  
+  final BasicParameter amount = new BasicParameter("GHOS");
+  
+  GhostEffect(LX lx) {
+    super(lx);
+    addLayer(new GhostEffectsLayer());
+  }
+  
+  protected void apply(int[] colors) {
+  }
+  
+  class GhostEffectsLayer extends LXLayer {
+    
+    GhostEffectsLayer() {
+      addParameter(amount);
+    }
+  
+    float timer = 0;
+    ArrayList<GhostEffectLayer> ghosts = new ArrayList<GhostEffectLayer>();
+    
+    public void run(double deltaMs, int[] colors) {
+      if (amount.getValue() != 0) {
+        timer += deltaMs;
+        float lifetime = (float)amount.getValue() * 2000;
+        if (timer >= lifetime) {
+          timer = 0;
+          GhostEffectLayer ghost = new GhostEffectLayer();
+          ghost.lifetime = lifetime * 3;
+          addLayer(ghost);
+          ghosts.add(ghost);
+        }
+      }
+      if (ghosts.size() > 0) {
+        Iterator<GhostEffectLayer> iter = ghosts.iterator();
+        while (iter.hasNext()) {
+          GhostEffectLayer ghost = iter.next();
+          if (!ghost.running) {
+            layers.remove(ghost);
+            iter.remove();
+          }
+        }
+      }
+      
+      for (LXModulator m : this.modulators) {
+        m.run(deltaMs);
+      }
+      for (LXLayer layer : this.layers) {
+        layer.run(deltaMs, colors);
+      }
+    }
+    
+    public void onParameterChanged(LXParameter parameter) {
+      if (parameter.getValue() == 0) {
+        timer = 0;
+      }
+    }
+  }
+  
+  class GhostEffectLayer extends LXLayer {
+    
+    float lifetime;
+    boolean running = true;
+  
+    private color[] ghostColors = null;
+    float timer = 0;
+    
+    public void run(double deltaMs, int[] colors) {
+      if (running) {
+        timer += (float)deltaMs;
+        if (timer >= lifetime) {
+          running = false;
+        } else {
+          if (ghostColors == null) {
+            ghostColors = new int[colors.length];
+            for (int i = 0; i < colors.length; i++) {
+              ghostColors[i] = colors[i];
+            }
+          }
+          
+          for (int i = 0; i < colors.length; i++) {
+            ghostColors[i] = blendColor(ghostColors[i], lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / lifetime))), MULTIPLY);
+            colors[i] = blendColor(colors[i], ghostColors[i], LIGHTEST);
+          }
+        }
+      }
+    }
+  }
+}
