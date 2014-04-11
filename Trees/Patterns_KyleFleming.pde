@@ -708,7 +708,7 @@ class Palette extends LXPattern {
 
 class GhostEffect extends LXEffect {
   
-  final BasicParameter amount = new BasicParameter("GHOS");
+  final BasicParameter amount = new BasicParameter("GHOS", 0, 0, 1, BasicParameter.Scaling.QUAD_IN);
   
   GhostEffect(LX lx) {
     super(lx);
