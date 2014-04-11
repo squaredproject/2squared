@@ -8,6 +8,7 @@ LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmQuadraticLfo, bpmS
 String[] bpmLabels = {"SIN", "SAW", "QD", "SQR"};
 LXRangeModulator selectedBpmModulator;
 
+Tempo tempo;
 
 class UIMasterBpm extends UIWindow {
   
@@ -53,7 +54,13 @@ class UIMasterBpm extends UIWindow {
     
     xPos += BUTT_WIDTH + SPACING;
     
-    new UIButton(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    new UIButton(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT) {
+      void onToggle(boolean enabled) {
+        if (enabled) {
+          tempo.tap();
+        }
+      }
+    }
     .setLabel("TAP")
     .setMomentary(true)
     .addToContainer(this);
@@ -117,6 +124,7 @@ class BPMTool {
   
   BPMTool() {    
     bpm.addListener(new bpmListener());
+    tempo = new Tempo();
     startBpmModulators();
     for (int i = 0; i < effectButtonParameters.length; i++) {
       effectButtonParameters[i].addListener(new bpmSelectionListener(BPM_MODULATORS[i]));
@@ -243,4 +251,17 @@ class BPMSquareLFO extends SquareLFO implements BPMLFO {
       bind.setValue(value);
     }
   }  
+}
+
+class BPMTempo extends Tempo {
+
+  LXParameter bpmParameter;
+  
+//  Tempo(LXParameter bpmParameter) {
+//    bpmParameter = bpmParameter;
+//  }
+  
+  public void tap() {
+    super.tap();
+  }
 }
