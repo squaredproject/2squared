@@ -1,4 +1,4 @@
-SinLFO bpmSinLfo = new SinLFO(0, 1, 0);
+BPMSinLFO bpmSinLfo = new BPMSinLFO(0, 1, 0);
 SawLFO bpmSawLfo = new SawLFO(0, 1, 0);
 SquareLFO bpmSquareLfo = new SquareLFO(0, 1, 0);
 TriangleLFO bpmTriangleLfo = new TriangleLFO(0, 1, 0);
@@ -133,10 +133,42 @@ class BPMTool {
     for (LXPattern pattern : patterns) {
       for (LXParameter parameter : pattern.getParameters()) {        
         if (parameter instanceof LXListenableParameter) {
-          //((LXListenableParameter)parameter).addListener()
-          println("Param is listenable " + parameter.getLabel());
+          //((LXListenableParameter)parameter).addListener()          
         }
       }
     }
   }
+}
+
+interface BPMLFO {
+  
+  public void AddBind(LXParameter parameter);
+  public void RemoveBind(LXParameter parameter);
+  
+}
+
+class BPMSinLFO extends SinLFO implements BPMLFO {
+
+  List<LXParameter> binds;
+  
+  public BPMSinLFO(double startValue, double endValue, double periodMs) {
+    super(startValue, endValue, periodMs);
+    binds = new ArrayList<LXParameter>();  
+  }
+  
+  public void AddBind(LXParameter parameter) {
+    binds.add(parameter);
+  }
+  
+  public void RemoveBind(LXParameter parameter) {
+    binds.remove(parameter);
+  }
+  
+  
+  void onSetValue(double value) {
+    super.onSetValue(value);
+    for (LXParameter bind : binds) {
+      bind.setValue(value);
+    }
+  }  
 }
