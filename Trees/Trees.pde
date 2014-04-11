@@ -252,9 +252,14 @@ TreesTransition getFaderTransition(LXDeck deck) {
 class UITrees extends UICameraComponent {
   
   color[] previewBuffer;
+  color[] black;
   
   UITrees() {
     previewBuffer = new int[lx.total];
+    black = new int[lx.total];
+    for (int i = 0; i < black.length; ++i) {
+      black[i] = 0xff000000;
+    }
   }
   
   protected void onDraw(UI ui) {
@@ -324,12 +329,27 @@ class UITrees extends UICameraComponent {
   private void drawLights(UI ui) {
     
     color[] colors;
-    if (previewChannel.getValuei() >= 8) {
+    boolean isPreviewOn = false;
+    for (BooleanParameter previewChannel : previewChannels) {
+      isPreviewOn |= previewChannel.isOn();
+    }
+    if (!isPreviewOn) {
       colors = lx.getColors();
     } else {
-      lx.engine.getDeck(previewChannel.getValuei()).copyBuffer(colors = previewBuffer);
+      colors = black;
+      for (int i = 0; i < NUM_CHANNELS; i++) {
+        if (previewChannels[i].isOn()) {
+          LXDeck deck = lx.engine.getDeck(i);
+          deck.getFaderTransition().blend(colors, deck.getColors(), 1, 0);
+          colors = deck.getFaderTransition().getColors();
+        }
+      }
+      for (int i = 0; i < colors.length; ++i) {
+        previewBuffer[i] = colors[i];
+      }
+      colors = previewBuffer;
     }
-    noStroke();    
+    noStroke();
     noFill();
     
     if (mappingTool.isEnabled()) {

@@ -1,5 +1,5 @@
 
-DiscreteParameter previewChannel = new DiscreteParameter("PRV", NUM_CHANNELS+1);
+BooleanParameter[] previewChannels = new BooleanParameter[NUM_CHANNELS];
 
 int focusedDeck() {
   return lx.engine.focusedDeck.getValuei();
@@ -25,7 +25,6 @@ class MidiEngine {
   MPK25 mpk25 = null;
   
   public MidiEngine() {
-    previewChannel.setValue(NUM_CHANNELS);
     setAPC40Mode();
     LXMidiInput apcInput = APC40.matchInput(lx);
     LXMidiOutput apcOutput = APC40.matchOutput(lx);
@@ -97,7 +96,9 @@ class MidiEngine {
       apc40.bindNotes(lx.engine.focusedDeck, channels, APC40.TRACK_SELECTION);
       
       // Cue activators
-      apc40.bindNotes(previewChannel, channels, APC40.ACTIVATOR, NUM_CHANNELS);
+      for (int i = 0; i < NUM_CHANNELS; i++) {
+        apc40.bindNote(previewChannels[i], i, APC40.ACTIVATOR, LXMidiDevice.TOGGLE);
+      }
       
       for (int i = 0; i < NUM_CHANNELS; i++) {
         final LXDeck deck = lx.engine.getDeck(i);
@@ -348,17 +349,21 @@ class UIChannelFaders extends UIContext {
       final LXDeck deck = lx.engine.getDeck(i);
       float xPos = PADDING + deck.index*(PADDING+FADER_WIDTH) + SPACER;
       
+      previewChannels[deck.index] = new BooleanParameter("PRV");
+      
+      previewChannels[deck.index].addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          cues[deck.index].setActive(previewChannels[deck.index].isOn());
+        }
+      });
+      
       cues[deck.index] = new UIButton(xPos, PADDING, FADER_WIDTH, BUTTON_HEIGHT) {
         void onToggle(boolean active) {
-          if (active) {
-            previewChannel.setValue(deck.index);
-          } else {
-            previewChannel.setValue(8);
-          }
+          previewChannels[deck.index].setValue(active);
         }
       };
       cues[deck.index]
-      .setActive(deck.index == previewChannel.getValuei())
+      .setActive(previewChannels[deck.index].isOn())
       .addToContainer(this);
       
       lefts[deck.index] = new UIButton(xPos, 2*PADDING+BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
@@ -412,16 +417,6 @@ class UIChannelFaders extends UIContext {
     new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-4*PADDING-2*BUTTON_HEIGHT)
     .setParameter(output.brightness)
     .addToContainer(this);
-    
-    previewChannel.addListener(new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        int channel = previewChannel.getValuei();
-        for (int i = 0; i < cues.length; ++i) {
-          cues[i].setActive(i == channel);
-        }
-        previewChannel.setValue(channel);
-      }
-    });
     
     LXParameterListener listener;
     lx.engine.focusedDeck.addListener(listener = new LXParameterListener() {
