@@ -28,7 +28,7 @@ class UIMasterBpm extends UIWindow {
     
     xPos += 20 + SPACING;
   
-    new UIIntegerBox(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    new UISlider(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
     .setParameter(bpmTool.bpm)
     .addToContainer(this);
     
@@ -119,7 +119,7 @@ class bpmSelectionListener implements LXParameterListener {
 
 class BPMTool {
 
-  final DiscreteParameter bpm = new DiscreteParameter("BPM", 0, 300); 
+  final BasicParameter bpm = new BasicParameter("BPM", 0, 300); 
   
   BPMTool() {    
     bpm.addListener(new bpmListener());

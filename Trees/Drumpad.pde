@@ -7,7 +7,7 @@ class TSDrumpad implements Drumpad {
       new Brightness(lx),
       new Explosions(lx),
       new Wisps(lx),
-      new Lightning(lx),
+      //new Lightning(lx),
     };
     return patterns;
   }
@@ -52,4 +52,3 @@ interface TriggerablePattern {
   public void onTriggered(float strength);
   public void onRelease();
 }
-
