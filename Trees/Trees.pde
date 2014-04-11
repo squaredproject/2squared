@@ -136,9 +136,15 @@ void setup() {
     
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
-  for (int i = 1; i < NUM_CHANNELS; ++i) {
+  for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
     lx.engine.addDeck(patterns(lx));
   }
+  
+  if (isMPK25Connected()) {
+    keyboard = new TSKeyboard();
+    keyboard.configure(lx);
+  }
+  
   for (LXDeck deck : lx.engine.getDecks()) {
     if (deck.index == 0) {
       deck.goIndex(deck.index);
@@ -152,6 +158,8 @@ void setup() {
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
+  GhostEffect ghostEffect = new GhostEffect(lx);
+  lx.addEffect(ghostEffect);
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -161,7 +169,7 @@ void setup() {
       colorEffect.sharp,
       colorEffect.soft,
       blurEffect.amount,
-      null,
+      ghostEffect.amount,
   };
   
   effectButtonParameters = new BooleanParameter[] {
@@ -235,7 +243,15 @@ void setup() {
     drumpad = new TSDrumpad();
     drumpad.configure(lx);
     midiEngine.mpk25.setDrumpad(drumpad);
+
+    midiEngine.mpk25.setKeyboard(keyboard);
   }
+  
+  // bad code I know
+  // (shouldn't mess with engine internals)
+  // maybe need a way to specify a deck shouldn't be focused?
+  // -kf
+  lx.engine.focusedDeck.setRange(NUM_CHANNELS);
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  

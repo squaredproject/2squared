@@ -234,7 +234,7 @@
   {
     "face": 2,
     "level": 11,
-    "treeIndex": 0,
+    "treeIndex": 1,
     "mountPoint": 22,
     "offset": 0.27586206793785095,
     "skew": 0,
@@ -243,7 +243,7 @@
   {
     "face": 0,
     "level": 11,
-    "treeIndex": 0,
+    "treeIndex": 1,
     "mountPoint": 22,
     "offset": -0.6206896305084229,
     "skew": -6.206896781921387,
@@ -811,22 +811,20 @@
     "treeIndex": 0,
     "mountPoint": -3.7931034564971924,
     "offset": 1,
-    "skew": 0,
     "ipAddress": "10.0.0.245"
   },
   {
-    "face": 0,
-    "level": 11,
-    "treeIndex": 1,
-    "mountPoint": 10.275861740112305,
-    "offset": 0.37931033968925476,
-    "skew": -15.517241477966309,
+    "face": 2,
+    "level": 6,
+    "treeIndex": 0,
+    "mountPoint": -2.620689630508423,
+    "offset": -0.3448275923728943,
     "ipAddress": "10.0.0.246"
   },
   {
     "face": 3,
     "level": 9,
-    "treeIndex": 1,
+    "treeIndex": 0,
     "mountPoint": 6.758620738983154,
     "offset": -0.517241358757019,
     "skew": 0,
