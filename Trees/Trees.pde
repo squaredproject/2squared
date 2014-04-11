@@ -113,6 +113,7 @@ LXPattern[] patterns(LX lx) {
     new Rain(lx),
     new Fade(lx),
     new Strobe(lx),
+    new Twinkle(lx),
     new RandomColor(lx),
     new RandomColorAll(lx),
   };
