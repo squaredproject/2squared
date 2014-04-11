@@ -5,7 +5,7 @@ TriangleLFO bpmTriangleLfo = new TriangleLFO(0, 1, 0);
 QuadraticEnvelope bpmQuadraticLfo = new QuadraticEnvelope(0, 1, 0);
 
 LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmQuadraticLfo, bpmSquareLfo, bpmTriangleLfo};
-
+String[] bpmLabels = {"SIN", "SAW", "QD", "SQR", "TRI"};
 LXRangeModulator selectedBpmModulator;
 
 
@@ -67,9 +67,10 @@ class UIMasterBpm extends UIWindow {
     yPos += BUTT_HEIGHT + SPACING;
     
     for (int i = 0; i < 4; ++i) {
-      new UIButton(5 + 34 * i, yPos, 28, 24)
+      new UIButton(5 + 34 * i, yPos, 28, 20)
       .setParameter(effectButtonParameters[i])
       .setMomentary(true)
+      .setLabel(bpmLabels[i])
       .addToContainer(this);
     }
 
