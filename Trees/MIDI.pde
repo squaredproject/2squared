@@ -1,4 +1,5 @@
-DiscreteParameter previewChannel = new DiscreteParameter("PRV", NUM_CHANNELS+1);
+
+BooleanParameter[] previewChannels = new BooleanParameter[NUM_CHANNELS];
 
 int focusedDeck() {
   return lx.engine.focusedDeck.getValuei();
@@ -19,63 +20,19 @@ final static byte[] APC_MODE_SYSEX = {
   (byte) 0xf7, // sysex end
 };
 
-final static int MPK25_PAD_CHANNEL = 1;
-final static int MPK25_PAD1_PITCH = 60;
-final static int MPK25_PAD2_PITCH = 62;
-final static int MPK25_PAD3_PITCH = 64;
-final static int MPK25_PAD4_PITCH = 65;
-final static int MPK25_PAD5_PITCH = 67;
-final static int MPK25_PAD6_PITCH = 69;
-final static int MPK25_PAD7_PITCH = 71;
-final static int MPK25_PAD8_PITCH = 72;
-final static int MPK25_PAD9_PITCH = 74;
-final static int MPK25_PAD10_PITCH = 76;
-final static int MPK25_PAD11_PITCH = 77;
-final static int MPK25_PAD12_PITCH = 78;
-
-final static int[] MPK25_PAD_PITCHES = {
-  MPK25_PAD1_PITCH,
-  MPK25_PAD2_PITCH,
-  MPK25_PAD3_PITCH,
-  MPK25_PAD4_PITCH,
-  MPK25_PAD5_PITCH,
-  MPK25_PAD6_PITCH,
-  MPK25_PAD7_PITCH,
-  MPK25_PAD8_PITCH,
-  MPK25_PAD9_PITCH,
-  MPK25_PAD10_PITCH,
-  MPK25_PAD11_PITCH,
-  MPK25_PAD12_PITCH
-};
-
 class MidiEngine {
   
-  final LXMidiDevice mpk25;
+  MPK25 mpk25 = null;
   
   public MidiEngine() {
-    previewChannel.setValue(NUM_CHANNELS);
     setAPC40Mode();
-    MidiInputDevice input = null;
-    MidiOutputDevice output = null;
-    MidiInputDevice mpkInput = null;
+    LXMidiInput apcInput = APC40.matchInput(lx);
+    LXMidiOutput apcOutput = APC40.matchOutput(lx);
+    LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");
     
-    for (MidiInputDevice mid : RWMidi.getInputDevices()) {
-      if (input == null && mid.getName().contains("APC40")) {
-        input = mid;
-      } else if (mpkInput == null && mid.getName().contains("MPK25")) {
-        mpkInput = mid;
-      }
-    }
-    for (MidiOutputDevice mod : RWMidi.getOutputDevices()) {
-      if (mod.getName().contains("APC40")) {
-        output = mod;
-        break;
-      }
-    }
-    
-    if (input != null) {
-      final APC40 apc40 = new APC40(input, output) {
-        protected void noteOn(Note note) {
+    if (apcInput != null) {
+      final APC40 apc40 = new APC40(apcInput, apcOutput) {
+        protected void noteOn(LXMidiNote note) {
           int channel = note.getChannel();
           switch (note.getPitch()) {
           case APC40.CLIP_LAUNCH:
@@ -103,11 +60,7 @@ class MidiEngine {
             break;
             
           case APC40.MASTER_TRACK:
-            previewChannel.setValue(NUM_CHANNELS);
-            break;
-            
           case APC40.SHIFT:
-          case APC40.PLAY:
             uiDeck.select();
             break;
           case APC40.BANK_UP:
@@ -125,7 +78,7 @@ class MidiEngine {
           }
         }
         
-        protected void controllerChange(rwmidi.Controller controller) {
+        protected void controlChange(LXMidiControlChange controller) {
           switch (controller.getCC()) {
           case APC40.CUE_LEVEL:
             uiDeck.knob(controller.getValue());
@@ -143,7 +96,9 @@ class MidiEngine {
       apc40.bindNotes(lx.engine.focusedDeck, channels, APC40.TRACK_SELECTION);
       
       // Cue activators
-      apc40.bindNotes(previewChannel, channels, APC40.ACTIVATOR, NUM_CHANNELS);
+      for (int i = 0; i < NUM_CHANNELS; i++) {
+        apc40.bindNote(previewChannels[i], i, APC40.ACTIVATOR, LXMidiDevice.TOGGLE);
+      }
       
       for (int i = 0; i < NUM_CHANNELS; i++) {
         final LXDeck deck = lx.engine.getDeck(i);
@@ -189,6 +144,7 @@ class MidiEngine {
       }
       for (int i = 0; i < effectButtonParameters.length; ++i) {
         apc40.bindNoteOn(effectButtonParameters[i], 0, APC40.PAN + i, LXMidiDevice.TOGGLE);
+        apc40.bindNoteOff(effectButtonParameters[i], 0, APC40.PAN + i);
       }
       
       // Pattern control
@@ -221,10 +177,7 @@ class MidiEngine {
     }
     
     if (mpkInput != null) {
-      mpk25 = new LXMidiDevice(mpkInput) {
-      };
-    } else {
-      mpk25 = null;
+      mpk25 = new MPK25(mpkInput);
     }
   }
   
@@ -255,6 +208,123 @@ class MidiEngine {
   }
 }
 
+interface Drumpad {
+  public void padTriggered(int index, int velocity);
+  public void padReleased(int index);
+}
+
+interface Keyboard {
+  public void noteOn(LXMidiNote note);
+  public void noteOff(LXMidiNote note);
+  public void modWheelChanged(int value);
+}
+
+class MPK25 extends LXMidiDevice {
+  
+  final static int PAD_CHANNEL = 1;
+  final static int NUM_PADS = 12;
+  final static int PAD1_PITCH = 60;
+  final static int PAD2_PITCH = 62;
+  final static int PAD3_PITCH = 64;
+  final static int PAD4_PITCH = 65;
+  final static int PAD5_PITCH = 67;
+  final static int PAD6_PITCH = 69;
+  final static int PAD7_PITCH = 71;
+  final static int PAD8_PITCH = 72;
+  final static int PAD9_PITCH = 74;
+  final static int PAD10_PITCH = 76;
+  final static int PAD11_PITCH = 77;
+  final static int PAD12_PITCH = 78;
+  
+  final int[] PAD_PITCHES = {
+    PAD1_PITCH,
+    PAD2_PITCH,
+    PAD3_PITCH,
+    PAD4_PITCH,
+    PAD5_PITCH,
+    PAD6_PITCH,
+    PAD7_PITCH,
+    PAD8_PITCH,
+    PAD9_PITCH,
+    PAD10_PITCH,
+    PAD11_PITCH,
+    PAD12_PITCH
+  };
+  
+  final static int KEYBOARD_CHANNEL = 1;
+  final static int KEYBOARD_PITCH_FIRST = 0;
+  final static int KEYBOARD_PITCH_LAST = 120;
+  
+  final static int MODWHEEL_CHANNEL = 0;
+  final static int MODWHEEL_CC = 1;
+  
+  private Drumpad drumpad = null;
+  private Keyboard keyboard = null;
+  
+  public MPK25(LXMidiInput input) {
+    this(input, null);
+  }
+
+  public MPK25(LXMidiInput input, LXMidiOutput output) {
+    super(input, output);
+  }
+  
+  public void setDrumpad(Drumpad drumpad) {
+    this.drumpad = drumpad;
+  }
+  
+  public void setKeyboard(Keyboard keyoard) {
+    this.keyboard = keyboard;
+  }
+  
+  private int getPadIndex(LXMidiNote note) {
+    if (note.getChannel() == PAD_CHANNEL) {
+      for (int i = 0; i < PAD_PITCHES.length; i++) {
+        if (note.getPitch() == PAD_PITCHES[i]) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+  
+  private boolean isKeyboard(LXMidiNote note) {
+    return note.getChannel() == KEYBOARD_CHANNEL
+        && note.getPitch() >= KEYBOARD_PITCH_FIRST
+        && note.getPitch() <= KEYBOARD_PITCH_LAST;
+  }
+  
+  protected void noteOn(LXMidiNote note) {
+    if (drumpad != null) {
+      int padIndex = getPadIndex(note);
+      if (padIndex != -1) {
+        drumpad.padTriggered(padIndex, note.getVelocity());
+      }
+    }
+    if (keyboard != null && isKeyboard(note)) {
+      keyboard.noteOn(note);
+    }
+  }
+
+  protected void noteOff(LXMidiNote note) {
+    if (drumpad != null) {
+      int padIndex = getPadIndex(note);
+      if (padIndex != -1) {
+        drumpad.padReleased(padIndex);
+      }
+    }
+    if (keyboard != null && isKeyboard(note)) {
+      keyboard.noteOff(note);
+    }
+  }
+
+  protected void controlChange(LXMidiControlChange controlChange) {
+    if (keyboard != null && controlChange.getChannel() == MODWHEEL_CHANNEL && controlChange.getCC() == MODWHEEL_CC) {
+      keyboard.modWheelChanged(controlChange.getValue());
+    }
+  }
+}
+
 class UIChannelFaders extends UIContext {
   
   final static int SPACER = 30;
@@ -279,17 +349,21 @@ class UIChannelFaders extends UIContext {
       final LXDeck deck = lx.engine.getDeck(i);
       float xPos = PADDING + deck.index*(PADDING+FADER_WIDTH) + SPACER;
       
+      previewChannels[deck.index] = new BooleanParameter("PRV");
+      
+      previewChannels[deck.index].addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          cues[deck.index].setActive(previewChannels[deck.index].isOn());
+        }
+      });
+      
       cues[deck.index] = new UIButton(xPos, PADDING, FADER_WIDTH, BUTTON_HEIGHT) {
         void onToggle(boolean active) {
-          if (active) {
-            previewChannel.setValue(deck.index);
-          } else {
-            previewChannel.setValue(8);
-          }
+          previewChannels[deck.index].setValue(active);
         }
       };
       cues[deck.index]
-      .setActive(deck.index == previewChannel.getValuei())
+      .setActive(previewChannels[deck.index].isOn())
       .addToContainer(this);
       
       lefts[deck.index] = new UIButton(xPos, 2*PADDING+BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
@@ -343,16 +417,6 @@ class UIChannelFaders extends UIContext {
     new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-4*PADDING-2*BUTTON_HEIGHT)
     .setParameter(output.brightness)
     .addToContainer(this);
-    
-    previewChannel.addListener(new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        int channel = previewChannel.getValuei();
-        for (int i = 0; i < cues.length; ++i) {
-          cues[i].setActive(i == channel);
-        }
-        previewChannel.setValue(channel);
-      }
-    });
     
     LXParameterListener listener;
     lx.engine.focusedDeck.addListener(listener = new LXParameterListener() {
@@ -632,7 +696,7 @@ class UIEffects extends UIWindow {
   final int KNOBS_PER_ROW = 4;
   
   UIEffects(UI ui) {
-    super(ui, "MASTER EFFECTS", Trees.this.width-144, 86, 140, 144);
+    super(ui, "MASTER EFFECTS", Trees.this.width-144, 110, 140, 120);
     
     int yp = TITLE_LABEL_HEIGHT;
     for (int ki = 0; ki < 8; ++ki) {
@@ -641,12 +705,7 @@ class UIEffects extends UIWindow {
       .addToContainer(this);
     }
     yp += 98;
-    for (int i = 0; i < 4; ++i) {
-      new UIButton(5 + 34 * i, yp, 28, 14)
-      .setParameter(effectButtonParameters[i])
-      .addToContainer(this);
-    }
+    
   } 
   
 }
-

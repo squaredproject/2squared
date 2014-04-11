@@ -46,7 +46,7 @@ class BassSlam extends LXPattern {
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TriggerablePattern {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern implements TriggerablePattern {
   
   BasicParameter frequency;
   
@@ -54,6 +54,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends Trigg
   
   final ArrayList<ObjectType> objects;
   double pauseTimerCountdown = 0;
+  boolean triggered = true;
 //  BasicParameter fadeLength
   
   MultiObjectPattern(LX lx) {
@@ -81,8 +82,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends Trigg
 //    return new BasicParameter("TAIL", 
 //  }
   
-  public void doRun(double deltaMs) {
-    if (triggered.getValueb() && objects.size() < ceil(frequency.getValuef())) {
+  public void run(double deltaMs) {
+    if (triggered && objects.size() < ceil(frequency.getValuef())) {
       int missing = ceil(frequency.getValuef()) - objects.size();
       pauseTimerCountdown -= deltaMs;
       if (pauseTimerCountdown <= 0 || missing >= 5) {
@@ -121,8 +122,17 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends Trigg
     objects.add(object);
   }
   
-  void onTriggerOn(float strength) {
+  public void enableTriggerableMode() {
+    triggered = false;
+  }
+  
+  public void onTriggered(float strength) {
+    triggered = true;
     makeObject();
+  }
+  
+  public void onRelease() {
+    triggered = false;
   }
   
   abstract ObjectType generateObject();
@@ -502,13 +512,14 @@ class RainDrop extends MultiObject {
   }
 }
 
-class Strobe extends TriggerablePattern {
+class Strobe extends LXPattern implements TriggerablePattern {
   
   final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
   final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
 
   int timer = 0;
   boolean on = false;
+  boolean triggered = true;
   
   Strobe(LX lx) {
     super(lx);
@@ -517,8 +528,8 @@ class Strobe extends TriggerablePattern {
     addParameter(balance);
   }
   
-  public void doRun(double deltaMs) {
-    if (triggered.getValueb()) {
+  public void run(double deltaMs) {
+    if (triggered) {
       timer += deltaMs;
       if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
         timer = 0;
@@ -529,31 +540,40 @@ class Strobe extends TriggerablePattern {
     }
   }
   
-  public void onTriggerOn(float strength) {
+  public void enableTriggerableMode() {
+    triggered = false;
+  }
+  
+  public void onTriggered(float strength) {
+    triggered = true;
     on = true;
   }
   
-  public void onTriggerOff() {
+  public void onRelease() {
+    triggered = false;
     timer = 0;
     on = false;
     setColors(BLACK);
   }
 }
 
-class Brightness extends TriggerablePattern {
+class Brightness extends LXPattern implements TriggerablePattern {
   
   Brightness(LX lx) {
     super(lx);
   }
   
-  public void doRun(double deltaMs) {
+  public void run(double deltaMs) {
   }
   
-  public void onTriggerOn(float strength) {
+  public void enableTriggerableMode() {
+  }
+  
+  public void onTriggered(float strength) {
     setColors(lx.hsb(0, 0, 100 * strength));
   }
   
-  public void onTriggerOff() {
+  public void onRelease() {
     setColors(BLACK);
   }
 }
@@ -686,3 +706,92 @@ class Palette extends LXPattern {
   }
 }
 
+class GhostEffect extends LXEffect {
+  
+  final BasicParameter amount = new BasicParameter("GHOS", 0, 0, 1, BasicParameter.Scaling.QUAD_IN);
+  
+  GhostEffect(LX lx) {
+    super(lx);
+    addLayer(new GhostEffectsLayer());
+  }
+  
+  protected void apply(int[] colors) {
+  }
+  
+  class GhostEffectsLayer extends LXLayer {
+    
+    GhostEffectsLayer() {
+      addParameter(amount);
+    }
+  
+    float timer = 0;
+    ArrayList<GhostEffectLayer> ghosts = new ArrayList<GhostEffectLayer>();
+    
+    public void run(double deltaMs, int[] colors) {
+      if (amount.getValue() != 0) {
+        timer += deltaMs;
+        float lifetime = (float)amount.getValue() * 2000;
+        if (timer >= lifetime) {
+          timer = 0;
+          GhostEffectLayer ghost = new GhostEffectLayer();
+          ghost.lifetime = lifetime * 3;
+          addLayer(ghost);
+          ghosts.add(ghost);
+        }
+      }
+      if (ghosts.size() > 0) {
+        Iterator<GhostEffectLayer> iter = ghosts.iterator();
+        while (iter.hasNext()) {
+          GhostEffectLayer ghost = iter.next();
+          if (!ghost.running) {
+            layers.remove(ghost);
+            iter.remove();
+          }
+        }
+      }
+      
+      for (LXModulator m : this.modulators) {
+        m.run(deltaMs);
+      }
+      for (LXLayer layer : this.layers) {
+        layer.run(deltaMs, colors);
+      }
+    }
+    
+    public void onParameterChanged(LXParameter parameter) {
+      if (parameter.getValue() == 0) {
+        timer = 0;
+      }
+    }
+  }
+  
+  class GhostEffectLayer extends LXLayer {
+    
+    float lifetime;
+    boolean running = true;
+  
+    private color[] ghostColors = null;
+    float timer = 0;
+    
+    public void run(double deltaMs, int[] colors) {
+      if (running) {
+        timer += (float)deltaMs;
+        if (timer >= lifetime) {
+          running = false;
+        } else {
+          if (ghostColors == null) {
+            ghostColors = new int[colors.length];
+            for (int i = 0; i < colors.length; i++) {
+              ghostColors[i] = colors[i];
+            }
+          }
+          
+          for (int i = 0; i < colors.length; i++) {
+            ghostColors[i] = blendColor(ghostColors[i], lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / lifetime))), MULTIPLY);
+            colors[i] = blendColor(colors[i], ghostColors[i], LIGHTEST);
+          }
+        }
+      }
+    }
+  }
+}

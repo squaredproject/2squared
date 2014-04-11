@@ -1,6 +1,7 @@
 import heronarts.lx.ui.component.*;
 import heronarts.lx.*;
 import heronarts.lx.effect.*;
+import heronarts.lx.midi.*;
 import heronarts.lx.model.*;
 import heronarts.lx.output.*;
 import heronarts.lx.parameter.*;
@@ -12,10 +13,8 @@ import heronarts.lx.modulator.*;
 import heronarts.lx.ui.*;
 import heronarts.lx.ui.control.*;
 
-
 import ddf.minim.*;
 import processing.opengl.*;
-import rwmidi.*;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -82,6 +81,8 @@ LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
 BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
 MidiEngine midiEngine;
+TSDrumpad drumpad;
+TSKeyboard keyboard;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
@@ -150,7 +151,8 @@ void setup() {
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
-  lx.addEffect(bpmTool = new BPMTool(lx));
+  GhostEffect ghostEffect = new GhostEffect(lx);
+  lx.addEffect(ghostEffect);
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -160,7 +162,7 @@ void setup() {
       colorEffect.sharp,
       colorEffect.soft,
       blurEffect.amount,
-      null,
+      ghostEffect.amount,
   };
   
   effectButtonParameters = new BooleanParameter[] {
@@ -169,6 +171,9 @@ void setup() {
     new BooleanParameter("-", false),
     new BooleanParameter("-", false)
   };
+  
+  bpmTool = new BPMTool();
+  bpmTool.AddBPMListener(lx.getPatterns());
 
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {
@@ -226,9 +231,12 @@ void setup() {
   
   // MIDI control
   midiEngine = new MidiEngine();
-  
-  // Drumpad
-  setupDrumpad();
+  if (midiEngine.mpk25 != null) {
+    // Drumpad
+    drumpad = new TSDrumpad();
+    drumpad.configure(lx);
+    midiEngine.mpk25.setDrumpad(drumpad);
+  }
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
@@ -246,9 +254,14 @@ TreesTransition getFaderTransition(LXDeck deck) {
 class UITrees extends UICameraComponent {
   
   color[] previewBuffer;
+  color[] black;
   
   UITrees() {
     previewBuffer = new int[lx.total];
+    black = new int[lx.total];
+    for (int i = 0; i < black.length; ++i) {
+      black[i] = 0xff000000;
+    }
   }
   
   protected void onDraw(UI ui) {
@@ -318,12 +331,27 @@ class UITrees extends UICameraComponent {
   private void drawLights(UI ui) {
     
     color[] colors;
-    if (previewChannel.getValuei() >= 8) {
+    boolean isPreviewOn = false;
+    for (BooleanParameter previewChannel : previewChannels) {
+      isPreviewOn |= previewChannel.isOn();
+    }
+    if (!isPreviewOn) {
       colors = lx.getColors();
     } else {
-      lx.engine.getDeck(previewChannel.getValuei()).copyBuffer(colors = previewBuffer);
+      colors = black;
+      for (int i = 0; i < NUM_CHANNELS; i++) {
+        if (previewChannels[i].isOn()) {
+          LXDeck deck = lx.engine.getDeck(i);
+          deck.getFaderTransition().blend(colors, deck.getColors(), 1, 0);
+          colors = deck.getFaderTransition().getColors();
+        }
+      }
+      for (int i = 0; i < colors.length; ++i) {
+        previewBuffer[i] = colors[i];
+      }
+      colors = previewBuffer;
     }
-    noStroke();    
+    noStroke();
     noFill();
     
     if (mappingTool.isEnabled()) {
