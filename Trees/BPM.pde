@@ -21,22 +21,12 @@ class UIMasterBpm extends UIWindow {
     int yPos = TITLE_LABEL_HEIGHT - 3;
     int xPos = SPACING * 2;
 
-    new UILabel(xPos, yPos, 20, BUTT_HEIGHT)
-    .setLabel("BPM: ")
-    .setAlignment(LEFT, CENTER)
-    .addToContainer(this);
-    
-    xPos += 20 + SPACING;
-  
-    new UISlider(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
+    new UIKnob(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
     .setParameter(bpmTool.bpm)
     .addToContainer(this);
     
     xPos += BUTT_WIDTH + SPACING;
          
-    yPos += BUTT_HEIGHT + SPACING;
-
-    xPos = SPACING;
     
     new UIButton(xPos, yPos, BUTT_WIDTH / 2, BUTT_HEIGHT)
     .setLabel("+")
@@ -50,7 +40,11 @@ class UIMasterBpm extends UIWindow {
     .setMomentary(true)
     .addToContainer(this);
     
-    xPos += BUTT_WIDTH / 2 + SPACING;
+    yPos += BUTT_HEIGHT + SPACING;
+
+    xPos = SPACING;
+    
+    xPos += BUTT_WIDTH + SPACING;
     
     new UIButton(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
     .setLabel("SYNC")
