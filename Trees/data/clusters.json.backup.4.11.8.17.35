@@ -235,7 +235,7 @@
   {
     "face": 2,
     "level": 11,
-    "treeIndex": 1,
+    "treeIndex": 0,
     "mountPoint": 22,
     "offset": 0.27586206793785095,
     "skew": 0,
@@ -244,7 +244,7 @@
   {
     "face": 0,
     "level": 11,
-    "treeIndex": 1,
+    "treeIndex": 0,
     "mountPoint": 22,
     "offset": -0.6206896305084229,
     "skew": -6.206896781921387,
@@ -661,7 +661,7 @@
   {
     "face": 3,
     "level": 9,
-    "treeIndex": 0,
+    "treeIndex": 1,
     "mountPoint": -12,
     "offset": 0.661133885383606,
     "skew": 0,
@@ -799,7 +799,7 @@
   {
     "face": 0,
     "level": 7,
-    "treeIndex": 0,
+    "treeIndex": 1,
     "mountPoint": -4.379310131072998,
     "offset": -0.6206896305084229,
     "skew": 0,
@@ -816,7 +816,7 @@
   {
     "face": 0,
     "level": 6,
-    "treeIndex": 0,
+    "treeIndex": 1,
     "mountPoint": -3.7931034564971924,
     "offset": 1,
     "skew": 0,
