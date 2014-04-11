@@ -1,6 +1,7 @@
 import heronarts.lx.ui.component.*;
 import heronarts.lx.*;
 import heronarts.lx.effect.*;
+import heronarts.lx.midi.*;
 import heronarts.lx.model.*;
 import heronarts.lx.output.*;
 import heronarts.lx.parameter.*;
@@ -12,10 +13,8 @@ import heronarts.lx.modulator.*;
 import heronarts.lx.ui.*;
 import heronarts.lx.ui.control.*;
 
-
 import ddf.minim.*;
 import processing.opengl.*;
-import rwmidi.*;
 
 import java.util.Arrays;
 import java.util.ArrayList;

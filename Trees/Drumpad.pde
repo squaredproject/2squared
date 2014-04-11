@@ -14,21 +14,13 @@ TriggerablePattern[] drumpadPatterns(LX lx) {
 }
 
 void setupDrumpad() {
-  int drumpadDeckIndexStart = lx.engine.getDecks().size();
-  
   drumpadPatterns = drumpadPatterns(lx);
   
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
   for (TriggerablePattern pattern : drumpadPatterns) {
     pattern.setTransition(t);
     pattern.triggered.setValue(false);
-    lx.engine.addDeck(new LXPattern[] { pattern });
-  }
-  
-  int drumpadDeckIndexEnd = lx.engine.getDecks().size();
-  
-  for (int i = drumpadDeckIndexStart; i < drumpadDeckIndexEnd; i++) {
-    LXDeck deck = lx.engine.getDeck(i);
+    LXDeck deck = lx.engine.addDeck(new LXPattern[] { pattern });
     deck.getFader().setValue(1);
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
