@@ -5,6 +5,7 @@ class TSKeyboard implements Keyboard {
   
   void configure(LX lx) {
     patterns = new KeyboardPlayablePattern[] {
+      new Explosions(lx),
     };
     
     LXPattern[] lxPatterns = new LXPattern[patterns.length];
@@ -38,7 +39,7 @@ class TSKeyboard implements Keyboard {
     }
   }
   
-  public void modWheelChanged(int value) {
+  public void modWheelChanged(float value) {
     if (deck != null) {
       getCurrentPattern().modWheelChanged(value);
     }
@@ -49,6 +50,6 @@ interface KeyboardPlayablePattern {
   public void enableKeyboardPlayableMode();
   public void noteOn(LXMidiNote note);
   public void noteOff(LXMidiNote note);
-  public void modWheelChanged(int value);
+  public void modWheelChanged(float value);
 }
 

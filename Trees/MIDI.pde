@@ -20,6 +20,10 @@ final static byte[] APC_MODE_SYSEX = {
   (byte) 0xf7, // sysex end
 };
 
+boolean isMPK25Connected() {
+  return LXMidiSystem.matchInput(lx, "MPK25") != null;
+}
+
 class MidiEngine {
   
   MPK25 mpk25 = null;
@@ -216,7 +220,7 @@ interface Drumpad {
 interface Keyboard {
   public void noteOn(LXMidiNote note);
   public void noteOff(LXMidiNote note);
-  public void modWheelChanged(int value);
+  public void modWheelChanged(float value);
 }
 
 class MPK25 extends LXMidiDevice {
@@ -251,7 +255,7 @@ class MPK25 extends LXMidiDevice {
     PAD12_PITCH
   };
   
-  final static int KEYBOARD_CHANNEL = 1;
+  final static int KEYBOARD_CHANNEL = 0;
   final static int KEYBOARD_PITCH_FIRST = 0;
   final static int KEYBOARD_PITCH_LAST = 120;
   
@@ -273,7 +277,7 @@ class MPK25 extends LXMidiDevice {
     this.drumpad = drumpad;
   }
   
-  public void setKeyboard(Keyboard keyoard) {
+  public void setKeyboard(Keyboard keyboard) {
     this.keyboard = keyboard;
   }
   
@@ -320,7 +324,7 @@ class MPK25 extends LXMidiDevice {
 
   protected void controlChange(LXMidiControlChange controlChange) {
     if (keyboard != null && controlChange.getChannel() == MODWHEEL_CHANNEL && controlChange.getCC() == MODWHEEL_CC) {
-      keyboard.modWheelChanged(controlChange.getValue());
+      keyboard.modWheelChanged(controlChange.getValue() / 127.);
     }
   }
 }

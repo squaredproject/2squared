@@ -46,7 +46,7 @@ class BassSlam extends LXPattern {
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern implements TriggerablePattern {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern implements TriggerablePattern, KeyboardPlayablePattern {
   
   BasicParameter frequency;
   
@@ -55,6 +55,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
   final ArrayList<ObjectType> objects;
   double pauseTimerCountdown = 0;
   boolean triggered = true;
+  boolean keyboardMode = false;
+  float modWheelValue = 0;
 //  BasicParameter fadeLength
   
   MultiObjectPattern(LX lx) {
@@ -83,14 +85,14 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
 //  }
   
   public void run(double deltaMs) {
-    if (triggered && objects.size() < ceil(frequency.getValuef())) {
+    if (triggered && !keyboardMode && objects.size() < ceil(frequency.getValuef())) {
       int missing = ceil(frequency.getValuef()) - objects.size();
       pauseTimerCountdown -= deltaMs;
       if (pauseTimerCountdown <= 0 || missing >= 5) {
         pauseTimerCountdown = (frequency.getValuef() < 1 ? 500 * (1 / frequency.getValuef() - 1) : 0)
                               + (missing == 1 ? random(200) : random(50));
         for (int i = ceil(missing / 3.); i > 0; i--) {
-          makeObject();
+          makeObject(0);
         }
       }
     }
@@ -115,8 +117,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
     }
   }
   
-  void makeObject() {
-    ObjectType object = generateObject();
+  void makeObject(float strength) {
+    ObjectType object = generateObject(strength);
     object.init();
     addLayer(object);
     objects.add(object);
@@ -128,14 +130,29 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
   
   public void onTriggered(float strength) {
     triggered = true;
-    makeObject();
+    makeObject(strength);
   }
   
   public void onRelease() {
     triggered = false;
   }
   
-  abstract ObjectType generateObject();
+  public void enableKeyboardPlayableMode() {
+    keyboardMode = true;
+  }
+  
+  public void noteOn(LXMidiNote note) {
+    makeObject(note.getPitch());
+  }
+  
+  public void noteOff(LXMidiNote note) {
+  }
+  
+  public void modWheelChanged(float value) {
+    modWheelValue = value;
+  }
+  
+  abstract ObjectType generateObject(float strength);
 }
 
 abstract class MultiObject extends LXLayer {
@@ -173,10 +190,10 @@ class Explosions extends MultiObjectPattern<Explosion> {
     return new BasicParameter("FREQ", .50, .1, 20, BasicParameter.Scaling.QUAD_IN);
   }
   
-  Explosion generateObject() {
+  Explosion generateObject(float strength) {
     Explosion explosion = new Explosion();
     explosion.origin = new PVector(random(360), (float)LXUtils.random(model.yMin + 50, model.yMax - 50));
-    explosion.hue = (int)random(360);
+    explosion.hue = (int)(keyboardMode ? (360 * modWheelValue) : random(360));
     return explosion;
   }
 }
@@ -303,7 +320,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
     addParameter(speed);
   }
     
-  Wisp generateObject() {
+  Wisp generateObject(float strength) {
     Wisp wisp = new Wisp();
     wisp.runningTimer = 0;
     wisp.runningTimerEnd = 5000 / speed.getValuef();
@@ -450,7 +467,7 @@ class Rain extends MultiObjectPattern<RainDrop> {
     return new BasicParameter("FREQ", 40, .1, 400, BasicParameter.Scaling.QUAD_IN);
   }
    
-  RainDrop generateObject() {
+  RainDrop generateObject(float strength) {
     RainDrop rainDrop = new RainDrop();
     rainDrop.runningTimer = 0;
     rainDrop.runningTimerEnd = 180 + random(20);

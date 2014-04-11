@@ -135,9 +135,15 @@ void setup() {
     
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
-  for (int i = 1; i < NUM_CHANNELS; ++i) {
+  for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
     lx.engine.addDeck(patterns(lx));
   }
+  
+  if (isMPK25Connected()) {
+    keyboard = new TSKeyboard();
+    keyboard.configure(lx);
+  }
+  
   for (LXDeck deck : lx.engine.getDecks()) {
     if (deck.index == 0) {
       deck.goIndex(deck.index);
@@ -236,6 +242,8 @@ void setup() {
     drumpad = new TSDrumpad();
     drumpad.configure(lx);
     midiEngine.mpk25.setDrumpad(drumpad);
+
+    midiEngine.mpk25.setKeyboard(keyboard);
   }
   
   // Engine threading
