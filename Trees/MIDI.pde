@@ -90,11 +90,7 @@ class MidiEngine {
             break;
             
           case APC40.MASTER_TRACK:
-            previewChannel.setValue(NUM_CHANNELS);
-            break;
-            
           case APC40.SHIFT:
-          case APC40.PLAY:
             uiDeck.select();
             break;
           case APC40.BANK_UP:
