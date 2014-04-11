@@ -246,6 +246,12 @@ void setup() {
     midiEngine.mpk25.setKeyboard(keyboard);
   }
   
+  // bad code I know
+  // (shouldn't mess with engine internals)
+  // maybe need a way to specify a deck shouldn't be focused?
+  // -kf
+  lx.engine.focusedDeck.setRange(NUM_CHANNELS);
+  
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
