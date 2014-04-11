@@ -1,3 +1,4 @@
+
 DiscreteParameter previewChannel = new DiscreteParameter("PRV", NUM_CHANNELS+1);
 
 int focusedDeck() {
@@ -55,27 +56,13 @@ class MidiEngine {
   public MidiEngine() {
     previewChannel.setValue(NUM_CHANNELS);
     setAPC40Mode();
-    MidiInputDevice input = null;
-    MidiOutputDevice output = null;
-    MidiInputDevice mpkInput = null;
+    LXMidiInput apcInput = APC40.matchInput(lx);
+    LXMidiOutput apcOutput = APC40.matchOutput(lx);
+    LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");;
     
-    for (MidiInputDevice mid : RWMidi.getInputDevices()) {
-      if (input == null && mid.getName().contains("APC40")) {
-        input = mid;
-      } else if (mpkInput == null && mid.getName().contains("MPK25")) {
-        mpkInput = mid;
-      }
-    }
-    for (MidiOutputDevice mod : RWMidi.getOutputDevices()) {
-      if (mod.getName().contains("APC40")) {
-        output = mod;
-        break;
-      }
-    }
-    
-    if (input != null) {
-      final APC40 apc40 = new APC40(input, output) {
-        protected void noteOn(Note note) {
+    if (apcInput != null) {
+      final APC40 apc40 = new APC40(apcInput, apcOutput) {
+        protected void noteOn(LXMidiNote note) {
           int channel = note.getChannel();
           switch (note.getPitch()) {
           case APC40.CLIP_LAUNCH:
@@ -103,11 +90,7 @@ class MidiEngine {
             break;
             
           case APC40.MASTER_TRACK:
-            previewChannel.setValue(NUM_CHANNELS);
-            break;
-            
           case APC40.SHIFT:
-          case APC40.PLAY:
             uiDeck.select();
             break;
           case APC40.BANK_UP:
@@ -125,7 +108,7 @@ class MidiEngine {
           }
         }
         
-        protected void controllerChange(rwmidi.Controller controller) {
+        protected void controlChange(LXMidiControlChange controller) {
           switch (controller.getCC()) {
           case APC40.CUE_LEVEL:
             uiDeck.knob(controller.getValue());
