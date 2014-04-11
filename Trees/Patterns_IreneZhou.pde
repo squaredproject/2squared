@@ -169,9 +169,9 @@ class Springs extends LXPattern {
 class Fire extends LXPattern {
   final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
   final BasicParameter flameSize = new BasicParameter("SIZE", 30, 10, 75);  
-  final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 200);
+  final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 75);
   
-  private int numFlames = 1;
+  private int numFlames = 75;
   private Flame[] flames;
   
   private class Flame {
@@ -185,7 +185,7 @@ class Fire extends LXPattern {
       if (!groundStart) {
         decay.setBasis(random(0,1));
       }
-      lx.addModulator(decay.start());
+      addModulator(decay.start());
     }
   }
 
@@ -243,12 +243,12 @@ class Fire extends LXPattern {
   }
 }
 
-class BouncyBalls extends LXPattern { //ported from SugarCubes
+class BouncyBalls extends LXPattern {
   final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 25);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
-  final BasicParameter maxBounce = new BasicParameter("MAXBOUNCE", 0.75, 0, 1);
+  final BasicParameter maxBounce = new BasicParameter("MAXBOUNCE", 0.9, 0, 1);
   final BasicParameter minBounce = new BasicParameter("MINBOUNCE", 0.5, 0, 1);
-  final BasicParameter acceleration = new BasicParameter("ACCEL", 400, -1000, 1000); 
+  final BasicParameter acceleration = new BasicParameter("ACCEL", 400, 0, 1000); 
     
   private int numBalls = 10;
   private Ball[] balls;
@@ -261,8 +261,8 @@ class BouncyBalls extends LXPattern { //ported from SugarCubes
     
     public Ball(float maxRadius) {
       radius = random(5, maxRadius);
-      gravity.setVelocity(random(-10,10)).setAcceleration(-acceleration.getValuef());
-      lx.addModulator(gravity.start());
+      gravity.setVelocity(random(-10, 10)).setAcceleration(-acceleration.getValuef());
+      addModulator(gravity.start());
     }
   }
   
@@ -302,21 +302,21 @@ class BouncyBalls extends LXPattern { //ported from SugarCubes
     if (balls.length != numBalls) {
       updateNumBalls(numBalls);
     }
-    
     for (int i = 0; i < balls.length; ++i) {
       float gravVel = balls[i].gravity.getVelocityf();
-      if (abs(gravVel) < 1) { //destroy finished balls
+      float gravVal = balls[i].gravity.getValuef();
+      
+      if (abs(gravVel) < 1 && gravVal < 20) { //destroy finished balls
         lx.removeModulator(balls[i].gravity);
         balls[i] = new Ball(maxRadius.getValuef());
       }
-      float gravVal = balls[i].gravity.getValuef();
+      
       if (gravVal < 0) { //bounce!
           balls[i].gravity.setValue(-gravVal);
           balls[i].gravity.setVelocity(-gravVel * random(minBounce.getValuef(), maxBounce.getValuef()));
       }
       for (Cube cube : model.cubes) {
-        float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - 100), 2));
-        
+        float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
         if (dist < balls[i].radius) {
           colors[cube.index] = lx.hsb(
             balls[i].bHue,
@@ -329,11 +329,9 @@ class BouncyBalls extends LXPattern { //ported from SugarCubes
   }
 }
 
-class Bubbly extends LXPattern { //ported from SugarCubes
+class Bubbles extends LXPattern {
   final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 25);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
-  final BasicParameter maxBounce = new BasicParameter("MAXBOUNCE", 0.75, 0, 1);
-  final BasicParameter minBounce = new BasicParameter("MINBOUNCE", 0.5, 0, 1);
   final BasicParameter acceleration = new BasicParameter("ACCEL", 100, 10, 1000); 
     
   private int numBalls = 10;
@@ -347,17 +345,15 @@ class Bubbly extends LXPattern { //ported from SugarCubes
     
     public Bubble(float maxRadius) {
       radius = random(5, maxRadius);
-      gravity.setVelocity(random(-10,10)).setAcceleration(acceleration.getValuef() * random(0.5, 1));
-      lx.addModulator(gravity.start());
+      gravity.setVelocity(random(-10,10)).setAcceleration(acceleration.getValuef() * random(0.25, 1));
+      addModulator(gravity.start());
     }
   }
   
-  Bubbly(LX lx) {
+  Bubbles(LX lx) {
     super(lx);
     addParameter(ballCount);
     addParameter(maxRadius);
-    addParameter(maxBounce);
-    addParameter(minBounce);
     addParameter(acceleration);
     
     balls = new Bubble[numBalls];
@@ -397,7 +393,7 @@ class Bubbly extends LXPattern { //ported from SugarCubes
         balls[i] = new Bubble(maxRadius.getValuef());
       }
       for (Cube cube : model.cubes) {
-        float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - 100), 2));
+        float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
         
         if (dist < balls[i].radius) {
           colors[cube.index] = lx.hsb(
@@ -411,42 +407,3 @@ class Bubbly extends LXPattern { //ported from SugarCubes
   }
 }
 
-//class Snow extends LXPattern {
-//  Snow(LX lx) {
-//    super(lx);
-//  }
-//  
-//  public void run(double deltaMs) {
-//    for (Cube cube: model.cubes) {
-//      colors[cube.index] = lx.hsb(
-//        100,
-//        100,
-//        -cube.ly
-//      );
-//    }
-//    
-//    
-//  }
-//  
-//}
-//
-//
-
-//class Bloom extends LXPattern {
-//  private Flowers[] flowers;
-//  
-//  private class Flower {
-//    float theta = random(0, 360);
-//    float y = r;
-//  
-//  }
-//  Spring(LX lx) {
-//    super(lx);
-//  }
-//  
-//  
-//  
-//  public void run(double deltaMs) {
-//  
-//  }
-//}

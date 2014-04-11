@@ -107,6 +107,8 @@ LXPattern[] patterns(LX lx) {
     new Springs(lx),
     new Lattice(lx),
     new Fire(lx),
+    new Bubbles(lx),
+    new BouncyBalls(lx),
     new Wisps(lx),
     new Explosions(lx),
     new BassSlam(lx),
