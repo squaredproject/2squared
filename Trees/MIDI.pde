@@ -318,7 +318,7 @@ class MPK25 extends LXMidiDevice {
   }
 
   protected void controlChange(LXMidiControlChange controlChange) {
-    if (controlChange.getChannel() == MODWHEEL_CHANNEL && controlChange.getCC() == MODWHEEL_CC) {
+    if (keyboard != null && controlChange.getChannel() == MODWHEEL_CHANNEL && controlChange.getCC() == MODWHEEL_CC) {
       keyboard.modWheelChanged(controlChange.getValue());
     }
   }

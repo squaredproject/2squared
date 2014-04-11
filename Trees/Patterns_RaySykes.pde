@@ -222,7 +222,7 @@ class SparkleTakeOver extends LXPattern {
   }
 }
 
-class Lightning extends LXPattern {
+class Lightning extends LXPattern implements TriggerablePattern {
   private LightningLine[] bolts = new LightningLine[2];
   final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
@@ -230,6 +230,7 @@ class Lightning extends LXPattern {
   final BasicParameter lightningChance = new BasicParameter("Chance", 5, 1, 10);
   final BasicParameter forkingChance = new BasicParameter("Fork", 3, 1, 10);
   int[] randomCheckTimeOuts = {0, 0};
+  boolean triggered = true;
   Lightning(LX lx) {
     super(lx);
     bolts[0] = makeBolt();
@@ -245,7 +246,7 @@ class Lightning extends LXPattern {
     int treeIndex = 0;
     
     for (Tree tree : model.trees){
-      if (bolts[treeIndex].isDead() && randomCheckTimeOuts[treeIndex] < millis()){
+      if (triggered && bolts[treeIndex].isDead() && randomCheckTimeOuts[treeIndex] < millis()){
         randomCheckTimeOuts[treeIndex] = millis() + 100;
         if (random(15) < lightningChance.getValuef()){
           bolts[treeIndex] = makeBolt();
@@ -277,6 +278,29 @@ class Lightning extends LXPattern {
     float theta = 45 * (int) random(8);
     float boltWidth = (maxBoltWidth.getValuef() + random(maxBoltWidth.getValuef())) / 2;
     return new LightningLine (millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3, forkingChance.getValuef());
+  }
+  
+  public void enableTriggerableMode() {
+    triggered = false;
+  }
+  
+  public void onTriggered(float strength) {
+    triggered = true;
+    propagationSpeed.setNormalized(strength);
+    
+    int treeIndex = 0;
+    
+    for (Tree tree : model.trees){
+      if (bolts[treeIndex].isDead()){
+        randomCheckTimeOuts[treeIndex] = millis() + 100;
+        bolts[treeIndex] = makeBolt();
+      }
+      treeIndex ++;
+    }
+  }
+  
+  public void onRelease() {
+    triggered = false;
   }
 }
 

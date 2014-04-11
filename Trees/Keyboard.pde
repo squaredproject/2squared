@@ -3,11 +3,7 @@ class TSKeyboard implements Keyboard {
   KeyboardPlayablePattern[] patterns = null;
   LXDeck deck = null;
   
-  boolean configure(MidiEngine midiEngine) {
-    if (midiEngine.mpk25 == null) {
-      return false;
-    }
-    
+  void configure(LX lx) {
     patterns = new KeyboardPlayablePattern[] {
     };
     
@@ -24,10 +20,6 @@ class TSKeyboard implements Keyboard {
     deck = lx.engine.addDeck(lxPatterns);
     deck.setFaderTransition(new TreesTransition(lx, deck));
     getCurrentPattern().enableKeyboardPlayableMode();
-    
-    midiEngine.mpk25.setKeyboard(this);
-    
-    return true;
   }
   
   KeyboardPlayablePattern getCurrentPattern() {
@@ -35,19 +27,19 @@ class TSKeyboard implements Keyboard {
   }
   
   public void noteOn(LXMidiNote note) {
-    if (midiEngine.mpk25 != null && deck != null) {
+    if (deck != null) {
       getCurrentPattern().noteOn(note);
     }
   }
   
   public void noteOff(LXMidiNote note) {
-    if (midiEngine.mpk25 != null && deck != null) {
+    if (deck != null) {
       getCurrentPattern().noteOff(note);
     }
   }
   
   public void modWheelChanged(int value) {
-    if (midiEngine.mpk25 != null && deck != null) {
+    if (deck != null) {
       getCurrentPattern().modWheelChanged(value);
     }
   }

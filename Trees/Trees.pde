@@ -229,10 +229,12 @@ void setup() {
   
   // MIDI control
   midiEngine = new MidiEngine();
-  
-  // Drumpad
-  drumpad = new TSDrumpad();
-  drumpad.configure(lx, midiEngine);
+  if (midiEngine.mpk25 != null) {
+    // Drumpad
+    drumpad = new TSDrumpad();
+    drumpad.configure(lx);
+    midiEngine.mpk25.setDrumpad(drumpad);
+  }
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
