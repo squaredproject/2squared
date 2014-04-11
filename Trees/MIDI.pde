@@ -36,7 +36,7 @@ class MidiEngine {
     
     if (apcInput != null) {
       final APC40 apc40 = new APC40(apcInput, apcOutput) {
-        protected void noteOn(LXMidiNote note) {
+        protected void noteOn(LXMidiNoteOn note) {
           int channel = note.getChannel();
           switch (note.getPitch()) {
           case APC40.CLIP_LAUNCH:
@@ -127,7 +127,7 @@ class MidiEngine {
         });
         setPattern(apc40, deck);
         TreesTransition transition = getFaderTransition(deck);
-        apc40.bindController(deck.getFader(), deck.index, APC40.VOLUME);
+        apc40.bindController(deck.getFader(), deck.index, APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
         apc40.bindNoteOn(transition.left, deck.index, APC40.SOLO_CUE, LXMidiDevice.TOGGLE);
         apc40.bindNoteOn(transition.right, deck.index, APC40.RECORD_ARM, LXMidiDevice.TOGGLE);
       }
@@ -144,7 +144,7 @@ class MidiEngine {
       }
       
       // Master fader
-      apc40.bindController(Trees.this.output.brightness, 0, APC40.MASTER_FADER);
+      apc40.bindController(Trees.this.output.brightness, 0, APC40.MASTER_FADER, LXMidiDevice.TakeoverMode.PICKUP);
       
       // Effect knobs + buttons
       for (int i = 0; i < effectKnobParameters.length; ++i) {
@@ -153,8 +153,7 @@ class MidiEngine {
         }
       }
       for (int i = 0; i < effectButtonParameters.length; ++i) {
-        apc40.bindNoteOn(effectButtonParameters[i], 0, APC40.PAN + i, LXMidiDevice.TOGGLE);
-        apc40.bindNoteOff(effectButtonParameters[i], 0, APC40.PAN + i);
+        apc40.bindNote(effectButtonParameters[i], 0, APC40.PAN + i, LXMidiDevice.DIRECT);
       }
       
       // Pattern control
