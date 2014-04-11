@@ -1,11 +1,11 @@
 BPMSinLFO bpmSinLfo = new BPMSinLFO(0, 1, 0);
-SawLFO bpmSawLfo = new SawLFO(0, 1, 0);
-SquareLFO bpmSquareLfo = new SquareLFO(0, 1, 0);
-TriangleLFO bpmTriangleLfo = new TriangleLFO(0, 1, 0);
-QuadraticEnvelope bpmQuadraticLfo = new QuadraticEnvelope(0, 1, 0);
+BPMSawLFO bpmSawLfo = new BPMSawLFO(0, 1, 0);
+BPMSquareLFO bpmSquareLfo = new BPMSquareLFO(0, 1, 0);
+//TriangleLFO bpmTriangleLfo = new TriangleLFO(0, 1, 0);
+BPMQuadraticEnvelope bpmQuadraticLfo = new BPMQuadraticEnvelope(0, 1, 0);
 
-LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmQuadraticLfo, bpmSquareLfo, bpmTriangleLfo};
-String[] bpmLabels = {"SIN", "SAW", "QD", "SQR", "TRI"};
+LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmQuadraticLfo, bpmSquareLfo};
+String[] bpmLabels = {"SIN", "SAW", "QD", "SQR"};
 LXRangeModulator selectedBpmModulator;
 
 
@@ -152,6 +152,84 @@ class BPMSinLFO extends SinLFO implements BPMLFO {
   List<LXParameter> binds;
   
   public BPMSinLFO(double startValue, double endValue, double periodMs) {
+    super(startValue, endValue, periodMs);
+    binds = new ArrayList<LXParameter>();  
+  }
+  
+  public void AddBind(LXParameter parameter) {
+    binds.add(parameter);
+  }
+  
+  public void RemoveBind(LXParameter parameter) {
+    binds.remove(parameter);
+  }
+  
+  
+  void onSetValue(double value) {
+    super.onSetValue(value);
+    for (LXParameter bind : binds) {
+      bind.setValue(value);
+    }
+  }  
+}
+
+class BPMSawLFO extends SawLFO implements BPMLFO {
+
+  List<LXParameter> binds;
+  
+  public BPMSawLFO(double startValue, double endValue, double periodMs) {
+    super(startValue, endValue, periodMs);
+    binds = new ArrayList<LXParameter>();  
+  }
+  
+  public void AddBind(LXParameter parameter) {
+    binds.add(parameter);
+  }
+  
+  public void RemoveBind(LXParameter parameter) {
+    binds.remove(parameter);
+  }
+  
+  
+  void onSetValue(double value) {
+    super.onSetValue(value);
+    for (LXParameter bind : binds) {
+      bind.setValue(value);
+    }
+  }  
+}
+
+class BPMQuadraticEnvelope extends QuadraticEnvelope implements BPMLFO {
+
+  List<LXParameter> binds;
+  
+  public BPMQuadraticEnvelope(double startValue, double endValue, double periodMs) {
+    super(startValue, endValue, periodMs);
+    binds = new ArrayList<LXParameter>();  
+  }
+  
+  public void AddBind(LXParameter parameter) {
+    binds.add(parameter);
+  }
+  
+  public void RemoveBind(LXParameter parameter) {
+    binds.remove(parameter);
+  }
+  
+  
+  void onSetValue(double value) {
+    super.onSetValue(value);
+    for (LXParameter bind : binds) {
+      bind.setValue(value);
+    }
+  }  
+}
+
+class BPMSquareLFO extends SquareLFO implements BPMLFO {
+
+  List<LXParameter> binds;
+  
+  public BPMSquareLFO(double startValue, double endValue, double periodMs) {
     super(startValue, endValue, periodMs);
     binds = new ArrayList<LXParameter>();  
   }
