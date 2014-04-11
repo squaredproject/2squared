@@ -63,6 +63,12 @@ class MidiEngine {
             }
             break;
             
+          case APC40.ACTIVATOR:
+            if (previewChannels[channel].isOn() && channel != focusedDeck()) {
+              lx.engine.focusedDeck.setValue(channel);
+            }
+            break;
+            
           case APC40.MASTER_TRACK:
           case APC40.SHIFT:
             uiDeck.select();
