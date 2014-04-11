@@ -6,14 +6,18 @@ QuadraticEnvelope bpmQuadraticLfo = new QuadraticEnvelope(0, 1, 0);
 
 LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmSquareLfo, bpmTriangleLfo, bpmQuadraticLfo};
 
+LXRangeModulator selectedBpmModulator;
+
+
 class UIMasterBpm extends UIWindow {
   
   final static int BUTT_WIDTH = 12 * 3;
   final static int BUTT_HEIGHT = 20;
   final static int SPACING = 4;
   
+  
   UIMasterBpm(UI ui, float x, float y) {
-    super(ui, "MASTER BPM", x, y, 140, 78);
+    super(ui, "MASTER BPM", x, y, 140, 102);
     int yPos = TITLE_LABEL_HEIGHT - 3;
     int xPos = SPACING * 2;
 
@@ -24,10 +28,12 @@ class UIMasterBpm extends UIWindow {
     
     xPos += 20 + SPACING;
   
-    new UIIntegerBox(xPos, yPos, BUTT_WIDTH * 2, BUTT_HEIGHT)
+    new UIIntegerBox(xPos, yPos, BUTT_WIDTH, BUTT_HEIGHT)
     .setParameter(bpmTool.bpm)
     .addToContainer(this);
-       
+    
+    xPos += BUTT_WIDTH + SPACING;
+         
     yPos += BUTT_HEIGHT + SPACING;
 
     xPos = SPACING;
@@ -57,6 +63,15 @@ class UIMasterBpm extends UIWindow {
     .setLabel("TAP")
     .setMomentary(true)
     .addToContainer(this);
+    
+    yPos += BUTT_HEIGHT + SPACING;
+    
+    for (int i = 0; i < 4; ++i) {
+      new UIButton(5 + 34 * i, yPos, 28, 24)
+      .setParameter(effectButtonParameters[i])
+      .setMomentary(true)
+      .addToContainer(this);
+    }
 
   }
 }
@@ -83,6 +98,7 @@ public void stopBpmModulators() {
     } 
 }
 
+
 class BPMTool extends LXEffect {
 
   final DiscreteParameter bpm = new DiscreteParameter("BPM", 0, 300); 
@@ -90,7 +106,16 @@ class BPMTool extends LXEffect {
   BPMTool(LX lx) {
     super(lx);
     bpm.addListener(new bpmListener());
-    
+    startBpmModulators();
+//    effectButtonParameters[0].addListener(new LXParameterListener() {
+//      public void onParameterChanged(LXParameter parameter) {
+//        if (parameter.getValue() > 0) {
+//          selectedBpmModulator = bpmSinLfo;
+//        } else {
+//          selectedBpmModulator = null;
+//        }
+//      }
+//    });
   }
   
 

@@ -189,6 +189,7 @@ class MidiEngine {
       }
       for (int i = 0; i < effectButtonParameters.length; ++i) {
         apc40.bindNoteOn(effectButtonParameters[i], 0, APC40.PAN + i, LXMidiDevice.TOGGLE);
+        apc40.bindNoteOff(effectButtonParameters[i], 0, APC40.PAN + i);
       }
       
       // Pattern control
@@ -632,7 +633,7 @@ class UIEffects extends UIWindow {
   final int KNOBS_PER_ROW = 4;
   
   UIEffects(UI ui) {
-    super(ui, "MASTER EFFECTS", Trees.this.width-144, 86, 140, 144);
+    super(ui, "MASTER EFFECTS", Trees.this.width-144, 110, 140, 120);
     
     int yp = TITLE_LABEL_HEIGHT;
     for (int ki = 0; ki < 8; ++ki) {
@@ -641,12 +642,7 @@ class UIEffects extends UIWindow {
       .addToContainer(this);
     }
     yp += 98;
-    for (int i = 0; i < 4; ++i) {
-      new UIButton(5 + 34 * i, yp, 28, 14)
-      .setParameter(effectButtonParameters[i])
-      .addToContainer(this);
-    }
+    
   } 
   
 }
-
