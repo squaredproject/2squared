@@ -20,45 +20,16 @@ final static byte[] APC_MODE_SYSEX = {
   (byte) 0xf7, // sysex end
 };
 
-final static int MPK25_PAD_CHANNEL = 1;
-final static int MPK25_PAD1_PITCH = 60;
-final static int MPK25_PAD2_PITCH = 62;
-final static int MPK25_PAD3_PITCH = 64;
-final static int MPK25_PAD4_PITCH = 65;
-final static int MPK25_PAD5_PITCH = 67;
-final static int MPK25_PAD6_PITCH = 69;
-final static int MPK25_PAD7_PITCH = 71;
-final static int MPK25_PAD8_PITCH = 72;
-final static int MPK25_PAD9_PITCH = 74;
-final static int MPK25_PAD10_PITCH = 76;
-final static int MPK25_PAD11_PITCH = 77;
-final static int MPK25_PAD12_PITCH = 78;
-
-final static int[] MPK25_PAD_PITCHES = {
-  MPK25_PAD1_PITCH,
-  MPK25_PAD2_PITCH,
-  MPK25_PAD3_PITCH,
-  MPK25_PAD4_PITCH,
-  MPK25_PAD5_PITCH,
-  MPK25_PAD6_PITCH,
-  MPK25_PAD7_PITCH,
-  MPK25_PAD8_PITCH,
-  MPK25_PAD9_PITCH,
-  MPK25_PAD10_PITCH,
-  MPK25_PAD11_PITCH,
-  MPK25_PAD12_PITCH
-};
-
 class MidiEngine {
   
-  final LXMidiDevice mpk25;
+  MPK25 mpk25 = null;
   
   public MidiEngine() {
     previewChannel.setValue(NUM_CHANNELS);
     setAPC40Mode();
     LXMidiInput apcInput = APC40.matchInput(lx);
     LXMidiOutput apcOutput = APC40.matchOutput(lx);
-    LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");;
+    LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");
     
     if (apcInput != null) {
       final APC40 apc40 = new APC40(apcInput, apcOutput) {
@@ -205,10 +176,7 @@ class MidiEngine {
     }
     
     if (mpkInput != null) {
-      mpk25 = new LXMidiDevice(mpkInput) {
-      };
-    } else {
-      mpk25 = null;
+      mpk25 = new MPK25(mpkInput);
     }
   }
   
@@ -236,6 +204,90 @@ class MidiEngine {
       }
       ++i;
     }
+  }
+}
+
+interface Drumpad {
+  public void padTriggered(int index, int velocity);
+  public void padReleased(int index);
+}
+
+class MPK25 extends LXMidiDevice {
+  
+  final static int PAD_CHANNEL = 1;
+  final static int NUM_PADS = 12;
+  final static int PAD1_PITCH = 60;
+  final static int PAD2_PITCH = 62;
+  final static int PAD3_PITCH = 64;
+  final static int PAD4_PITCH = 65;
+  final static int PAD5_PITCH = 67;
+  final static int PAD6_PITCH = 69;
+  final static int PAD7_PITCH = 71;
+  final static int PAD8_PITCH = 72;
+  final static int PAD9_PITCH = 74;
+  final static int PAD10_PITCH = 76;
+  final static int PAD11_PITCH = 77;
+  final static int PAD12_PITCH = 78;
+  
+  final int[] PAD_PITCHES = {
+    PAD1_PITCH,
+    PAD2_PITCH,
+    PAD3_PITCH,
+    PAD4_PITCH,
+    PAD5_PITCH,
+    PAD6_PITCH,
+    PAD7_PITCH,
+    PAD8_PITCH,
+    PAD9_PITCH,
+    PAD10_PITCH,
+    PAD11_PITCH,
+    PAD12_PITCH
+  };
+  
+  private Drumpad drumpad = null;
+  
+  public MPK25(LXMidiInput input) {
+    this(input, null);
+  }
+
+  public MPK25(LXMidiInput input, LXMidiOutput output) {
+    super(input, output);
+  }
+  
+  public void setDrumpad(Drumpad drumpad) {
+    this.drumpad = drumpad;
+  }
+  
+  private int getPadIndex(LXMidiNote note) {
+    if (note.getChannel() == PAD_CHANNEL) {
+      for (int i = 0; i < PAD_PITCHES.length; i++) {
+        if (note.getPitch() == PAD_PITCHES[i]) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+  
+  protected void noteOn(LXMidiNote note) {
+    if (drumpad != null) {
+      int padIndex = getPadIndex(note);
+      if (padIndex != -1) {
+        drumpad.padTriggered(padIndex, note.getVelocity());
+      }
+    }
+  }
+
+  protected void noteOff(LXMidiNote note) {
+    if (drumpad != null) {
+      int padIndex = getPadIndex(note);
+      if (padIndex != -1) {
+        drumpad.padReleased(padIndex);
+      }
+    }
+  }
+
+  protected void controlChange(LXMidiControlChange controlChange) {
   }
 }
 

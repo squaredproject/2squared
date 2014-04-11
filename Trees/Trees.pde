@@ -81,6 +81,7 @@ LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
 BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
 MidiEngine midiEngine;
+TSDrumpad drumpad;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
@@ -229,7 +230,8 @@ void setup() {
   midiEngine = new MidiEngine();
   
   // Drumpad
-  setupDrumpad();
+  drumpad = new TSDrumpad();
+  drumpad.configure(lx, midiEngine);
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
