@@ -150,7 +150,6 @@ void setup() {
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
-  lx.addEffect(bpmTool = new BPMTool(lx));
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -169,6 +168,8 @@ void setup() {
     new BooleanParameter("-", false),
     new BooleanParameter("-", false)
   };
+  
+  bpmTool = new BPMTool();
 
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {

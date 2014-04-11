@@ -4,7 +4,7 @@ SquareLFO bpmSquareLfo = new SquareLFO(0, 1, 0);
 TriangleLFO bpmTriangleLfo = new TriangleLFO(0, 1, 0);
 QuadraticEnvelope bpmQuadraticLfo = new QuadraticEnvelope(0, 1, 0);
 
-LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmSquareLfo, bpmTriangleLfo, bpmQuadraticLfo};
+LXRangeModulator BPM_MODULATORS[] = {bpmSinLfo, bpmSawLfo, bpmQuadraticLfo, bpmSquareLfo, bpmTriangleLfo};
 
 LXRangeModulator selectedBpmModulator;
 
@@ -99,23 +99,33 @@ public void stopBpmModulators() {
 }
 
 
-class BPMTool extends LXEffect {
+class bpmSelectionListener implements LXParameterListener {
+  
+  LXRangeModulator modulator;
+  
+  bpmSelectionListener(LXRangeModulator modulator) {
+    this.modulator = modulator;
+  }
+  
+  public void onParameterChanged(LXParameter parameter) {
+    if (parameter.getValue() > 0) {
+          selectedBpmModulator = bpmSinLfo;
+        } else {
+          selectedBpmModulator = null;
+        }
+  }
+}
+
+class BPMTool {
 
   final DiscreteParameter bpm = new DiscreteParameter("BPM", 0, 300); 
   
-  BPMTool(LX lx) {
-    super(lx);
+  BPMTool() {    
     bpm.addListener(new bpmListener());
     startBpmModulators();
-//    effectButtonParameters[0].addListener(new LXParameterListener() {
-//      public void onParameterChanged(LXParameter parameter) {
-//        if (parameter.getValue() > 0) {
-//          selectedBpmModulator = bpmSinLfo;
-//        } else {
-//          selectedBpmModulator = null;
-//        }
-//      }
-//    });
+    for (int i = 0; i < effectButtonParameters.length; i++) {
+      effectButtonParameters[i].addListener(new bpmSelectionListener(BPM_MODULATORS[i]));
+    }    
   }
   
 
