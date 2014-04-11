@@ -27,13 +27,13 @@ class TSKeyboard implements Keyboard {
     return (KeyboardPlayablePattern)deck.getActivePattern();
   }
   
-  public void noteOn(LXMidiNote note) {
+  public void noteOn(LXMidiNoteOn note) {
     if (deck != null) {
       getCurrentPattern().noteOn(note);
     }
   }
   
-  public void noteOff(LXMidiNote note) {
+  public void noteOff(LXMidiNoteOff note) {
     if (deck != null) {
       getCurrentPattern().noteOff(note);
     }
@@ -48,8 +48,8 @@ class TSKeyboard implements Keyboard {
 
 interface KeyboardPlayablePattern {
   public void enableKeyboardPlayableMode();
-  public void noteOn(LXMidiNote note);
-  public void noteOff(LXMidiNote note);
+  public void noteOn(LXMidiNoteOn note);
+  public void noteOff(LXMidiNoteOff note);
   public void modWheelChanged(float value);
 }
 

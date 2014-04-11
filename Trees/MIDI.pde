@@ -223,8 +223,8 @@ interface Drumpad {
 }
 
 interface Keyboard {
-  public void noteOn(LXMidiNote note);
-  public void noteOff(LXMidiNote note);
+  public void noteOn(LXMidiNoteOn note);
+  public void noteOff(LXMidiNoteOff note);
   public void modWheelChanged(float value);
 }
 
@@ -303,7 +303,7 @@ class MPK25 extends LXMidiDevice {
         && note.getPitch() <= KEYBOARD_PITCH_LAST;
   }
   
-  protected void noteOn(LXMidiNote note) {
+  protected void noteOn(LXMidiNoteOn note) {
     if (drumpad != null) {
       int padIndex = getPadIndex(note);
       if (padIndex != -1) {
@@ -315,7 +315,7 @@ class MPK25 extends LXMidiDevice {
     }
   }
 
-  protected void noteOff(LXMidiNote note) {
+  protected void noteOff(LXMidiNoteOff note) {
     if (drumpad != null) {
       int padIndex = getPadIndex(note);
       if (padIndex != -1) {

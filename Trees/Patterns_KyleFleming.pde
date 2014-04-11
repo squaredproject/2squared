@@ -141,11 +141,11 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
     keyboardMode = true;
   }
   
-  public void noteOn(LXMidiNote note) {
+  public void noteOn(LXMidiNoteOn note) {
     makeObject(note.getPitch());
   }
   
-  public void noteOff(LXMidiNote note) {
+  public void noteOff(LXMidiNoteOff note) {
   }
   
   public void modWheelChanged(float value) {
