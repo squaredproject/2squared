@@ -6,7 +6,7 @@ SyphonClient client;
 
 class SyphonPattern extends LXPattern {
 
-  int x, y, z = 0;
+  int x, y, z, buffWidth, buffHeight = 0;
   float xscale, yscale = 0f;
   int[] xpoints, ypoints;
 
@@ -37,8 +37,8 @@ class SyphonPattern extends LXPattern {
     return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
   }
   
-  private color mode2(Cube cube, int cubeIdx) {
-    return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
+  private color mode2(Cube cube, int cubeIdx) {    
+    return weighted_get(imgbuffer, int(this.buffWidth * (cube.theta / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());
   }
   
   public void run(double deltaMs) {
@@ -46,6 +46,8 @@ class SyphonPattern extends LXPattern {
 
       buffer = client.getGraphics(buffer);
       imgbuffer = buffer.get();
+      this.buffWidth = buffer.width;
+      this.buffHeight = buffer.height;
       if (this.xscale == 0) {
         generateMap(buffer.width, buffer.height);
       }
