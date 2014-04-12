@@ -86,6 +86,8 @@ TSKeyboard keyboard;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
+    new Stripes(lx),
+    new AcidTrip(lx),
     new Twister(lx),
     new MarkLottor(lx),
     new DoubleHelix(lx),
@@ -151,7 +153,7 @@ void setup() {
     if (deck.index == 0) {
       deck.goIndex(deck.index);
     } else {
-      deck.goIndex(28);
+      deck.goIndex(29);
     }
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
