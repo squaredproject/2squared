@@ -41,6 +41,10 @@ class SyphonPattern extends LXPattern {
     return weighted_get(imgbuffer, int(this.buffWidth * (cube.theta / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());
   }
   
+  private color mode3(Cube cube, int cubeIdx) {
+    return 0;
+  }
+  
   public void run(double deltaMs) {
     if (client.available()) {
 
@@ -58,7 +62,9 @@ class SyphonPattern extends LXPattern {
           case 1: c = mode1(cube, cubeIdx);
                   break;
           case 2: c = mode2(cube, cubeIdx);
-                  break;          
+                  break;    
+          case 3: c = mode3(cube, cubeIdx);
+                  break;      
         }
         
         setColor(cube, c);
