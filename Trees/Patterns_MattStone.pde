@@ -33,18 +33,24 @@ class SyphonPattern extends LXPattern {
     }
   }
 
-  private color mode1(Cube cube, int cubeIdx) {
-    return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
-  }
-  
-  private color mode2(Cube cube, int cubeIdx) {    
+  private color mode1(Cube cube, int cubeIdx) {    
     return weighted_get(imgbuffer, int(this.buffWidth * (cube.theta / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());
   }
   
-  private color mode3(Cube cube, int cubeIdx) {
-    return 0;
+  private color mode2(Cube cube, int cubeIdx) {
+    boolean reverse = false;
+    if (cube.theta > (360.0 / 2))
+      reverse = true;
+    if (reverse) {
+      return weighted_get(imgbuffer, int(this.buffWidth * ((((360.0 - cube.theta) * 2)) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());      
+    }
+    return weighted_get(imgbuffer, int(this.buffWidth * ((cube.theta * 2.0) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());
   }
   
+  private color mode3(Cube cube, int cubeIdx) {
+    return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
+  }
+        
   public void run(double deltaMs) {
     if (client.available()) {
 
