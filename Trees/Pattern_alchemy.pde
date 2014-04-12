@@ -1,4 +1,4 @@
-class Stripes extends LXPattern {
+class Zebra extends LXPattern {
  
  BasicParameter thickness =  new BasicParameter ("THIC", 160,0,200); 
  BasicParameter  period= new BasicParameter ("PERI", 500, 300, 3000);
@@ -6,7 +6,7 @@ class Stripes extends LXPattern {
   
   SinLFO position =new SinLFO(0, 200, period);
   
-  Demo(LX lx) {
+  Zebra(LX lx) {
     super(lx);
     addParameter(thickness);
     addParameter(period);

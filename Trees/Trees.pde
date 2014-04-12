@@ -86,7 +86,7 @@ TSKeyboard keyboard;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
-    new Stripes(lx),
+    new Zebra(lx),
     new AcidTrip(lx),
     new Twister(lx),
     new MarkLottor(lx),
