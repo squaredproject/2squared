@@ -5,6 +5,7 @@ class MappingTool extends LXEffect {
 
   MappingTool(LX lx) {
     super(lx);
+    addLayer(new MappingLayer());
   }
   
   JSONObject getConfig() {
@@ -16,11 +17,26 @@ class MappingTool extends LXEffect {
   }
 
   public void apply(int[] colors) {
-    if (isEnabled()) {
-      Cluster active = getCluster();
-      for (Cluster cluster : model.clusters) {
-        for (LXPoint point : cluster.points) {
-          colors[point.index] = (cluster == active) ? #ffffff : #000000;
+  }
+  
+  class MappingLayer extends LXLayer {
+    
+    double strobeTimer = 0;
+    double strobePeriod = 300;
+    boolean strobeActive = false;
+    
+    public void run(double deltaMs, int[] colors) {
+      if (isEnabled()) {
+        strobeTimer += deltaMs;
+        if (strobeTimer >= strobePeriod) {
+          strobeTimer = 0;
+          strobeActive = !strobeActive;
+        }
+        Cluster active = getCluster();
+        for (Cluster cluster : model.clusters) {
+          for (LXPoint point : cluster.points) {
+            colors[point.index] = ((cluster == active) && strobeActive) ? #ffffff : colors[point.index];
+          }
         }
       }
     }

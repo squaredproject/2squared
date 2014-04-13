@@ -723,6 +723,46 @@ class Palette extends LXPattern {
   }
 }
 
+class SolidColor extends LXPattern {
+  // 235 = blue, 135 = green, 0 = red
+  final BasicParameter hue = new BasicParameter("HUE", 135, 0, 360);
+  
+  SolidColor(LX lx) {
+    super(lx);
+    addParameter(hue);
+  }
+  
+  public void run(double deltaMs) {
+    setColors(lx.hsb(hue.getValuef(), 100, 100));
+  }
+}
+
+class ClusterLineTest extends LXPattern {
+  
+  final BasicParameter y;
+  final BasicParameter theta;
+  final BasicParameter spin;
+  
+  ClusterLineTest(LX lx) {
+    super(lx);
+    
+    addParameter(theta = new BasicParameter("θ", 0, -90, 430));
+    addParameter(y = new BasicParameter("Y", 200, lx.model.yMin, lx.model.yMax));
+    addParameter(spin = new BasicParameter("SPIN", 0, -90, 430));
+  }
+  
+  public void run(double deltaMs) {
+    PVector origin = new PVector(theta.getValuef(), y.getValuef());
+    for (Cube cube : model.cubes) {
+      PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);
+      float dist = origin.dist(cubePointPrime);
+      float cubeTheta = spin.getValuef() + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
+      colors[cube.index] = lx.hsb(135, 100, 100
+          * LXUtils.constrainf((1 - abs(cubeTheta % 90 - 15) / 100 / asin(20 / max(20, dist))), 0, 1));
+    }
+  }
+}
+
 class GhostEffect extends LXEffect {
   
   final BasicParameter amount = new BasicParameter("GHOS", 0, 0, 1, BasicParameter.Scaling.QUAD_IN);
