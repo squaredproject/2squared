@@ -86,6 +86,7 @@ TSKeyboard keyboard;
 
 LXPattern[] patterns(LX lx) {
   LXPattern[] patterns = new LXPattern[] {
+    new SolidColor(lx),
     new Twister(lx),
     new MarkLottor(lx),
     new DoubleHelix(lx),
@@ -104,7 +105,6 @@ LXPattern[] patterns(LX lx) {
     new TestCluster(lx).setEligible(false),
     new OrderTest(lx),
     new ClusterLineTest(lx),
-    new SolidColor(lx),
     new Zebra(lx),
     new AcidTrip(lx),
     new Pulley(lx),
