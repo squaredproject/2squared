@@ -118,6 +118,7 @@ LXPattern[] patterns(LX lx) {
     new Fade(lx),
     new Strobe(lx),
     new Twinkle(lx),
+    new VerticalSweep(lx),
     new RandomColor(lx),
     new RandomColorAll(lx),
   };

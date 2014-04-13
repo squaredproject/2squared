@@ -50,13 +50,53 @@ class Twinkle extends LXPattern {
         if (random(10) <= speedParam.getValuef()) {
           cubeToModulatorMapping[cube.index] = int(random(numBrights));
         }
-        sparkleTimeOuts[cube.index] = millis() + int(random(17100,33300));
+        sparkleTimeOuts[cube.index] = millis() + int(random(17100, 33300));
       }
       colors[cube.index] = lx.hsb(
-        0, 
-        0, 
-        bright[cubeToModulatorMapping[cube.index]].getValuef() * brightnessParam.getValuef()
+      0, 
+      0, 
+      bright[cubeToModulatorMapping[cube.index]].getValuef() * brightnessParam.getValuef()
         );
+    }
+  }
+}
+
+class VerticalSweep extends LXPattern {
+
+  final BasicParameter saturationParam = new BasicParameter("Saturation", 100, 0, 100);
+  final BasicParameter hue1Param = new BasicParameter("Hue1", 60, 0, 360);
+  final BasicParameter hue2Param = new BasicParameter("Hue2", 110, 0, 360);
+  final BasicParameter hue3Param = new BasicParameter("Hue3", 180, 0, 360);
+
+  final SawLFO range = new SawLFO(0, 1, 5000);
+
+  VerticalSweep(LX lx) {
+    super(lx);
+    addModulator(range.start());
+    addParameter(saturationParam);
+    addParameter(hue1Param);
+    addParameter(hue2Param);
+    addParameter(hue3Param);
+  }
+
+  public void run(double deltaMs) {
+
+    float[] colorPalette = { 
+      hue1Param.getValuef(), hue2Param.getValuef(), hue3Param.getValuef()
+      };
+      int saturation = (int) saturationParam.getValuef();
+
+    for (Cube cube : model.cubes) {
+      float progress = ((cube.theta / 360.0) + range.getValuef()) % 1; // value is 0-1
+      float scaledProgress = (colorPalette.length) * progress; // value is 0-3
+      int color1Index = floor(scaledProgress);
+      int color1Hue = (int) colorPalette[color1Index];
+      int color2Hue = (int) colorPalette[ceil(scaledProgress) % colorPalette.length];
+      color color1 = lx.hsb( color1Hue, saturation, 100 );
+      color color2 = lx.hsb( color2Hue, saturation, 100 );
+      float amt = scaledProgress-color1Index;
+
+      colors[cube.index] = lerpColor(color1, color2, amt);
     }
   }
 }
