@@ -113,6 +113,8 @@ LXPattern[] patterns(LX lx) {
     new Fire(lx),
     new Bubbles(lx),
     new BouncyBalls(lx),
+    new Fumes(lx),
+    new Voronoi(lx),
     new Wisps(lx),
     new Explosions(lx),
     new BassSlam(lx),
