@@ -19,6 +19,7 @@ class BPMTool {
   
   private LXDeck currentActiveDeck = null;
   final private List<BPMParameterListener> parameterListeners = new ArrayList<BPMParameterListener>();
+  final private List<BPMParameterListener> masterEffectParameterListeners = new ArrayList<BPMParameterListener>();
   
   final private ParameterModulatorController[] modulatorControllers;
   final private ParameterModulationController modulationController;
@@ -69,7 +70,13 @@ class BPMTool {
     
     addTempoLfo.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        bindPatternParameters(lx.engine.getFocusedDeck().getActivePattern());
+        if (addTempoLfo.isOn()) {
+          watchPattern(lx.engine.getFocusedDeck().getActivePattern());
+          watchMasterEffectParameters(effectKnobParameters);
+        } else {
+          unwatchPatternParameters();
+          unwatchMasterEffectParameters();
+        }
       }
     });
     
@@ -81,26 +88,26 @@ class BPMTool {
       }
     });
     
-    bindPatternParameters(lx.engine);
+    watchEngine(lx.engine);
   }
 
   private final LXDeck.AbstractListener bindPatternParametersListener = new LXDeck.AbstractListener() {
     @Override
     public void patternDidChange(LXDeck deck, LXPattern pattern) {
-      bindPatternParameters(pattern);
+      watchPatternParameters(pattern);
     }
   };
 
-  public void bindPatternParameters(final LXEngine engine) {
+  private void watchEngine(final LXEngine engine) {
     engine.focusedDeck.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        bindPatternParameters(engine.getFocusedDeck());
+        watchDeck(engine.getFocusedDeck());
       }
     });
-    bindPatternParameters(engine.getFocusedDeck());
+    watchDeck(engine.getFocusedDeck());
   }
 
-  public void bindPatternParameters(LXDeck deck) {
+  private void watchDeck(LXDeck deck) {
     if (this.currentActiveDeck != deck) {
       if (this.currentActiveDeck != null) {
         this.currentActiveDeck.removeListener(this.bindPatternParametersListener);
@@ -108,14 +115,11 @@ class BPMTool {
       this.currentActiveDeck = deck;
       this.currentActiveDeck.addListener(this.bindPatternParametersListener);
     }
-    bindPatternParameters(deck.getActivePattern());
+    watchPattern(deck.getActivePattern());
   }
 
-  public void bindPatternParameters(LXPattern pattern) {
-    for (BPMParameterListener parameterListener : parameterListeners) {
-      parameterListener.stopListening();
-    }
-    parameterListeners.clear();
+  private void watchPatternParameters(LXPattern pattern) {
+    unwatchPatternParameters();
     if (addTempoLfo.isOn()) {
       for (LXParameter parameter : pattern.getParameters()) {
         if (parameter instanceof LXListenableNormalizedParameter) {
@@ -123,6 +127,26 @@ class BPMTool {
         }
       }
     }
+  }
+  
+  private void unwatchPatternParameters() {
+    for (BPMParameterListener parameterListener : parameterListeners) {
+      parameterListener.stopListening();
+    }
+    parameterListeners.clear();
+  }
+  
+  private void watchMasterEffectParameter(LXListenableNormalizedParameter[] parameters) {
+    for (LXListenableNormalizedParameter parameter : parameters) {
+      masterEffectParameterListeners.add(new BPMParameterListener(this, parameter));
+    }
+  }
+  
+  private void unwatchMasterEffectParameters() {
+    for (BPMParameterListener parameterListener : masterEffectParameterListeners) {
+      parameterListener.stopListening();
+    }
+    masterEffectParameterListeners.clear();
   }
   
   public void bindParameter(LXListenableNormalizedParameter parameter, double minValue, double maxValue) {
