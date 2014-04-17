@@ -852,3 +852,4 @@ class GhostEffect extends LXEffect {
     }
   }
 }
+

@@ -265,3 +265,4 @@ class BPMTempo extends Tempo {
     super.tap();
   }
 }
+

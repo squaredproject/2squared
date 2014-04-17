@@ -718,3 +718,4 @@ class UIEffects extends UIWindow {
   } 
   
 }
+

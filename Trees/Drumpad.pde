@@ -44,3 +44,4 @@ interface TriggerablePattern {
   public void onTriggered(float strength);
   public void onRelease();
 }
+
