@@ -165,6 +165,8 @@ void setup() {
   lx.addEffect(mappingTool = new MappingTool(lx));
   GhostEffect ghostEffect = new GhostEffect(lx);
   lx.addEffect(ghostEffect);
+  ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
+  lx.addEffect(scrambleEffect);
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -172,9 +174,9 @@ void setup() {
       colorEffect.mono,
       colorEffect.desaturation,
       colorEffect.sharp,
-      colorEffect.soft,
       blurEffect.amount,
       ghostEffect.amount,
+      scrambleEffect.amount,
   };
   
   bpmTool = new BPMTool(lx);

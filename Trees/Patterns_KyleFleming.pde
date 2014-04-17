@@ -767,3 +767,55 @@ class GhostEffect extends LXEffect {
   }
 }
 
+class ScrambleEffect extends LXEffect {
+  
+  final DiscreteParameter amount;
+  final int offset;
+  
+  ScrambleEffect(LX lx) {
+    super(lx);
+    
+    amount = new DiscreteParameter("SCRA", lx.total / 2);
+    offset = lx.total / 4 + 5;
+  }
+  
+  protected void apply(int[] colors) {
+    for (Tree tree : ((Model)lx.model).trees) {
+      for (int i = min(tree.cubes.size(), amount.getValuei()); i >= 0; i--) {
+        colors[tree.cubes.get(i).index] = colors[tree.cubes.get((i + offset) % tree.cubes.size()).index];
+      }
+    }
+  }
+}
+
+class StaticEffect extends LXEffect {
+  
+  final BasicParameter amount = new BasicParameter("STTC");
+  
+  private boolean isCreatingStatic = false;
+  
+  StaticEffect(LX lx) {
+    super(lx);
+  }
+  
+  protected void apply(int[] colors) {
+    if (isCreatingStatic) {
+      double chance = random(1);
+      if (chance > amount.getValue()) {
+        isCreatingStatic = false;
+      }
+    } else {
+      double chance = random(1);
+      if (chance < amount.getValue()) {
+        isCreatingStatic = true;
+      }
+    }
+    if (isCreatingStatic) {
+      for (int i = 0; i < colors.length; i++) {
+        colors[i] = color(random(255));
+      }
+    }
+  }
+}
+
+
