@@ -69,6 +69,13 @@ class MidiEngine {
             }
             break;
             
+          case APC40.SEND_A:
+            bpmTool.beatType.increment();
+            break;
+          case APC40.SEND_B:
+            bpmTool.tempoLfoType.increment();
+            break;
+            
           case APC40.MASTER_TRACK:
           case APC40.SHIFT:
             uiDeck.select();
@@ -152,9 +159,6 @@ class MidiEngine {
           apc40.bindController(effectKnobParameters[i], 0, APC40.TRACK_CONTROL + i);
         }
       }
-      for (int i = 0; i < effectButtonParameters.length; ++i) {
-        apc40.bindNote(effectButtonParameters[i], 0, APC40.PAN + i, LXMidiDevice.DIRECT);
-      }
       
       // Pattern control
       apc40.bindDeviceControlKnobs(lx.engine);
@@ -167,6 +171,16 @@ class MidiEngine {
           );
         }
       });
+      
+      // Tap Tempo
+      apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.SEND_A, APC40.DIRECT);
+      apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.SEND_B, APC40.DIRECT);
+      apc40.bindNote(bpmTool.addTempoLfo, 0, APC40.PAN, APC40.DIRECT);
+      apc40.bindNote(bpmTool.clearAllTempoLfos, 0, APC40.SEND_C, APC40.DIRECT);
+      apc40.bindNote(bpmTool.tapTempo, 0, APC40.TAP_TEMPO, APC40.DIRECT);
+      apc40.bindNote(bpmTool.nudgeUpTempo, 0, APC40.NUDGE_PLUS, APC40.DIRECT);
+      apc40.bindNote(bpmTool.nudgeDownTempo, 0, APC40.NUDGE_MINUS, APC40.DIRECT);
+      
       apc40.bindNotes(
         getFaderTransition(lx.engine.getFocusedDeck()).blendMode,
         0,

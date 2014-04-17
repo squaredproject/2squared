@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 final static int INCHES = 1;
 final static int FEET = 12 * INCHES;
@@ -76,7 +77,6 @@ ColorEffect colorEffect;
 BPMTool bpmTool;
 MappingTool mappingTool;
 LXListenableNormalizedParameter[] effectKnobParameters;
-BooleanParameter[] effectButtonParameters;
 LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
 BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
@@ -177,15 +177,7 @@ void setup() {
       ghostEffect.amount,
   };
   
-  effectButtonParameters = new BooleanParameter[] {
-    new BooleanParameter("-", false),
-    new BooleanParameter("-", false),
-    new BooleanParameter("-", false),
-    new BooleanParameter("-", false)
-  };
-  
-  bpmTool = new BPMTool();
-  bpmTool.AddBPMListener(lx.getPatterns());
+  bpmTool = new BPMTool(lx);
 
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {
@@ -239,7 +231,7 @@ void setup() {
   lx.ui.addLayer(new UIEffects(lx.ui));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UILoopRecorder(lx.ui));
-  lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4));
+  lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4, bpmTool));
   
   // MIDI control
   midiEngine = new MidiEngine();
