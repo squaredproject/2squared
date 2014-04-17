@@ -3,45 +3,30 @@ int BLACK = java.awt.Color.BLACK.getRGB();
 
 class BassSlam extends LXPattern {
   
-  final static int SLAM_STATE_1 = 1 << 0;
-  final static int SLAM_STATE_2 = 1 << 1;
-  
-  int state = SLAM_STATE_1;
-  double timer = 0;
-  
   BassSlam(LX lx) {
     super(lx);
   }
   
   public void run(double deltaMs) {
-    timer += deltaMs;
-    switch(state) {
-      case SLAM_STATE_1:
-        float time = (float)(timer / 500);
-        float y;
-        if (time < 1) {
-          y = 1 + pow(time + 0.16, 2) * sin(18 * (time + 0.16)) / 4;
-        } else {
-          y = 1.32 - 20 * pow(time - 1, 2);
-        }
-        y = 100 * (y - 1) + 250;
-        if (y <= 0) {
-          state = SLAM_STATE_2;
-          timer = 0;
-          y = 0;
-        }
-        
-        for (Cube cube : model.cubes) {
-          setColor(cube.index, lx.hsb(200, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.y), 0, 100)));
-        }
-        break;
-      case SLAM_STATE_2:
-        if (timer >= 20) {
-          state = SLAM_STATE_1;
-          timer = 0;
-        }
-        setColors(lx.hsb(200, 100, 100));
-        break;
+    if (lx.tempo.ramp() < 0.1) {
+      setColors(lx.hsb(200, 100, 100));
+    } else {
+      float time = (float)((lx.tempo.ramp() - .1) / .9 * 1.3755);
+      float y;
+      if (time < 1) {
+        y = 1 + pow(time + 0.16, 2) * sin(18 * (time + 0.16)) / 4;
+      } else {
+        y = 1.32 - 20 * pow(time - 1, 2);
+      }
+      y = 100 * (y - 1) + 250;
+      // y = 0 when time = 1.3755
+      if (y <= 0) {
+        y = 0;
+      }
+      
+      for (Cube cube : model.cubes) {
+        setColor(cube.index, lx.hsb(200, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.y), 0, 100)));
+      }
     }
   }
 }
