@@ -142,7 +142,16 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
 
 abstract class MultiObject extends LXLayer {
   
+  float runningTimer = 0;
+  float runningTimerEnd = 1000;
   boolean running = true;
+  float progress;
+  int hue = BLACK;
+  float thickness;
+  
+  PVector currentPoint;
+  float fadeIn;
+  float fadeOut;
   
   public void run(double deltaMs, int[] colors) {
     if (running) {
@@ -155,10 +164,40 @@ abstract class MultiObject extends LXLayer {
     }
   }
   
-  void init() { }
-  void run(double deltaMs) { }
-  int getColorForCube(Cube cube) { return BLACK; }
-  float getRunningTimeEstimate() { return 1000; }
+  public void run(double deltaMs) {
+    if (running) {
+      runningTimer += deltaMs;
+      if (runningTimer >= runningTimerEnd) {
+        running = false;
+      } else {
+        progress = runningTimer / runningTimerEnd;
+        fadeIn = min(1, 3 * (1 - progress));
+        fadeOut = min(1, 3 * progress);
+        onProgressChanged(progress);
+      }
+    }
+  }
+  
+  public int getColorForCube(Cube cube) {
+    return lx.hsb(hue, 100, getBrightnessForCube(cube));
+  }
+  
+  public float getBrightnessForCube(Cube cube) {
+    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
+    if (insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness)) {
+      float dist = PVector.dist(cubePointPrime, currentPoint);
+      return 100 * max(0, (1 - dist / thickness)) * fadeIn * fadeOut;
+    } else {
+      return 0;
+    }
+  }
+  
+  float getRunningTimeEstimate() {
+    return runningTimerEnd;
+  }
+  
+  public void init() { }
+  public void onProgressChanged(float progress) { }
 }
 
 class Explosions extends MultiObjectPattern<Explosion> {
@@ -183,6 +222,30 @@ class Explosions extends MultiObjectPattern<Explosion> {
   }
 }
 
+boolean insideOfBoundingBox(PVector origin, PVector point, float xTolerance, float yTolerance) {
+  return abs(origin.x - point.x) <= xTolerance && abs(origin.y - point.y) <= yTolerance;
+}
+ 
+float wrapDist2d(PVector a, PVector b) {
+  return sqrt(pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + pow(a.y - b.y, 2));
+}
+ 
+PVector movePointToSamePlane(PVector reference, PVector point) {
+  return new PVector(moveThetaToSamePlane(reference.x, point.x), point.y);
+}
+ 
+// Assumes thetaA as a reference point
+// Moves thetaB to within 180 degrees, letting thetaB go beyond [0, 360)
+float moveThetaToSamePlane(float thetaA, float thetaB) {
+  if (thetaA - thetaB > 180) {
+    return thetaB + 360;
+  } else if (thetaB - thetaA > 180) {
+    return thetaB - 360;
+  } else {
+    return thetaB;
+  }
+}
+
 class Explosion extends MultiObject {
   
   final static int EXPLOSION_STATE_IMPLOSION_EXPAND = 1 << 0;
@@ -191,7 +254,6 @@ class Explosion extends MultiObject {
   final static int EXPLOSION_STATE_EXPLOSION = 1 << 3;
   
   PVector origin;
-  int hue;
   
   float accelOfImplosion = 3000;
   Accelerator implosionRadius;
@@ -244,21 +306,21 @@ class Explosion extends MultiObject {
     }
   }
   
-  int getColorForCube(Cube cube) {
+  public float getBrightnessForCube(Cube cube) {
     PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);
     float dist = origin.dist(cubePointPrime);
     switch (state) {
       case EXPLOSION_STATE_IMPLOSION_EXPAND:
       case EXPLOSION_STATE_IMPLOSION_WAIT:
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
-        return lx.hsb(hue, 100, 100 * LXUtils.constrainf((implosionRadius.getValuef() - dist) / 10, 0, 1));
+        return 100 * LXUtils.constrainf((implosionRadius.getValuef() - dist) / 10, 0, 1);
       default:
         float theta = explosionThetaOffset + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
-        return lx.hsb(hue, 100, 100
+        return 100
             * LXUtils.constrainf(1 - (dist - explosionRadius.getValuef()) / 10, 0, 1)
             * LXUtils.constrainf(1 - (explosionRadius.getValuef() - dist) / 200, 0, 1)
             * LXUtils.constrainf((1 - abs(theta % 30 - 15) / 100 / asin(20 / max(20, dist))), 0, 1)
-            * explosionFade.getValuef());
+            * explosionFade.getValuef();
     }
   }
 }
@@ -305,7 +367,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
     wisp.endPoint = PVector.fromAngle(pathDirection * PI / 180);
     wisp.endPoint.mult(pathDist);
     wisp.endPoint.add(wisp.startPoint);
-    wisp.displayColor = (int)(baseColor.getValuef()
+    wisp.hue = (int)(baseColor.getValuef()
       + LXUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
     wisp.thickness = 10 * thickness.getValuef() + (float)LXUtils.random(-3, 3);
     
@@ -315,70 +377,11 @@ class Wisps extends MultiObjectPattern<Wisp> {
 
 class Wisp extends MultiObject {
   
-  float runningTimer;
-  float runningTimerEnd;
-  
   PVector startPoint;
   PVector endPoint;
   
-  int displayColor;
-  float thickness;
-  
-  float progress;
-  PVector currentPoint;
-  float fadeIn;
-  float fadeOut;
-  
-  public void run(double deltaMs) {
-    if (running) {
-      runningTimer += deltaMs;
-      if (runningTimer >= runningTimerEnd) {
-        running = false;
-      } else {
-        progress = runningTimer / runningTimerEnd;
-        currentPoint = PVector.lerp(startPoint, endPoint, progress);
-        fadeIn = min(1, 3 * (1 - progress));
-        fadeOut = min(1, 3 * progress);
-      }
-    }
-  }
-  
-  int getColorForCube(Cube cube) {
-    return lx.hsb(displayColor, 100, getBrightnessForCube(cube));
-  }
-  
-  float getBrightnessForCube(Cube cube) {
-    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
-    if (insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness)) {
-      float dist = PVector.dist(cubePointPrime, currentPoint);
-      return 100 * max(0, (1 - dist / thickness)) * fadeIn * fadeOut;
-    } else {
-      return 0;
-    }
-  }
-}
-
-boolean insideOfBoundingBox(PVector origin, PVector point, float xTolerance, float yTolerance) {
-  return abs(origin.x - point.x) <= xTolerance && abs(origin.y - point.y) <= yTolerance;
-}
-
-float wrapDist2d(PVector a, PVector b) {
-  return sqrt(pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + pow(a.y - b.y, 2));
-}
-
-PVector movePointToSamePlane(PVector reference, PVector point) {
-  return new PVector(moveThetaToSamePlane(reference.x, point.x), point.y);
-}
-
-// Assumes thetaA as a reference point
-// Moves thetaB to within 180 degrees, letting thetaB go beyond [0, 360)
-float moveThetaToSamePlane(float thetaA, float thetaB) {
-  if (thetaA - thetaB > 180) {
-    return thetaB + 360;
-  } else if (thetaB - thetaA > 180) {
-    return thetaB - 360;
-  } else {
-    return thetaB;
+  public void onProgressChanged(float progress) {
+    currentPoint = PVector.lerp(startPoint, endPoint, progress);
   }
 }
 
@@ -400,7 +403,7 @@ class Rain extends MultiObjectPattern<RainDrop> {
     rainDrop.startY = model.yMax + 20;
     rainDrop.endY = model.yMin - 20;
     rainDrop.pathDist = abs(rainDrop.endY - rainDrop.startY);
-    rainDrop.displayColor = 200 + (int)random(20);
+    rainDrop.hue = 200 + (int)random(20);
     rainDrop.thickness = 1.5 + random(.6);
     
     return rainDrop;
@@ -409,19 +412,12 @@ class Rain extends MultiObjectPattern<RainDrop> {
 
 class RainDrop extends MultiObject {
   
-  float runningTimer = 0;
-  float runningTimerEnd;
   float decayTime;
   
   float theta;
   float startY;
   float endY;
   float pathDist;
-  
-  int displayColor;
-  float thickness;
-  
-  PVector currentPoint;
   
   public void run(double deltaMs) {
     if (running) {
@@ -435,11 +431,11 @@ class RainDrop extends MultiObject {
     }
   }
   
-  int getColorForCube(Cube cube) {
+  public float getBrightnessForCube(Cube cube) {
     PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
     float distFromSource = PVector.dist(cubePointPrime, currentPoint);
     float tailFadeFactor = distFromSource / pathDist;
-    return lx.hsb(displayColor, 100, max(0, (100 - 10 * distFromSource / thickness)));
+    return max(0, (100 - 10 * distFromSource / thickness));
   }
 }
 
