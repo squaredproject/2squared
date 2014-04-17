@@ -297,7 +297,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
     wisp.runningTimerEnd = 5000 / speed.getValuef();
     float pathDirection = (float)(direction.getValuef()
       + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
-    float pathDist = (float)LXUtils.random(80, min(450, 140 / max(0.01, abs(cos(PI * pathDirection / 180)))));
+    float pathDist = (float)LXUtils.random(200, 400);
     float startTheta = random(360);
     float startY = (float)LXUtils.random(max(model.yMin, model.yMin - pathDist * sin(PI * pathDirection / 180)), 
       min(model.yMax, model.yMax - pathDist * sin(PI * pathDirection / 180)));
@@ -324,7 +324,10 @@ class Wisp extends MultiObject {
   int displayColor;
   float thickness;
   
+  float progress;
   PVector currentPoint;
+  float fadeIn;
+  float fadeOut;
   
   public void run(double deltaMs) {
     if (running) {
@@ -332,7 +335,10 @@ class Wisp extends MultiObject {
       if (runningTimer >= runningTimerEnd) {
         running = false;
       } else {
-        currentPoint = PVector.lerp(startPoint, endPoint, runningTimer / runningTimerEnd);
+        progress = runningTimer / runningTimerEnd;
+        currentPoint = PVector.lerp(startPoint, endPoint, progress);
+        fadeIn = min(1, 3 * (1 - progress));
+        fadeOut = min(1, 3 * progress);
       }
     }
   }
@@ -345,7 +351,7 @@ class Wisp extends MultiObject {
     PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
     if (insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness)) {
       float dist = PVector.dist(cubePointPrime, currentPoint);
-      return 100 * max(0, (1 - dist / thickness));
+      return 100 * max(0, (1 - dist / thickness)) * fadeIn * fadeOut;
     } else {
       return 0;
     }
