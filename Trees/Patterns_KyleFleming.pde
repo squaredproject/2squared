@@ -756,7 +756,7 @@ class ClusterLineTest extends LXPattern {
     for (Cube cube : model.cubes) {
       PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);
       float dist = origin.dist(cubePointPrime);
-      float cubeTheta = spin.getValuef() + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
+      float cubeTheta = (spin.getValuef() + 15) + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
       colors[cube.index] = lx.hsb(135, 100, 100
           * LXUtils.constrainf((1 - abs(cubeTheta % 90 - 15) / 100 / asin(20 / max(20, dist))), 0, 1));
     }

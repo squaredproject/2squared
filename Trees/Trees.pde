@@ -155,11 +155,7 @@ void setup() {
   }
   
   for (LXDeck deck : lx.engine.getDecks()) {
-    if (deck.index == 0) {
-      deck.goIndex(deck.index);
-    } else {
-      deck.goIndex(31);
-    }
+    deck.goIndex(deck.index);
     deck.setFaderTransition(new TreesTransition(lx, deck));
   }
   
@@ -259,6 +255,8 @@ void setup() {
   // bad code I know
   // (shouldn't mess with engine internals)
   // maybe need a way to specify a deck shouldn't be focused?
+  // essentially this lets us have extra decks for the drumpad
+  // patterns without letting them be assigned to channels
   // -kf
   lx.engine.focusedDeck.setRange(NUM_CHANNELS);
   
@@ -621,8 +619,11 @@ class TreesTransition extends LXTransition {
 void keyPressed() {
   switch (key) {
     case 'a':
-      for (LXDatagram datagram : datagrams) {
-        datagram.enabled.toggle();
+      if (datagrams.length > 0) {
+        boolean toEnable = !datagrams[0].enabled.isOn();
+        for (LXDatagram datagram : datagrams) {
+          datagram.enabled.setValue(toEnable);
+        }
       }
       break;
   }
