@@ -71,7 +71,7 @@ class BPMTool {
     addTempoLfo.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         if (addTempoLfo.isOn()) {
-          watchPattern(lx.engine.getFocusedDeck().getActivePattern());
+          watchPatternParameters(lx.engine.getFocusedDeck().getActivePattern());
           watchMasterEffectParameters(effectKnobParameters);
         } else {
           unwatchPatternParameters();
@@ -115,7 +115,7 @@ class BPMTool {
       this.currentActiveDeck = deck;
       this.currentActiveDeck.addListener(this.bindPatternParametersListener);
     }
-    watchPattern(deck.getActivePattern());
+    watchPatternParameters(deck.getActivePattern());
   }
 
   private void watchPatternParameters(LXPattern pattern) {
@@ -136,7 +136,7 @@ class BPMTool {
     parameterListeners.clear();
   }
   
-  private void watchMasterEffectParameter(LXListenableNormalizedParameter[] parameters) {
+  private void watchMasterEffectParameters(LXListenableNormalizedParameter[] parameters) {
     for (LXListenableNormalizedParameter parameter : parameters) {
       masterEffectParameterListeners.add(new BPMParameterListener(this, parameter));
     }
