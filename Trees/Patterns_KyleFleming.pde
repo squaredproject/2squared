@@ -3,29 +3,29 @@ int BLACK = java.awt.Color.BLACK.getRGB();
 
 class BassSlam extends LXPattern {
   
+  final private double flashTimePercent = 0.1;
+  final private int patternHue = 200;
+  
   BassSlam(LX lx) {
     super(lx);
   }
   
   public void run(double deltaMs) {
-    if (lx.tempo.ramp() < 0.1) {
-      setColors(lx.hsb(200, 100, 100));
+    if (lx.tempo.ramp() < flashTimePercent) {
+      setColors(lx.hsb(patternHue, 100, 100));
     } else {
-      float time = (float)((lx.tempo.ramp() - .1) / .9 * 1.3755);
+      float time = (float)((lx.tempo.ramp() - flashTimePercent) / (1 - flashTimePercent) * 1.3755);
       float y;
+      // y = 0 when time = 1.3755
       if (time < 1) {
         y = 1 + pow(time + 0.16, 2) * sin(18 * (time + 0.16)) / 4;
       } else {
         y = 1.32 - 20 * pow(time - 1, 2);
       }
-      y = 100 * (y - 1) + 250;
-      // y = 0 when time = 1.3755
-      if (y <= 0) {
-        y = 0;
-      }
+      y = max(0, 100 * (y - 1) + 250);
       
       for (Cube cube : model.cubes) {
-        setColor(cube.index, lx.hsb(200, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.y), 0, 100)));
+        setColor(cube.index, lx.hsb(patternHue, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.y), 0, 100)));
       }
     }
   }
