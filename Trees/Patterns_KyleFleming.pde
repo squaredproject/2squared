@@ -203,8 +203,7 @@ class Explosion extends MultiObject {
   final static int EXPLOSION_STATE_IMPLOSION_EXPAND = 1 << 0;
   final static int EXPLOSION_STATE_IMPLOSION_WAIT = 1 << 1;
   final static int EXPLOSION_STATE_IMPLOSION_CONTRACT = 1 << 2;
-  final static int EXPLOSION_STATE_FLASH = 1 << 3;
-  final static int EXPLOSION_STATE_EXPLOSION = 1 << 4;
+  final static int EXPLOSION_STATE_EXPLOSION = 1 << 3;
   
   PVector origin;
   int hue;
@@ -215,7 +214,6 @@ class Explosion extends MultiObject {
   Accelerator explosionRadius;
   LXModulator explosionFade;
   float explosionThetaOffset;
-  float flashTimer = 50;
   
   int state = EXPLOSION_STATE_IMPLOSION_EXPAND;
   
@@ -244,17 +242,7 @@ class Explosion extends MultiObject {
         break;
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         if (implosionRadius.getValuef() < 0) {
-//          state = EXPLOSION_STATE_FLASH;
           lx.removeModulator(implosionRadius.stop());
-          state = EXPLOSION_STATE_EXPLOSION;
-          explosionRadius = new Accelerator(0, -implosionRadius.getVelocityf(), -300);
-          lx.addModulator(explosionRadius.start());
-          lx.addModulator(explosionFade.start());
-        }
-        break;
-      case EXPLOSION_STATE_FLASH:
-        flashTimer -= deltaMs;
-        if (flashTimer <= 0) {
           state = EXPLOSION_STATE_EXPLOSION;
           explosionRadius = new Accelerator(0, -implosionRadius.getVelocityf(), -300);
           lx.addModulator(explosionRadius.start());
@@ -279,8 +267,6 @@ class Explosion extends MultiObject {
       case EXPLOSION_STATE_IMPLOSION_WAIT:
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         return lx.hsb(hue, 100, 100 * LXUtils.constrainf((implosionRadius.getValuef() - dist) / 10, 0, 1));
-      case EXPLOSION_STATE_FLASH:
-        return lx.hsb(hue, 100, 20);
       default:
         float theta = explosionThetaOffset + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
         return lx.hsb(hue, 100, 100
@@ -405,58 +391,6 @@ float moveThetaToSamePlane(float thetaA, float thetaB) {
   }
 }
 
-// Gets the closest point on a line segment [a, b] to another point p
-// Assumes points are in the form (theta, y) and are on a cylinder.
-PVector getClosestPointOnLineOnCylinder(PVector a, PVector b, PVector p) {
-  // Unwrap the cylinder at 0 degrees to calculate
-  // Assume a and b are already on the same plane (aka theta would be negative already)
-  
-  // Move p onto the same plane as a, if needed
-  PVector pPrime = movePointToSamePlane(a, p);;
-  
-  return getClosestPointOnLine(a, b, pPrime);
-}
-
-// Gets the closest point on a line segment [a, b] to another point p
-// Assumes points are in the form (theta, y)
-PVector getClosestPointOnLineA(PVector a, PVector b, PVector p) {
-
-  if (a.x == b.x) {
-    float m = (b.x - a.x) / (b.y - a.y);
-    float x = m * p.y + a.x - m * a.y;
-  } 
-  else {
-    float m = (b.y - a.y) / (b.x - a.x);
-    float y = m * p.x + a.y - m * a.x;
-  }
-
-  return null;
-}
-
-// Gets the closest point on a line segment [a, b] to another point p
-// Assumes points are in the form (theta, y)
-PVector getClosestPointOnLine(PVector a, PVector b, PVector p) {
-  
-  // adapted from http://stackoverflow.com/a/3122532
-  
-  // Storing vector A->P
-  PVector a_to_p = PVector.sub(p, a);
-  // Storing vector A->B
-  PVector a_to_b = PVector.sub(b, a);
-
-  //   Basically finding the squared magnitude of a_to_b
-  float atb2 = a_to_b.magSq();
-
-  // The dot product of a_to_p and a_to_b
-  float atp_dot_atb = a_to_p.dot(a_to_b);
-
-  // The normalized "distance" from a to your closest point
-  float t = LXUtils.constrainf(atp_dot_atb / atb2, 0, 1);
-
-  // Add the distance to A, moving towards B
-  return PVector.lerp(a, b, t);
-}
-
 class Rain extends MultiObjectPattern<RainDrop> {
   
   Rain(LX lx) {
@@ -464,21 +398,17 @@ class Rain extends MultiObjectPattern<RainDrop> {
   }
   
   BasicParameter getFrequencyParameter() {
-    return new BasicParameter("FREQ", 40, .1, 400, BasicParameter.Scaling.QUAD_IN);
+    return new BasicParameter("FREQ", 40, .1, 75, BasicParameter.Scaling.QUAD_IN);
   }
    
   RainDrop generateObject(float strength) {
     RainDrop rainDrop = new RainDrop();
-    rainDrop.runningTimer = 0;
     rainDrop.runningTimerEnd = 180 + random(20);
     rainDrop.decayTime = rainDrop.runningTimerEnd;
-    float pathDirection = 270;
-    rainDrop.pathDist = model.yMax - model.yMin + 40;
-    rainDrop.startTheta = random(360);
+    rainDrop.theta = random(360);
     rainDrop.startY = model.yMax + 20;
-    rainDrop.startPoint = new PVector(rainDrop.startTheta, rainDrop.startY);
-    rainDrop.endTheta = rainDrop.startTheta;
     rainDrop.endY = model.yMin - 20;
+    rainDrop.pathDist = abs(rainDrop.endY - rainDrop.startY);
     rainDrop.displayColor = 200 + (int)random(20);
     rainDrop.thickness = 1.5 + random(.6);
     
@@ -488,24 +418,19 @@ class Rain extends MultiObjectPattern<RainDrop> {
 
 class RainDrop extends MultiObject {
   
-  float runningTimer;
+  float runningTimer = 0;
   float runningTimerEnd;
   float decayTime;
   
-  PVector startPoint;
-  float startTheta;
+  float theta;
   float startY;
-  float endTheta;
   float endY;
   float pathDist;
   
   int displayColor;
   float thickness;
   
-  float percentDone;
   PVector currentPoint;
-  float currentTheta;
-  float currentY;
   
   public void run(double deltaMs) {
     if (running) {
@@ -513,10 +438,8 @@ class RainDrop extends MultiObject {
       if (runningTimer >= runningTimerEnd + decayTime) {
         running = false;
       } else {
-        percentDone = min(runningTimer, runningTimerEnd) / runningTimerEnd;
-        currentTheta = (float)LXUtils.lerp(startTheta, endTheta, percentDone);
-        currentY = (float)LXUtils.lerp(startY, endY, percentDone);
-        currentPoint = new PVector(currentTheta, currentY);
+        float percentDone = min(runningTimer, runningTimerEnd) / runningTimerEnd;
+        currentPoint = new PVector(theta, (float)LXUtils.lerp(startY, endY, percentDone));
       }
     }
   }
