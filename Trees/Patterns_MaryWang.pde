@@ -1,7 +1,6 @@
 class Twinkle extends LXPattern {
 
   private SinLFO[] bright;
-  final BasicParameter speedParam = new BasicParameter("Speed", 0.5, 0, 10);
   final BasicParameter brightnessParam = new BasicParameter("Brightness", 0.8, 0.5, 1);
   final int numBrights = 18;
   final int density = 20;
@@ -10,7 +9,6 @@ class Twinkle extends LXPattern {
 
   Twinkle(LX lx) {
     super(lx);
-    addParameter(speedParam);
     addParameter(brightnessParam);
 
     sparkleTimeOuts = new int[model.cubes.size()];
@@ -27,17 +25,17 @@ class Twinkle extends LXPattern {
     for (int i = 0; i < bright.length; i++ ) {
       if (i <= numLight) {
         if (random(1) < 0.5) {
-          bright[i] = new SinLFO(int(random(80, 100)), 0, int(random(11300, 17700)));
+          bright[i] = new SinLFO(int(random(80, 100)), 0, int(random(2300, 7700)));
         } 
         else {
-          bright[i] = new SinLFO(0, int(random(80, 100)), int(random(9300, 14200)));
+          bright[i] = new SinLFO(0, int(random(70, 90)), int(random(5300, 9200)));
         }
       } 
       else if ( i < numDarkReverse ) {
-        bright[i] = new SinLFO(int(random(60, 70)), 0, int(random(7300, 25300)));
+        bright[i] = new SinLFO(int(random(50, 70)), 0, int(random(3300, 11300)));
       } 
       else {
-        bright[i] = new SinLFO(0, int(random(50, 80)), int(random(9300, 23300)));
+        bright[i] = new SinLFO(0, int(random(30, 80)), int(random(3100, 9300)));
       }
       addModulator(bright[i].start());
     }
@@ -47,10 +45,10 @@ class Twinkle extends LXPattern {
     for (Cube cube : model.cubes) {
       if (sparkleTimeOuts[cube.index] < millis()) {
         // randomly change modulators        
-        if (random(10) <= speedParam.getValuef()) {
+        if (random(10) <= 3) {
           cubeToModulatorMapping[cube.index] = int(random(numBrights));
         }
-        sparkleTimeOuts[cube.index] = millis() + int(random(17100, 33300));
+        sparkleTimeOuts[cube.index] = millis() + int(random(11100, 23300));
       }
       colors[cube.index] = lx.hsb(
       0, 
