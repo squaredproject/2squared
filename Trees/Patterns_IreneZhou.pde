@@ -339,7 +339,7 @@ class BouncyBalls extends LXPattern {
 }
 
 class Bubbles extends LXPattern {
-  final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 25);
+  final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
   final BasicParameter acceleration = new BasicParameter("ACCEL", 100, 10, 1000); 
     
@@ -348,7 +348,7 @@ class Bubbles extends LXPattern {
   
   private class Bubble {
     public float theta = random(0, 360);
-    public float bHue = random(0, 25);
+    public float bHue = random(0, 30);
     public Accelerator gravity = new Accelerator(random(-50, 0),0,0);
     public float radius = 0;
     
@@ -402,14 +402,16 @@ class Bubbles extends LXPattern {
         balls[i] = new Bubble(maxRadius.getValuef());
       }
       for (Cube cube : model.cubes) {
-        float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
-        
-        if (dist < balls[i].radius) {
-          colors[cube.index] = lx.hsb(
-            balls[i].bHue,
-            50 + dist/balls[i].radius * 50,
-            constrain(cube.y/model.yMax * 125 - 50 * (dist/balls[i].radius), 0, 100)
-          );
+        if (abs(balls[i].theta - cube.theta) < balls[i].radius && abs(balls[i].gravity.getValuef() - (cube.y - model.yMin)) < balls[i].radius) {
+          float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
+          
+          if (dist < balls[i].radius) {
+            colors[cube.index] = lx.hsb(
+              balls[i].bHue,
+              50 + dist/balls[i].radius * 50,
+              constrain(cube.y/model.yMax * 125 - 50 * (dist/balls[i].radius), 0, 100)
+            );
+          }
         }
       }
     }
@@ -493,7 +495,7 @@ class Fumes extends LXPattern {
     public Site() {
       theta = random(0, 360);
       yPos = random(model.yMin, model.yMax);
-      velocity = new PVector(random(-1,1), random(-1,1));
+      velocity = new PVector(random(-1,1), random(0,1));
     }
     
     public void move(float speed) {
@@ -544,4 +546,5 @@ class Fumes extends LXPattern {
     }
   }
 }
+
 
