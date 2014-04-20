@@ -1,6 +1,18 @@
 class Lattice extends LXPattern {
-  final SawLFO spin = new SawLFO(0, 12 * 360, 12 * 800); 
+  final SawLFO spin = new SawLFO(0, 4320, 9600); 
   final SinLFO yClimb = new SinLFO(60, 30, 9600);
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
+  final BasicParameter speed = new BasicParameter("SPEED", 12, 0.01, 24);
+
+  void onParameterChanged(LXParameter parameter) {
+    super.onParameterChanged(parameter);
+    if (parameter == speed) {
+      float speedVar = 1/ speed.getValuef();
+//      yClimb.setPeriod(speedVar * 800);
+      spin.setPeriod(speedVar * 800);
+      
+    }
+  }
 
   float coil(float basis) {
     return sin(basis*PI);
@@ -10,6 +22,8 @@ class Lattice extends LXPattern {
     super(lx);
     addModulator(spin.start());
     addModulator(yClimb.start());
+    addParameter(hue);
+    addParameter(speed);
   }
 
   public void run(double deltaMs) {
@@ -22,145 +36,9 @@ class Lattice extends LXPattern {
       float df = min(100, 3 * max(0, wrapdistleft - width) + 3 * max(0, wrapdistright - width));
 
       colors[cube.index] = lx.hsb(
-        (lx.getBaseHuef() + .2*cube.y - 360) % 360, 
+        (hue.getValuef() + lx.getBaseHuef() + .2*cube.y - 360) % 360, 
         100, 
         df
-      );
-    }
-  }
-}
-
-class Pulley extends LXPattern { //ported from SugarCubes
-  final int NUM_DIVISIONS = 2;
-  private final Accelerator[] gravity = new Accelerator[NUM_DIVISIONS];
-  private final Click[] delays = new Click[NUM_DIVISIONS];
-
-  private final Click reset = new Click(9000);
-  private boolean isRising = false;
-  float coil = 10;
-
-  private BasicParameter sz = new BasicParameter("SIZE", 0.5);
-  private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
-
-  Pulley(LX lx) {
-    super(lx);
-    for (int i = 0; i < NUM_DIVISIONS; ++i) {
-      addModulator(gravity[i] = new Accelerator(0, 0, 0));
-      addModulator(delays[i] = new Click(0));
-    }
-    addModulator(reset).start();
-    addParameter(sz);
-    addParameter(beatAmount);
-    trigger();
-  }
-  
-  private void trigger() {
-    isRising = !isRising;
-    int i = 0;
-    for (Accelerator g : gravity) {
-      if (isRising) {
-        g.setSpeed(random(20, 33), 0).start();
-      } 
-      else {
-        g.setVelocity(0).setAcceleration(-420);
-        delays[i].setDuration(random(0, 500)).trigger();
-      }
-      ++i;
-    }
-  }
-
-  public void run(double deltaMS) {
-    if (reset.click()) {
-      trigger();
-    } 
-    if (!isRising) {
-      int j = 0;
-      for (Click d : delays) {
-        if (d.click()) {
-          gravity[j].start();
-          d.stop();
-        }
-        ++j;
-      }
-      for (Accelerator g : gravity) {
-        if (g.getValuef() < 0) {
-          g.setValue(-g.getValuef());
-          g.setVelocity(-g.getVelocityf() * random(0.74, 0.84));
-        }
-      }
-    }
-
-    float fPos = 1 -lx.tempo.rampf();
-    if (fPos < .2) {
-      fPos = .2 + 4 * (.2 - fPos);
-    }
-
-    float falloff = 100. / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
-    for (Cube cube : model.cubes) {
-      int gi = (int) constrain((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
-      float yn =  cube.y/model.yMax;
-      colors[cube.index] = lx.hsb(
-        (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4) % 360, 
-        constrain(100 *(0.8 -  yn * yn), 0, 100), 
-        max(0, 100 - abs(cube.y/2 - 50 - gravity[gi].getValuef())*falloff)
-      );
-    }
-  }
-}
-
-class Springs extends LXPattern {
-  private final Accelerator gravity = new Accelerator(0, 0, 0);
-  private final Click reset = new Click(9600);
-  private boolean isRising = false;
-  final SinLFO spin = new SinLFO(0, 360, 9600);
-  
-  float coil(float basis) {
-    return 4 * sin(basis*TWO_PI + PI) ;
-  }
-
-  Springs(LX lx) {
-    super(lx);
-    addModulator(gravity);
-    addModulator(reset).start();
-    addModulator(spin.start());
-    trigger();
-  }
-
-  private void trigger() {
-    isRising = !isRising;
-    if (isRising) {
-      gravity.setSpeed(0.25, 0).start();
-    } 
-    else {
-      gravity.setVelocity(0).setAcceleration(-1.75);
-    }
-  }
-
-  public void run(double deltaMS) {
-    if (reset.click()) {
-      trigger();
-    }
-    
-    if (!isRising) {
-      gravity.start();
-      if (gravity.getValuef() < 0) {
-        gravity.setValue(-gravity.getValuef());
-        gravity.setVelocity(-gravity.getVelocityf() * random(0.74, 0.84));
-      }
-    }
-
-    float spinf = spin.getValuef();
-    float coilf = 2*coil(spin.getBasisf());
-    
-    for (Cube cube : model.cubes) {
-      float yn =  cube.y/model.yMax;
-      float width = (1-yn) * 25;
-      float wrapdist = LXUtils.wrapdistf(cube.theta, spinf + (cube.y) * 1/(gravity.getValuef() + 0.2), 360);
-      float df = max(0, 100 - max(0, wrapdist-width));
-      colors[cube.index] = lx.hsb(
-        max(0, lx.getBaseHuef() - yn * 20), 
-        constrain((1- yn) * 100 + wrapdist, 0, 100),
-        max(0, df - yn * 50)
       );
     }
   }
@@ -170,6 +48,7 @@ class Fire extends LXPattern {
   final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
   final BasicParameter flameSize = new BasicParameter("SIZE", 30, 10, 75);  
   final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 75);
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   
   private int numFlames = 75;
   private Flame[] flames;
@@ -194,6 +73,7 @@ class Fire extends LXPattern {
     addParameter(maxHeight);
     addParameter(flameSize);
     addParameter(flameCount);
+    addParameter(hue);
 
     flames = new Flame[numFlames];
     for (int i = 0; i < numFlames; ++i) {
@@ -235,7 +115,7 @@ class Fire extends LXPattern {
         }
       }
       colors[cube.index] = lx.hsb(
-        cHue,
+        (cHue + hue.getValuef()) % 360,
         100,
         min(100, cBrt + (1- yn)* (1- yn) * 50)
       );
@@ -249,6 +129,7 @@ class BouncyBalls extends LXPattern {
   final BasicParameter maxBounce = new BasicParameter("MAXBOUNCE", 0.9, 0, 1);
   final BasicParameter minBounce = new BasicParameter("MINBOUNCE", 0.5, 0, 1);
   final BasicParameter acceleration = new BasicParameter("ACCEL", 400, 0, 1000); 
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
     
   private int numBalls = 10;
   private Ball[] balls;
@@ -276,6 +157,7 @@ class BouncyBalls extends LXPattern {
     addParameter(maxBounce);
     addParameter(minBounce);
     addParameter(acceleration);
+    addParameter(hue);
     
     balls = new Ball[numBalls];
     for (int i = 0; i < numBalls; ++i) {
@@ -328,7 +210,7 @@ class BouncyBalls extends LXPattern {
         float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
         if (dist < balls[i].radius) {
           colors[cube.index] = lx.hsb(
-            balls[i].bHue,
+            (balls[i].bHue + hue.getValuef()) % 360,
             100,
             constrain(cube.y/model.yMax * 125 - 50 * (dist/balls[i].radius), 0, 100)
           );
@@ -342,6 +224,7 @@ class Bubbles extends LXPattern {
   final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
   final BasicParameter acceleration = new BasicParameter("ACCEL", 100, 10, 1000); 
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
     
   private int numBalls = 10;
   private Bubble[] balls;
@@ -364,6 +247,7 @@ class Bubbles extends LXPattern {
     addParameter(ballCount);
     addParameter(maxRadius);
     addParameter(acceleration);
+    addParameter(hue);
     
     balls = new Bubble[numBalls];
     for (int i = 0; i < numBalls; ++i) {
@@ -407,7 +291,7 @@ class Bubbles extends LXPattern {
           
           if (dist < balls[i].radius) {
             colors[cube.index] = lx.hsb(
-              balls[i].bHue,
+              (balls[i].bHue + hue.getValuef()) % 360,
               50 + dist/balls[i].radius * 50,
               constrain(cube.y/model.yMax * 125 - 50 * (dist/balls[i].radius), 0, 100)
             );
@@ -421,6 +305,7 @@ class Bubbles extends LXPattern {
 class Voronoi extends LXPattern {
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5);
   final BasicParameter width = new BasicParameter("WIDTH", 0.75, 0.5, 1.25);
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   final int NUM_SITES = 15;
   private Site[] sites = new Site[NUM_SITES];
   
@@ -448,6 +333,7 @@ class Voronoi extends LXPattern {
     super(lx);
     addParameter(speed);
     addParameter(width);
+    addParameter(hue);
     for (int i = 0; i < sites.length; ++i) {
       sites[i] = new Site();
     }
@@ -471,7 +357,7 @@ class Voronoi extends LXPattern {
         }
       }
       colors[cube.index] = lx.hsb(
-        lx.getBaseHuef(),
+        (lx.getBaseHuef() + hue.getValuef()) % 360,
         100,
         max(0, min(100, 100 - sqrt(nextMinDistSq - minDistSq) / width.getValuef()))
       );
@@ -484,6 +370,7 @@ class Voronoi extends LXPattern {
 
 class Fumes extends LXPattern {
   final BasicParameter speed = new BasicParameter("SPEED", 2, 0, 8);
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   final int NUM_SITES = 15;
   private Site[] sites = new Site[NUM_SITES];
   
@@ -512,6 +399,7 @@ class Fumes extends LXPattern {
   
   Fumes(LX lx) {
     super(lx);
+    addParameter(hue);
     addParameter(speed);
     for (int i = 0; i < sites.length; ++i) {
       sites[i] = new Site();
@@ -536,7 +424,7 @@ class Fumes extends LXPattern {
         }
       }
       colors[cube.index] = lx.hsb(
-        lx.getBaseHuef(),
+        (lx.getBaseHuef() + hue.getValuef()) % 360,
         100,
         max(0, 100 - sqrt(nextMinDistSq - minDistSq * 0.05))
       );
@@ -547,4 +435,179 @@ class Fumes extends LXPattern {
   }
 }
 
+class Pulley extends LXPattern implements TriggerablePattern{ //ported from SugarCubes
+  final int NUM_DIVISIONS = 2;
+  private final Accelerator[] gravity = new Accelerator[NUM_DIVISIONS];
+  private final float[] baseSpeed = new float[NUM_DIVISIONS];
+  private final Click[] delays = new Click[NUM_DIVISIONS];
 
+  private boolean isRising = false;
+  boolean triggered = true;
+  float coil = 10;
+
+  private BasicParameter sz = new BasicParameter("SIZE", 0.5);
+  private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
+  private BooleanParameter automated = new BooleanParameter("AUTO", true);
+  private BasicParameter speed = new BasicParameter("SPEED", 1, -3, 3);
+  
+
+  Pulley(LX lx) {
+    super(lx);
+    for (int i = 0; i < NUM_DIVISIONS; ++i) {
+      addModulator(gravity[i] = new Accelerator(0, 0, 0));
+      addModulator(delays[i] = new Click(0));
+    }
+    addParameter(sz);
+    addParameter(beatAmount);
+    addParameter(speed);
+    addParameter(automated);
+    onParameterChanged(speed);
+    trigger();
+  }
+
+  void onParameterChanged(LXParameter parameter) {
+    super.onParameterChanged(parameter);
+    if (parameter == speed && isRising) {
+      for (int i = 0; i < NUM_DIVISIONS; ++i) {
+        gravity[i].setVelocity(baseSpeed[i] * speed.getValuef());
+      }
+    }
+    if (parameter == automated) {
+      if (automated.isOn()) {
+        trigger();
+      }
+    }
+  }
+  
+  private void trigger() {
+    isRising = !isRising;
+    int i = 0;
+    for (int j = 0; j < NUM_DIVISIONS; ++j) {
+      if (isRising) {
+        baseSpeed[j] = random(20, 33);
+        gravity[j].setSpeed(baseSpeed[j], 0).start();
+      } 
+      else {
+        gravity[j].setVelocity(0).setAcceleration(-420);
+        delays[j].setDuration(random(0, 500)).trigger();
+      }
+      ++i;
+    }
+  }
+
+  public void run(double deltaMS) {
+    if (!isRising) {
+      int j = 0;
+      for (Click d : delays) {
+        if (d.click()) {
+          gravity[j].start();
+          d.stop();
+        }
+        ++j;
+      }
+      for (Accelerator g : gravity) {
+        if (g.getValuef() < 0) { //bounce
+          g.setValue(-g.getValuef());
+          g.setVelocity(-g.getVelocityf() * random(0.74, 0.84));
+        }
+      }
+    }
+
+    float fPos = 1 -lx.tempo.rampf();
+    if (fPos < .2) {
+      fPos = .2 + 4 * (.2 - fPos);
+    }
+
+    float falloff = 100. / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
+    for (Cube cube : model.cubes) {
+      int gi = (int) constrain((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
+      float yn =  cube.y/model.yMax;
+      colors[cube.index] = lx.hsb(
+        (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4) % 360, 
+        constrain(100 *(0.8 -  yn * yn), 0, 100), 
+        max(0, 100 - abs(cube.y/2 - 50 - gravity[gi].getValuef())*falloff)
+      );
+    }
+  }
+
+  public void enableTriggerableMode() {
+    triggered = false;
+  }
+
+  public void onTriggered(float strength) {
+    triggered = true;
+    trigger();
+  }
+
+  public void onRelease() {
+    triggered = false;
+  }
+}
+
+
+class Springs extends LXPattern {
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
+  private BooleanParameter automated = new BooleanParameter("AUTO", true);
+  private final Accelerator gravity = new Accelerator(0, 0, 0);
+  private final Click reset = new Click(9600);
+  private boolean isRising = false;
+  final SinLFO spin = new SinLFO(0, 360, 9600);
+  
+  float coil(float basis) {
+    return 4 * sin(basis*TWO_PI + PI) ;
+  }
+
+  Springs(LX lx) {
+    super(lx);
+    addModulator(gravity);
+    addModulator(reset).start();
+    addModulator(spin.start());
+    addParameter(hue);
+    addParameter(automated);
+    trigger();
+  }
+
+  void onParameterChanged(LXParameter parameter) {
+    super.onParameterChanged(parameter);
+    if (parameter == automated) {
+      if (automated.isOn()) {
+        trigger();
+      }
+    }
+  }  
+
+  private void trigger() {
+    isRising = !isRising;
+    if (isRising) {
+      gravity.setSpeed(0.25, 0).start();
+    } 
+    else {
+      gravity.setVelocity(0).setAcceleration(-1.75);
+    }
+  }
+
+  public void run(double deltaMS) {
+    if (!isRising) {
+      gravity.start();
+      if (gravity.getValuef() < 0) {
+        gravity.setValue(-gravity.getValuef());
+        gravity.setVelocity(-gravity.getVelocityf() * random(0.74, 0.84));
+      }
+    }
+
+    float spinf = spin.getValuef();
+    float coilf = 2*coil(spin.getBasisf());
+    
+    for (Cube cube : model.cubes) {
+      float yn =  cube.y/model.yMax;
+      float width = (1-yn) * 25;
+      float wrapdist = LXUtils.wrapdistf(cube.theta, spinf + (cube.y) * 1/(gravity.getValuef() + 0.2), 360);
+      float df = max(0, 100 - max(0, wrapdist-width));
+      colors[cube.index] = lx.hsb(
+        max(0, (lx.getBaseHuef() - yn * 20 + hue.getValuef()) % 360), 
+        constrain((1- yn) * 100 + wrapdist, 0, 100),
+        max(0, df - yn * 50)
+      );
+    }
+  }
+}
