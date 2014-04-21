@@ -1,18 +1,8 @@
 class Lattice extends LXPattern {
-  final SawLFO spin = new SawLFO(0, 4320, 9600); 
-  final SinLFO yClimb = new SinLFO(60, 30, 9600);
+  final SawLFO spin = new SawLFO(0, 4320, 24000); 
+  final SinLFO yClimb = new SinLFO(60, 30, 24000);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
-  final BasicParameter speed = new BasicParameter("SPEED", 12, 0.01, 24);
-
-  void onParameterChanged(LXParameter parameter) {
-    super.onParameterChanged(parameter);
-    if (parameter == speed) {
-      float speedVar = 1/ speed.getValuef();
-//      yClimb.setPeriod(speedVar * 800);
-      spin.setPeriod(speedVar * 800);
-      
-    }
-  }
+  final BasicParameter yHeight = new BasicParameter("HEIGHT", 0, -500, 500);
 
   float coil(float basis) {
     return sin(basis*PI);
@@ -23,7 +13,7 @@ class Lattice extends LXPattern {
     addModulator(spin.start());
     addModulator(yClimb.start());
     addParameter(hue);
-    addParameter(speed);
+    addParameter(yHeight);
   }
 
   public void run(double deltaMs) {
@@ -32,7 +22,7 @@ class Lattice extends LXPattern {
     for (Cube cube : model.cubes) {
       float wrapdistleft = LXUtils.wrapdistf(cube.theta, spinf + (model.yMax - cube.y) * coilf, 180);
       float wrapdistright = LXUtils.wrapdistf(cube.theta, -spinf - (model.yMax - cube.y) * coilf, 180);
-      float width = yClimb.getValuef() + (cube.y/model.yMax) * 50;
+      float width = yClimb.getValuef() + ((cube.y - yHeight.getValuef())/model.yMax) * 50;
       float df = min(100, 3 * max(0, wrapdistleft - width) + 3 * max(0, wrapdistright - width));
 
       colors[cube.index] = lx.hsb(
@@ -223,22 +213,33 @@ class BouncyBalls extends LXPattern {
 class Bubbles extends LXPattern {
   final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
-  final BasicParameter acceleration = new BasicParameter("ACCEL", 100, 10, 1000); 
+  final BasicParameter speed = new BasicParameter("ACCEL", 1, -10, 25); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
     
   private int numBalls = 10;
-  private Bubble[] balls;
+  private Bubble[] bubbles;
   
   private class Bubble {
     public float theta = random(0, 360);
     public float bHue = random(0, 30);
     public Accelerator gravity = new Accelerator(random(-50, 0),0,0);
     public float radius = 0;
+    public float baseAcceleration = 0;
     
     public Bubble(float maxRadius) {
       radius = random(5, maxRadius);
-      gravity.setVelocity(random(-10,10)).setAcceleration(acceleration.getValuef() * random(0.25, 1));
+      baseAcceleration = 100 * random(0.25, 1);
+      gravity.setVelocity(random(-10,10)).setAcceleration(baseAcceleration);
       lx.addModulator(gravity.start());
+    }
+  }
+  
+  void onParameterChanged(LXParameter parameter) {
+    super.onParameterChanged(parameter);
+    if (parameter == speed) {
+      for (Bubble b : bubbles) {
+        b.gravity.setAcceleration(b.baseAcceleration * speed.getValuef());
+      }
     }
   }
   
@@ -246,23 +247,23 @@ class Bubbles extends LXPattern {
     super(lx);
     addParameter(ballCount);
     addParameter(maxRadius);
-    addParameter(acceleration);
+    addParameter(speed);
     addParameter(hue);
     
-    balls = new Bubble[numBalls];
+    bubbles = new Bubble[numBalls];
     for (int i = 0; i < numBalls; ++i) {
-      balls[i] = new Bubble(maxRadius.getValuef());
+      bubbles[i] = new Bubble(maxRadius.getValuef());
     }
   }
   
   public void updateNumBalls(int numBalls) {
-    Bubble[] newBalls = Arrays.copyOf(balls, numBalls);
-    if (balls.length < numBalls) {
-      for (int i = balls.length; i < numBalls; ++i) {
-        newBalls[i] = new Bubble(maxRadius.getValuef());
+    Bubble[] newBubbless = Arrays.copyOf(bubbles, numBalls);
+    if (bubbles.length < numBalls) {
+      for (int i = bubbles.length; i < numBalls; ++i) {
+        newBubbless[i] = new Bubble(maxRadius.getValuef());
       }
     }
-    balls = newBalls;
+    bubbles = newBubbless;
   }
   
   public void run(double deltaMs) {
@@ -274,26 +275,29 @@ class Bubbles extends LXPattern {
       );
     }
     numBalls = (int) ballCount.getValuef();
-    if (balls.length != numBalls) {
+    if (bubbles.length != numBalls) {
       updateNumBalls(numBalls);
     }
     
-    for (int i = 0; i < balls.length; ++i) {
-      float gravVel = balls[i].gravity.getVelocityf();
-      float gravVal = balls[i].gravity.getValuef();
+    for (int i = 0; i < bubbles.length; ++i) {
+      float gravVel = bubbles[i].gravity.getVelocityf();
+      float gravVal = bubbles[i].gravity.getValuef();
+      if (gravVel <= 0) {
+        bubbles[i].gravity.setVelocity(0);
+      }
       if (abs(gravVal) > model.yMax) { //destroy finished balls
-        lx.removeModulator(balls[i].gravity);
-        balls[i] = new Bubble(maxRadius.getValuef());
+        lx.removeModulator(bubbles[i].gravity);
+        bubbles[i] = new Bubble(maxRadius.getValuef());
       }
       for (Cube cube : model.cubes) {
-        if (abs(balls[i].theta - cube.theta) < balls[i].radius && abs(balls[i].gravity.getValuef() - (cube.y - model.yMin)) < balls[i].radius) {
-          float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
+        if (abs(bubbles[i].theta - cube.theta) < bubbles[i].radius && abs(bubbles[i].gravity.getValuef() - (cube.y - model.yMin)) < bubbles[i].radius) {
+          float dist = sqrt(pow((LXUtils.wrapdistf(bubbles[i].theta, cube.theta, 360)) * 0.8, 2) + pow(bubbles[i].gravity.getValuef() - (cube.y - model.yMin), 2));
           
-          if (dist < balls[i].radius) {
+          if (dist < bubbles[i].radius) {
             colors[cube.index] = lx.hsb(
-              (balls[i].bHue + hue.getValuef()) % 360,
-              50 + dist/balls[i].radius * 50,
-              constrain(cube.y/model.yMax * 125 - 50 * (dist/balls[i].radius), 0, 100)
+              (bubbles[i].bHue + hue.getValuef()) % 360,
+              50 + dist/bubbles[i].radius * 50,
+              constrain(cube.y/model.yMax * 125 - 50 * (dist/bubbles[i].radius), 0, 100)
             );
           }
         }
@@ -440,6 +444,7 @@ class Pulley extends LXPattern implements TriggerablePattern{ //ported from Suga
   private final Accelerator[] gravity = new Accelerator[NUM_DIVISIONS];
   private final float[] baseSpeed = new float[NUM_DIVISIONS];
   private final Click[] delays = new Click[NUM_DIVISIONS];
+   private final Click turnOff = new Click(9000);
 
   private boolean isRising = false;
   boolean triggered = true;
@@ -462,7 +467,7 @@ class Pulley extends LXPattern implements TriggerablePattern{ //ported from Suga
     addParameter(speed);
     addParameter(automated);
     onParameterChanged(speed);
-    trigger();
+    addModulator(turnOff);
   }
 
   void onParameterChanged(LXParameter parameter) {
@@ -496,37 +501,44 @@ class Pulley extends LXPattern implements TriggerablePattern{ //ported from Suga
   }
 
   public void run(double deltaMS) {
-    if (!isRising) {
-      int j = 0;
-      for (Click d : delays) {
-        if (d.click()) {
-          gravity[j].start();
-          d.stop();
-        }
-        ++j;
-      }
-      for (Accelerator g : gravity) {
-        if (g.getValuef() < 0) { //bounce
-          g.setValue(-g.getValuef());
-          g.setVelocity(-g.getVelocityf() * random(0.74, 0.84));
-        }
-      }
+    if (turnOff.click()) {
+      triggered = false;
+      setColors(lx.hsb(0,0,0));
+      turnOff.stopAndReset();      
     }
-
-    float fPos = 1 -lx.tempo.rampf();
-    if (fPos < .2) {
-      fPos = .2 + 4 * (.2 - fPos);
-    }
-
-    float falloff = 100. / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
-    for (Cube cube : model.cubes) {
-      int gi = (int) constrain((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
-      float yn =  cube.y/model.yMax;
-      colors[cube.index] = lx.hsb(
-        (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4) % 360, 
-        constrain(100 *(0.8 -  yn * yn), 0, 100), 
-        max(0, 100 - abs(cube.y/2 - 50 - gravity[gi].getValuef())*falloff)
-      );
+    if(triggered) {
+      if (!isRising) {
+        int j = 0;
+        for (Click d : delays) {
+          if (d.click()) {
+            gravity[j].start();
+            d.stop();
+          }
+          ++j;
+        }
+        for (Accelerator g : gravity) {
+          if (g.getValuef() < 0) { //bounce
+            g.setValue(-g.getValuef());
+            g.setVelocity(-g.getVelocityf() * random(0.74, 0.84));
+          }
+        }
+      }
+  
+      float fPos = 1 -lx.tempo.rampf();
+      if (fPos < .2) {
+        fPos = .2 + 4 * (.2 - fPos);
+      }
+  
+      float falloff = 100. / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
+      for (Cube cube : model.cubes) {
+        int gi = (int) constrain((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
+        float yn =  cube.y/model.yMax;
+        colors[cube.index] = lx.hsb(
+          (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4) % 360, 
+          constrain(100 *(0.8 -  yn * yn), 0, 100), 
+          max(0, 100 - abs(cube.y/2 - 50 - gravity[gi].getValuef())*falloff)
+        );
+      }
     }
   }
 
@@ -536,11 +548,16 @@ class Pulley extends LXPattern implements TriggerablePattern{ //ported from Suga
 
   public void onTriggered(float strength) {
     triggered = true;
+    isRising = true;
+    turnOff.start();
+    
+    for (Accelerator g: gravity) {
+      g.setValue(225);
+    }
     trigger();
   }
 
   public void onRelease() {
-    triggered = false;
   }
 }
 

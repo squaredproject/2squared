@@ -125,6 +125,8 @@ class SweepPattern extends LXPattern {
   final SawLFO offset = new SawLFO(0, TWO_PI, 9000);
   
   final BasicParameter amplitude = new BasicParameter("AMP", 10*FEET, 0, 20*FEET);
+  final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 3);
+  final BasicParameter height = new BasicParameter("HEIGHT", 0, -300, 300);
   final SinLFO amp = new SinLFO(0, amplitude, 5000);
   
   SweepPattern(LX lx) {
@@ -133,9 +135,20 @@ class SweepPattern extends LXPattern {
     addModulator(yPos.start());
     addModulator(width.start());
     addParameter(amplitude);
+    addParameter(speed);
+    addParameter(height);
     addModulator(amp.start());
     addModulator(offset.start());
   }
+  
+  void onParameterChanged(LXParameter parameter) {
+    super.onParameterChanged(parameter);
+    if (parameter == speed) {
+      float speedVar = 1/speed.getValuef();
+      speedMod.setRange(9000 * speedVar,5400 * speedVar);
+    }
+  }
+  
   
   public void run(double deltaMs) {
     for (Cube cube : model.cubes) {
@@ -143,7 +156,7 @@ class SweepPattern extends LXPattern {
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + abs(cube.x - model.cx) * .2 +  cube.cz*.1 + cube.cy*.1) % 360,
         constrain(abs(cube.y - model.cy), 0, 100),
-        max(0, 100 - (100/width.getValuef())*abs(cube.cy - yp))
+        max(0, 100 - (100/width.getValuef())*abs(cube.cy - yp - height.getValuef()))
       );
     }
   }

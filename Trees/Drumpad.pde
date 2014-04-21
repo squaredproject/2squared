@@ -8,6 +8,7 @@ class TSDrumpad implements Drumpad {
       new Explosions(lx),
       new Wisps(lx),
       new Lightning(lx),
+      new Pulley(lx),
     };
     return patterns;
   }
