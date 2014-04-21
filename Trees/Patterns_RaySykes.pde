@@ -113,7 +113,7 @@ class Stripes extends LXPattern {
 }
 
 class Ripple extends LXPattern {
-  final BasicParameter speed = new BasicParameter("Speed", 15000, 8000, 25000);
+  final BasicParameter speed = new BasicParameter("Speed", 15000, 25000, 8000);
   final BasicParameter baseBrightness = new BasicParameter("Bright", 0, 0, 100);
   final SawLFO rippleAge = new SawLFO(0, 100, speed);
   float hueVal;

@@ -134,7 +134,7 @@ LXPattern[] patterns(LX lx) {
 }
 
 void setup() {
-  size(960, 600, OPENGL);
+  size(1400, 800, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
