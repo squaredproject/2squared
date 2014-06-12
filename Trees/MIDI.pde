@@ -21,7 +21,11 @@ final static byte[] APC_MODE_SYSEX = {
 };
 
 boolean isMPK25Connected() {
-  return LXMidiSystem.matchInput(lx, "MPK25") != null;
+    try {
+        return LXMidiSystem.matchInput(lx, "MPK25") != null;
+    } catch (java.lang.UnsatisfiedLinkError e){
+        return false;
+    }
 }
 
 class MidiEngine {
@@ -29,7 +33,11 @@ class MidiEngine {
   MPK25 mpk25 = null;
   
   public MidiEngine() {
-    setAPC40Mode();
+    try{
+        setAPC40Mode();
+    } catch (java.lang.UnsatisfiedLinkError e){
+        return;
+    }
     LXMidiInput apcInput = APC40.matchInput(lx);
     LXMidiOutput apcOutput = APC40.matchOutput(lx);
     LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");
