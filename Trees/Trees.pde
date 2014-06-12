@@ -100,7 +100,6 @@ LXPattern[] patterns(LX lx) {
     new IceCrystals(lx),
     new ColoredLeaves(lx),
     new Stripes(lx),
-    new SyphonPattern(lx, this),
     new TestPattern(lx).setEligible(false),
     new TestCluster(lx).setEligible(false),
     new OrderTest(lx),
