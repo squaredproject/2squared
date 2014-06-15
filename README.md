@@ -1,6 +1,8 @@
 2squared
 ========
 
+### MOVED TO: https://github.com/squaredproject/2squared
+
 Big LED trees with blinky blinks
 
 Download Processing: https://processing.org/download/?processing
