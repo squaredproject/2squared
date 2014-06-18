@@ -777,7 +777,7 @@ class ScrambleEffect extends LXEffect {
   
   protected void apply(int[] colors) {
     for (Tree tree : ((Model)lx.model).trees) {
-      for (int i = min(tree.cubes.size(), amount.getValuei()); i >= 0; i--) {
+      for (int i = min(tree.cubes.size(), amount.getValuei()); i > 0; i--) {
         colors[tree.cubes.get(i).index] = colors[tree.cubes.get((i + offset) % tree.cubes.size()).index];
       }
     }
