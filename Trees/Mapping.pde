@@ -1,10 +1,13 @@
 class MappingTool extends LXEffect {
 
-  final DiscreteParameter clusterIndex = new DiscreteParameter("CLUSTER", model.clusters.size()); 
+  final SinLFO strobe = new SinLFO(20, 100, 1000);
+  
+  final DiscreteParameter clusterIndex = new DiscreteParameter("CLUSTER", clusterConfig.size()); 
   final BooleanParameter showBlanks = new BooleanParameter("BLANKS", false);
 
   MappingTool(LX lx) {
     super(lx);
+    addModulator(strobe).start();
     addLayer(new MappingLayer());
   }
   
@@ -13,7 +16,7 @@ class MappingTool extends LXEffect {
   }
   
   Cluster getCluster() {
-    return model.clusters.get(clusterIndex.getValuei());
+    return model.clustersByIp.get(getConfig().getString("ipAddress"));
   }
 
   public void apply(int[] colors) {
@@ -21,22 +24,10 @@ class MappingTool extends LXEffect {
   
   class MappingLayer extends LXLayer {
     
-    double strobeTimer = 0;
-    double strobePeriod = 300;
-    boolean strobeActive = false;
-    
     public void run(double deltaMs, int[] colors) {
       if (isEnabled()) {
-        strobeTimer += deltaMs;
-        if (strobeTimer >= strobePeriod) {
-          strobeTimer = 0;
-          strobeActive = !strobeActive;
-        }
-        Cluster active = getCluster();
-        for (Cluster cluster : model.clusters) {
-          for (LXPoint point : cluster.points) {
-            colors[point.index] = ((cluster == active) && strobeActive) ? #ffffff : colors[point.index];
-          }
+        for (Cube cube : getCluster().cubes) {
+          colors[cube.index] = blendColor(lx.hsb(0, 0, strobe.getValuef()), colors[cube.index], ADD);
         }
       }
     }
@@ -61,9 +52,9 @@ class UIMapping extends UIWindow {
     (ipAddress = new UILabel()).setAlignment(CENTER, CENTER).setBorderColor(#666666).setBackgroundColor(#292929);
     tree = new UIToggleSet() {
       protected void onToggle(String value) {
-        mappingTool.getConfig().setInt("treeIndex", (value == "A") ? 0 : 1);
+        mappingTool.getConfig().setInt("treeIndex", (value == "L") ? 0 : 1);
       }
-    }.setOptions(new String[] { "A", "B" });
+    }.setOptions(new String[] { "L", "R" });
     
     level = new UIIntegerBox() {
       protected void onValueChange(int value) {

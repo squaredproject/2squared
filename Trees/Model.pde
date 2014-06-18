@@ -103,6 +103,11 @@ public static class Model extends LXModel {
   public final List<Cluster> clusters;
   
   /**
+   * Lookup table from cluster UID to cluster object.
+   */
+  public final Map<String, Cluster> clustersByIp;
+  
+  /**
    * Cubes in the model
    */
   public final List<Cube> cubes;
@@ -113,12 +118,15 @@ public static class Model extends LXModel {
     this.trees = Collections.unmodifiableList(f.trees);
     
     List<Cluster> _clusters = new ArrayList<Cluster>();
+    Map<String, Cluster> _clustersByIp = new HashMap<String, Cluster>();
     for (Tree tree : this.trees) {
       for (Cluster cluster : tree.clusters) {
         _clusters.add(cluster);
+        _clustersByIp.put(cluster.ipAddress, cluster);
       }
     }
     this.clusters = Collections.unmodifiableList(_clusters);
+    this.clustersByIp = Collections.unmodifiableMap(_clustersByIp);
     
     List<Cube> _cubes = new ArrayList<Cube>();
     for (Cluster cluster : this.clusters) {
@@ -489,7 +497,7 @@ public static class Cube extends LXModel {
   /**
    * Point of the cube in the form (theta, y) relative to center of tree base
    */
-   public final PVector cylinderPoint;
+  public final PVector cylinderPoint;
 
   Cube(int clusterPosition, PVector treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
     super(Arrays.asList(new LXPoint[] {

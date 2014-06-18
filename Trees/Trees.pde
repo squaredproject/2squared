@@ -140,9 +140,7 @@ void setup() {
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
   model = new Model();
-  
-  // saveJSONArray(clusterConfig, CLUSTER_CONFIG_FILE);
-    
+      
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
   for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
@@ -160,13 +158,13 @@ void setup() {
   }
   
   // Effects
+  GhostEffect ghostEffect;
+  ScrambleEffect scrambleEffect;
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
+  lx.addEffect(ghostEffect = new GhostEffect(lx));
+  lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
-  GhostEffect ghostEffect = new GhostEffect(lx);
-  lx.addEffect(ghostEffect);
-  ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
-  lx.addEffect(scrambleEffect);
   
   effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
@@ -258,7 +256,7 @@ void setup() {
   lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
 }
-  
+
 void draw() {
   background(#222222);
 }
