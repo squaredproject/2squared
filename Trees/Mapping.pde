@@ -116,7 +116,7 @@ class UIMapping extends UIWindow {
     // yPos = labelRow(yPos, "BLANKS", new UIButton().setParameter(mappingTool.showBlanks));
     yPos = labelRow(yPos, "CLUSTER #", clusterIndex);
     yPos = labelRow(yPos, "IP", ipAddress);
-    yPos = labelRow(yPos, "TREE", tree);
+    // yPos = labelRow(yPos, "TREE", tree);
     yPos = labelRow(yPos, "LEVEL", level);
     yPos = labelRow(yPos, "FACE", face);
     yPos = labelRow(yPos, "OFFSET", offset);

@@ -55,8 +55,7 @@ final static int NUM_AUTOMATION = 4;
  */
 final static float[][] TREE_POSITIONS = {
   /*  X-pos    Y-pos    Rot  */
-  {  15*FEET,  15*FEET,   0  },
-  {  90*FEET,  15*FEET, -45  }
+  {  15*FEET,  15*FEET,   0  }
 };
 
 final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
@@ -134,7 +133,7 @@ LXPattern[] patterns(LX lx) {
 }
 
 void setup() {
-  size(1400, 800, OPENGL);
+  size(1200, 640, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
@@ -286,8 +285,8 @@ class UITrees extends UICameraComponent {
     fill(#191919);
     beginShape();
     vertex(0, 0, 0);
-    vertex(105*FEET, 0, 0);
-    vertex(105*FEET, 0, 30*FEET);
+    vertex(30*FEET, 0, 0);
+    vertex(30*FEET, 0, 30*FEET);
     vertex(0, 0, 30*FEET);
     endShape(CLOSE);
 
