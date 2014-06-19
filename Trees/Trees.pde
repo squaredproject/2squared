@@ -85,51 +85,56 @@ TSDrumpad drumpad;
 TSKeyboard keyboard;
 
 LXPattern[] patterns(LX lx) {
-  LXPattern[] patterns = new LXPattern[] {
-    new SolidColor(lx),
-    new Twister(lx),
-    new MarkLottor(lx),
-    new DoubleHelix(lx),
-    new SparkleHelix(lx),
-    new Lightning(lx),
-    new SparkleTakeOver(lx),
-    new MultiSine(lx),
-    new Ripple(lx),
-    new SeeSaw(lx),
-    new SweepPattern(lx),
-    new IceCrystals(lx),
-    new ColoredLeaves(lx),
-    new Stripes(lx),
-    new TestPattern(lx).setEligible(false),
-    new TestCluster(lx).setEligible(false),
-    new OrderTest(lx),
-    new ClusterLineTest(lx),
-    new Zebra(lx),
-    new AcidTrip(lx),
-    new Pulley(lx),
-    new Springs(lx),
-    new Lattice(lx),
-    new Fire(lx),
-    new Bubbles(lx),
-    new BouncyBalls(lx),
-    new Fumes(lx),
-    new Voronoi(lx),
-    new Wisps(lx),
-    new Explosions(lx),
-    new BassSlam(lx),
-    new Rain(lx),
-    new Fade(lx),
-    new Strobe(lx),
-    new Twinkle(lx),
-    new VerticalSweep(lx),
-    new RandomColor(lx),
-    new RandomColorAll(lx),
-  };
+  ArrayList <LXPattern> patterns = new ArrayList<LXPattern>();
+  patterns.add(new SolidColor(lx));
+  patterns.add(new Twister(lx));
+  patterns.add(new MarkLottor(lx));
+  patterns.add(new DoubleHelix(lx));
+  patterns.add(new SparkleHelix(lx));
+  patterns.add(new Lightning(lx));
+  patterns.add(new SparkleTakeOver(lx));
+  patterns.add(new MultiSine(lx));
+  patterns.add(new Ripple(lx));
+  patterns.add(new SeeSaw(lx));
+  patterns.add(new SweepPattern(lx));
+  patterns.add(new IceCrystals(lx));
+  patterns.add(new ColoredLeaves(lx));
+  patterns.add(new Stripes(lx));
+  patterns.add(new TestPattern(lx).setEligible(false));
+  patterns.add(new TestCluster(lx).setEligible(false));
+  patterns.add(new OrderTest(lx));
+  patterns.add(new ClusterLineTest(lx));
+  patterns.add(new Zebra(lx));
+  patterns.add(new AcidTrip(lx));
+  patterns.add(new Pulley(lx));
+  patterns.add(new Springs(lx));
+  patterns.add(new Lattice(lx));
+  patterns.add(new Fire(lx));
+  patterns.add(new Bubbles(lx));
+  patterns.add(new BouncyBalls(lx));
+  patterns.add(new Fumes(lx));
+  patterns.add(new Voronoi(lx));
+  patterns.add(new Wisps(lx));
+  patterns.add(new Explosions(lx));
+  patterns.add(new BassSlam(lx));
+  patterns.add(new Rain(lx));
+  patterns.add(new Fade(lx));
+  patterns.add(new Strobe(lx));
+  patterns.add(new Twinkle(lx));
+  patterns.add(new VerticalSweep(lx));
+  patterns.add(new RandomColor(lx));
+  patterns.add(new RandomColorAll(lx));
+
+  Object[] o_patterns = patterns.toArray();
+  LXPattern[] l_patterns = new LXPattern [o_patterns.length];
+  for (int i=0; i< o_patterns.length; ++i){
+    l_patterns[i] = (LXPattern)o_patterns[i];
+  }
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
-  for (LXPattern p : patterns) {
+  for (LXPattern p : l_patterns) {
     p.setTransition(t);
   }
-  return patterns;
+  return l_patterns;
 }
 
 void setup() {
