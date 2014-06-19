@@ -19,6 +19,7 @@ import processing.opengl.*;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +125,12 @@ LXPattern[] patterns(LX lx) {
   patterns.add(new VerticalSweep(lx));
   patterns.add(new RandomColor(lx));
   patterns.add(new RandomColorAll(lx));
+
+  Collections.sort(patterns, new Comparator<LXPattern>(){
+    public int compare(LXPattern a, LXPattern b){
+      return a.getClass().getName().compareTo(b.getClass().getName());
+    }
+  });
 
   Object[] o_patterns = patterns.toArray();
   LXPattern[] l_patterns = new LXPattern [o_patterns.length];
