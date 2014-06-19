@@ -101,6 +101,12 @@ LXPattern[] patterns(LX lx) {
   patterns.add(new IceCrystals(lx));
   patterns.add(new ColoredLeaves(lx));
   patterns.add(new Stripes(lx));
+  try {
+    LXPattern syphon = new SyphonPattern(lx, this);
+    patterns.add(syphon);
+  } catch (Throwable e) {
+    ;
+  }
   patterns.add(new TestPattern(lx).setEligible(false));
   patterns.add(new TestCluster(lx).setEligible(false));
   patterns.add(new OrderTest(lx));
