@@ -45,7 +45,7 @@ class UIMapping extends UIWindow {
   final UISlider skew;
   
   UIMapping(UI ui) {
-    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 268, 140, 264);
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);
     
     final UIIntegerBox clusterIndex = new UIIntegerBox().setParameter(mappingTool.clusterIndex);
     

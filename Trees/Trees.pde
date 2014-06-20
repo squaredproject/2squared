@@ -133,7 +133,7 @@ LXPattern[] patterns(LX lx) {
 }
 
 void setup() {
-  size(1200, 640, OPENGL);
+  size(1024, 640, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
@@ -222,6 +222,8 @@ void setup() {
     }
     .setRadius(90*FEET)
     .setCenter(model.cx, model.cy, model.cz)
+    .setTheta(30*PI/180)
+    .setPhi(10*PI/180)
     .addComponent(new UITrees())
   );
   lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
