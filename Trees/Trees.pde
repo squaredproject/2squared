@@ -131,17 +131,7 @@ LXPattern[] patterns(LX lx) {
   patterns.add(new RandomColor(lx));
   patterns.add(new RandomColorAll(lx));
 
-  Collections.sort(patterns, new Comparator<LXPattern>(){
-    public int compare(LXPattern a, LXPattern b){
-      return a.getClass().getName().compareTo(b.getClass().getName());
-    }
-  });
-
-  Object[] o_patterns = patterns.toArray();
-  LXPattern[] l_patterns = new LXPattern [o_patterns.length];
-  for (int i=0; i< o_patterns.length; ++i){
-    l_patterns[i] = (LXPattern)o_patterns[i];
-  }
+  LXPattern[] l_patterns = patterns.toArray(new LXPattern[patterns.size()]);
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
   for (LXPattern p : l_patterns) {
     p.setTransition(t);
