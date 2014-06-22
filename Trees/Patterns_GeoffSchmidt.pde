@@ -150,7 +150,7 @@ public class ColorBar {
 class Parallax extends LXPattern {
   final BasicParameter pHue = new BasicParameter("HUE", 0.5);
   final BasicParameter pSpeed = new BasicParameter("SPD", 0);
-  final BasicParameter pCount = new BasicParameter("BARS", 0);
+  final BasicParameter pCount = new BasicParameter("BARS", .25);
   final BasicParameter pBounceMag = new BasicParameter("BNC", 0);
   final SinLFO bounceLFO = new SinLFO(-1.0, 1.0, 750);
   ColorBar[] colorBars;
