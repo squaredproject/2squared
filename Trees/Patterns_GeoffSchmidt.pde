@@ -117,3 +117,85 @@ class Wedges extends LXPattern {
   } 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+public class ColorBar {
+  double s, b;
+  double startTime;
+  double velocity;
+  double barHeight;
+  
+  ColorBar(double now) {
+    startTime = now;
+    velocity = random(6.0, 12.0*25.0); // upward velocity, inches per second
+    s = random(0.1, 1.0) * 100;
+    b = random(0.1, 1.0) * 100;
+    barHeight = random(12.0, 10.0*12.0);
+  }
+  
+  public boolean intersects(double now, double y) {
+    y -= (now - startTime)/1000.0 * velocity;
+    return y < 0 && y > -barHeight;
+  }
+  
+  public boolean offscreen(double now) {
+    return (velocity * (now - startTime)/1000.0) - barHeight > 70*12;
+  }
+  
+  public color getColor(double h) {
+    return lx.hsb(h, s, b);
+  }
+}
+
+class Parallax extends LXPattern {
+  final BasicParameter pHue = new BasicParameter("HUE", 0.5);
+  final BasicParameter pSpeed = new BasicParameter("SPD", 0);
+  final BasicParameter pCount = new BasicParameter("BARS", 0);
+  final BasicParameter pBounceMag = new BasicParameter("BNC", 0);
+  final SinLFO bounceLFO = new SinLFO(-1.0, 1.0, 750);
+  ColorBar[] colorBars;
+  double now = 0;
+
+  Parallax(LX lx) {
+    super(lx);
+    addParameter(pHue);
+    addParameter(pSpeed);
+    addParameter(pCount);
+    addParameter(pBounceMag);
+    addModulator(bounceLFO.start());
+    colorBars = new ColorBar[0];
+  }
+  
+  public void run(double deltaMs) {
+    int targetCount = (int)(pCount.getValuef() * 20) + 1;
+    
+    if (targetCount != colorBars.length) {
+      // If I knew any Java, I might know how to resize an array
+      ColorBar[] newColorBars = new ColorBar[targetCount];
+      for (int i = 0; i < targetCount; i++) {
+        newColorBars[i] = i < colorBars.length ? colorBars[i] : null;
+      }
+      colorBars = newColorBars;
+    }
+    
+    now += deltaMs * (pSpeed.getValuef() * 2.0 + .5);
+    double bouncedNow = now + bounceLFO.getValuef() * pBounceMag.getValuef() * 1000.0;
+    
+    for (int i = 0; i < colorBars.length; i++) {
+      if (colorBars[i] == null || colorBars[i].offscreen(now))
+        colorBars[i] = new ColorBar(now);
+    }
+
+    for (Cube cube : model.cubes) {
+      colors[cube.index] = lx.hsb(0, 0, 0);
+
+      for (ColorBar colorBar : colorBars) {
+        if (colorBar.intersects(bouncedNow, cube.y)) {
+          colors[cube.index] = colorBar.getColor(pHue.getValuef() * 360);
+          break;
+        }
+      }
+    }     
+  } 
+}
+
