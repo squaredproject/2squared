@@ -10,7 +10,7 @@ void configureNFC() {
   turnOffSmartcardLibraryLogging();
   
   if (!isPCSCDaemonRunning()) {
-    Logger.getGlobal().warning("NFC not configured: couldn't establish connection to NFC daemon");
+    Logger.getGlobal().warning("NFC not configured: couldn't establish connection to PC/SC daemon");
     return;
   }
   
