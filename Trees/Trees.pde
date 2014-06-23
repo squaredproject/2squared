@@ -255,6 +255,8 @@ void setup() {
     midiEngine.mpk25.setKeyboard(keyboard);
   }
   
+  configureNFC();
+  
   // bad code I know
   // (shouldn't mess with engine internals)
   // maybe need a way to specify a deck shouldn't be focused?
