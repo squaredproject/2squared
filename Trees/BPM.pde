@@ -17,7 +17,7 @@ class BPMTool {
   final BooleanParameter clearAllTempoLfos = new BooleanParameter("Clear All Tempo LFOs");
   
   
-  private LXDeck currentActiveDeck = null;
+  private LXChannel currentActiveChannel = null;
   final private List<BPMParameterListener> parameterListeners = new ArrayList<BPMParameterListener>();
   final private List<BPMParameterListener> masterEffectParameterListeners = new ArrayList<BPMParameterListener>();
   
@@ -71,7 +71,7 @@ class BPMTool {
     addTempoLfo.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         if (addTempoLfo.isOn()) {
-          watchPatternParameters(lx.engine.getFocusedDeck().getActivePattern());
+          watchPatternParameters(lx.engine.getFocusedChannel().getActivePattern());
           watchMasterEffectParameters(effectKnobParameters);
         } else {
           unwatchPatternParameters();
@@ -91,31 +91,31 @@ class BPMTool {
     watchEngine(lx.engine);
   }
 
-  private final LXDeck.AbstractListener bindPatternParametersListener = new LXDeck.AbstractListener() {
+  private final LXChannel.AbstractListener bindPatternParametersListener = new LXChannel.AbstractListener() {
     @Override
-    public void patternDidChange(LXDeck deck, LXPattern pattern) {
+    public void patternDidChange(LXChannel channel, LXPattern pattern) {
       watchPatternParameters(pattern);
     }
   };
 
   private void watchEngine(final LXEngine engine) {
-    engine.focusedDeck.addListener(new LXParameterListener() {
+    engine.focusedChannel.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        watchDeck(engine.getFocusedDeck());
+        watchDeck(engine.getFocusedChannel());
       }
     });
-    watchDeck(engine.getFocusedDeck());
+    watchDeck(engine.getFocusedChannel());
   }
 
-  private void watchDeck(LXDeck deck) {
-    if (this.currentActiveDeck != deck) {
-      if (this.currentActiveDeck != null) {
-        this.currentActiveDeck.removeListener(this.bindPatternParametersListener);
+  private void watchDeck(LXChannel channel) {
+    if (this.currentActiveChannel != channel) {
+      if (this.currentActiveChannel != null) {
+        this.currentActiveChannel.removeListener(this.bindPatternParametersListener);
       }
-      this.currentActiveDeck = deck;
-      this.currentActiveDeck.addListener(this.bindPatternParametersListener);
+      this.currentActiveChannel = channel;
+      this.currentActiveChannel.addListener(this.bindPatternParametersListener);
     }
-    watchPatternParameters(deck.getActivePattern());
+    watchPatternParameters(channel.getActivePattern());
   }
 
   private void watchPatternParameters(LXPattern pattern) {

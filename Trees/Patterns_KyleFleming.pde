@@ -153,9 +153,13 @@ abstract class MultiObject extends LXLayer {
   float fadeIn;
   float fadeOut;
   
-  public void run(double deltaMs, int[] colors) {
+  MultiObject(LX lx) {
+    super(lx);
+  }
+  
+  public void run(double deltaMs) {
     if (running) {
-      run(deltaMs);
+      advance(deltaMs);
       if (running) {
         for (Cube cube : model.cubes) {
           colors[cube.index] = blendColor(colors[cube.index], getColorForCube(cube), LIGHTEST);
@@ -164,7 +168,7 @@ abstract class MultiObject extends LXLayer {
     }
   }
   
-  public void run(double deltaMs) {
+  private void advance(double deltaMs) {
     if (running) {
       runningTimer += deltaMs;
       if (runningTimer >= runningTimerEnd) {
@@ -215,7 +219,7 @@ class Explosions extends MultiObjectPattern<Explosion> {
   }
   
   Explosion generateObject(float strength) {
-    Explosion explosion = new Explosion();
+    Explosion explosion = new Explosion(lx);
     explosion.origin = new PVector(random(360), (float)LXUtils.random(model.yMin + 50, model.yMax - 50));
     explosion.hue = (int)(keyboardMode ? (360 * modWheelValue) : random(360));
     return explosion;
@@ -263,6 +267,10 @@ class Explosion extends MultiObject {
   float explosionThetaOffset;
   
   int state = EXPLOSION_STATE_IMPLOSION_EXPAND;
+  
+  Explosion(LX lx) {
+    super(lx);
+  }
   
   void init() {
     explosionThetaOffset = random(360);
@@ -354,7 +362,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
   }
     
   Wisp generateObject(float strength) {
-    Wisp wisp = new Wisp();
+    Wisp wisp = new Wisp(lx);
     wisp.runningTimer = 0;
     wisp.runningTimerEnd = 5000 / speed.getValuef();
     float pathDirection = (float)(direction.getValuef()
@@ -380,6 +388,10 @@ class Wisp extends MultiObject {
   PVector startPoint;
   PVector endPoint;
   
+  Wisp(LX lx) {
+    super(lx);
+  }
+  
   public void onProgressChanged(float progress) {
     currentPoint = PVector.lerp(startPoint, endPoint, progress);
   }
@@ -396,7 +408,7 @@ class Rain extends MultiObjectPattern<RainDrop> {
   }
    
   RainDrop generateObject(float strength) {
-    RainDrop rainDrop = new RainDrop();
+    RainDrop rainDrop = new RainDrop(lx);
     rainDrop.runningTimerEnd = 180 + random(20);
     rainDrop.decayTime = rainDrop.runningTimerEnd;
     rainDrop.theta = random(360);
@@ -418,6 +430,10 @@ class RainDrop extends MultiObject {
   float startY;
   float endY;
   float pathDist;
+  
+  RainDrop(LX lx) {
+    super(lx);
+  }
   
   public void run(double deltaMs) {
     if (running) {
@@ -679,28 +695,29 @@ class GhostEffect extends LXEffect {
   
   GhostEffect(LX lx) {
     super(lx);
-    addLayer(new GhostEffectsLayer());
+    addLayer(new GhostEffectsLayer(lx));
   }
   
-  protected void apply(int[] colors) {
+  protected void run(double deltaMs) {
   }
   
   class GhostEffectsLayer extends LXLayer {
     
-    GhostEffectsLayer() {
+    GhostEffectsLayer(LX lx) {
+      super(lx);
       addParameter(amount);
     }
   
     float timer = 0;
     ArrayList<GhostEffectLayer> ghosts = new ArrayList<GhostEffectLayer>();
     
-    public void run(double deltaMs, int[] colors) {
+    public void run(double deltaMs) {
       if (amount.getValue() != 0) {
         timer += deltaMs;
         float lifetime = (float)amount.getValue() * 2000;
         if (timer >= lifetime) {
           timer = 0;
-          GhostEffectLayer ghost = new GhostEffectLayer();
+          GhostEffectLayer ghost = new GhostEffectLayer(lx);
           ghost.lifetime = lifetime * 3;
           addLayer(ghost);
           ghosts.add(ghost);
@@ -715,14 +732,7 @@ class GhostEffect extends LXEffect {
             iter.remove();
           }
         }
-      }
-      
-      for (LXModulator m : this.modulators) {
-        m.run(deltaMs);
-      }
-      for (LXLayer layer : this.layers) {
-        layer.run(deltaMs, colors);
-      }
+      }      
     }
     
     public void onParameterChanged(LXParameter parameter) {
@@ -740,7 +750,11 @@ class GhostEffect extends LXEffect {
     private color[] ghostColors = null;
     float timer = 0;
     
-    public void run(double deltaMs, int[] colors) {
+    GhostEffectLayer(LX lx) {
+      super(lx);
+    }
+    
+    public void run(double deltaMs) {
       if (running) {
         timer += (float)deltaMs;
         if (timer >= lifetime) {
@@ -775,7 +789,7 @@ class ScrambleEffect extends LXEffect {
     offset = lx.total / 4 + 5;
   }
   
-  protected void apply(int[] colors) {
+  protected void run(double deltaMs) {
     for (Tree tree : ((Model)lx.model).trees) {
       for (int i = min(tree.cubes.size(), amount.getValuei()); i > 0; i--) {
         colors[tree.cubes.get(i).index] = colors[tree.cubes.get((i + offset) % tree.cubes.size()).index];
@@ -794,7 +808,7 @@ class StaticEffect extends LXEffect {
     super(lx);
   }
   
-  protected void apply(int[] colors) {
+  protected void run(double deltaMs) {
     if (isCreatingStatic) {
       double chance = random(1);
       if (chance > amount.getValue()) {

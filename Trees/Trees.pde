@@ -153,7 +153,7 @@ void setup() {
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
   for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
-    lx.engine.addDeck(patterns(lx));
+    lx.engine.addChannel(patterns(lx));
   }
   
   if (isMPK25Connected()) {
@@ -161,9 +161,9 @@ void setup() {
     keyboard.configure(lx);
   }
   
-  for (LXDeck deck : lx.engine.getDecks()) {
-    deck.goIndex(deck.index);
-    deck.setFaderTransition(new TreesTransition(lx, deck));
+  for (LXChannel channel : lx.engine.getChannels()) {
+    channel.goIndex(channel.getIndex());
+    channel.setFaderTransition(new TreesTransition(lx, channel));
   }
   
   // Effects
@@ -263,7 +263,7 @@ void setup() {
   // essentially this lets us have extra decks for the drumpad
   // patterns without letting them be assigned to channels
   // -kf
-  lx.engine.focusedDeck.setRange(NUM_CHANNELS);
+  lx.engine.focusedChannel.setRange(NUM_CHANNELS);
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
@@ -274,8 +274,8 @@ void draw() {
   background(#222222);
 }
 
-TreesTransition getFaderTransition(LXDeck deck) {
-  return (TreesTransition) deck.getFaderTransition();
+TreesTransition getFaderTransition(LXChannel channel) {
+  return (TreesTransition) channel.getFaderTransition();
 }
 
 class UITrees extends UICameraComponent {
@@ -368,9 +368,9 @@ class UITrees extends UICameraComponent {
       colors = black;
       for (int i = 0; i < NUM_CHANNELS; i++) {
         if (previewChannels[i].isOn()) {
-          LXDeck deck = lx.engine.getDeck(i);
-          deck.getFaderTransition().blend(colors, deck.getColors(), 1, 0);
-          colors = deck.getFaderTransition().getColors();
+          LXChannel channel = lx.engine.getChannel(i);
+          channel.getFaderTransition().blend(colors, channel.getColors(), 1);
+          colors = channel.getFaderTransition().getColors();
         }
       }
       for (int i = 0; i < colors.length; ++i) {
@@ -562,7 +562,7 @@ class UILoopRecorder extends UIWindow {
 
 class TreesTransition extends LXTransition {
   
-  private final LXDeck deck;
+  private final LXChannel channel;
   
   public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
   public final BooleanParameter left = new BooleanParameter("LEFT", true);
@@ -575,7 +575,7 @@ class TreesTransition extends LXTransition {
   
   private final color[] scaleBuffer = new color[lx.total];
   
-  TreesTransition(LX lx, LXDeck deck) {
+  TreesTransition(LX lx, LXChannel channel) {
     super(lx);
     addParameter(blendMode);
     addParameter(left);
@@ -583,7 +583,7 @@ class TreesTransition extends LXTransition {
     
     addModulator(leftLevel.start());
     addModulator(rightLevel.start());
-    this.deck = deck;
+    this.channel = channel;
     blendMode.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         switch (blendMode.getValuei()) {

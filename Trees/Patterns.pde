@@ -280,7 +280,7 @@ class ColorEffect extends LXEffect {
     addModulator(rainbowd.start());
   }
   
-  protected void apply(int[] colors) {
+  protected void run(double deltaMs) {
     float desatf = desaturation.getValuef();
     float huef = hueShiftd.getValuef();
     float sharpf = sharp.getValuef();

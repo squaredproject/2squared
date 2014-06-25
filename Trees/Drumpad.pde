@@ -21,9 +21,9 @@ class TSDrumpad implements Drumpad {
       LXPattern p = (LXPattern)pattern; // trust they extend lxpattern
       p.setTransition(t);
       pattern.enableTriggerableMode();
-      LXDeck deck = lx.engine.addDeck(new LXPattern[] { p });
-      deck.getFader().setValue(1);
-      deck.setFaderTransition(new TreesTransition(lx, deck));
+      LXChannel channel = lx.engine.addChannel(new LXPattern[] { p });
+      channel.getFader().setValue(1);
+      channel.setFaderTransition(new TreesTransition(lx, channel));
     }
   }
   

@@ -1,7 +1,7 @@
 class TSKeyboard implements Keyboard {
   
   KeyboardPlayablePattern[] patterns = null;
-  LXDeck deck = null;
+  LXChannel channel = null;
   
   void configure(LX lx) {
     patterns = new KeyboardPlayablePattern[] {
@@ -18,29 +18,29 @@ class TSKeyboard implements Keyboard {
       pattern.setTransition(t);
     }
     
-    deck = lx.engine.addDeck(lxPatterns);
-    deck.setFaderTransition(new TreesTransition(lx, deck));
+    channel = lx.engine.addChannel(lxPatterns);
+    channel.setFaderTransition(new TreesTransition(lx, channel));
     getCurrentPattern().enableKeyboardPlayableMode();
   }
   
   KeyboardPlayablePattern getCurrentPattern() {
-    return (KeyboardPlayablePattern)deck.getActivePattern();
+    return (KeyboardPlayablePattern) channel.getActivePattern();
   }
   
   public void noteOn(LXMidiNoteOn note) {
-    if (deck != null) {
+    if (channel != null) {
       getCurrentPattern().noteOn(note);
     }
   }
   
   public void noteOff(LXMidiNoteOff note) {
-    if (deck != null) {
+    if (channel != null) {
       getCurrentPattern().noteOff(note);
     }
   }
   
   public void modWheelChanged(float value) {
-    if (deck != null) {
+    if (channel != null) {
       getCurrentPattern().modWheelChanged(value);
     }
   }

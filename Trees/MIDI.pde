@@ -1,8 +1,8 @@
 
 BooleanParameter[] previewChannels = new BooleanParameter[NUM_CHANNELS];
 
-int focusedDeck() {
-  return lx.engine.focusedDeck.getValuei();
+int focusedChannel() {
+  return lx.engine.focusedChannel.getValuei();
 }
 
 final static byte[] APC_MODE_SYSEX = {
@@ -60,20 +60,20 @@ class MidiEngine {
           case APC40.SCENE_LAUNCH+2:
           case APC40.SCENE_LAUNCH+3:
           case APC40.SCENE_LAUNCH+4:
-            uiDeck.selectPattern(focusedDeck(), note.getPitch() - APC40.SCENE_LAUNCH);        
+            uiDeck.selectPattern(focusedChannel(), note.getPitch() - APC40.SCENE_LAUNCH);        
             break;
             
           case APC40.CLIP_STOP:
-            if (channel != focusedDeck()) {
-              lx.engine.focusedDeck.setValue(channel);
+            if (channel != focusedChannel()) {
+              lx.engine.focusedChannel.setValue(channel);
             } else {
               uiDeck.pagePatterns(channel);
             }
             break;
             
           case APC40.ACTIVATOR:
-            if (previewChannels[channel].isOn() && channel != focusedDeck()) {
-              lx.engine.focusedDeck.setValue(channel);
+            if (previewChannels[channel].isOn() && channel != focusedChannel()) {
+              lx.engine.focusedChannel.setValue(channel);
             }
             break;
             
@@ -95,10 +95,10 @@ class MidiEngine {
             uiDeck.scroll(1);
             break;
           case APC40.BANK_RIGHT:
-            lx.engine.focusedDeck.increment();
+            lx.engine.focusedChannel.increment();
             break;
           case APC40.BANK_LEFT:
-            lx.engine.focusedDeck.decrement();
+            lx.engine.focusedChannel.decrement();
             break;
           }
         }
@@ -118,7 +118,7 @@ class MidiEngine {
       }
       
       // Track selection
-      apc40.bindNotes(lx.engine.focusedDeck, channels, APC40.TRACK_SELECTION);
+      apc40.bindNotes(lx.engine.focusedChannel, channels, APC40.TRACK_SELECTION);
       
       // Cue activators
       for (int i = 0; i < NUM_CHANNELS; i++) {
@@ -126,25 +126,25 @@ class MidiEngine {
       }
       
       for (int i = 0; i < NUM_CHANNELS; i++) {
-        final LXDeck deck = lx.engine.getDeck(i);
-        deck.addListener(new LXDeck.AbstractListener() {
-          public void patternWillChange(LXDeck deck, LXPattern pattern, LXPattern nextPattern) {
-            setPattern(apc40, deck);
+        final LXChannel channel = lx.engine.getChannel(i);
+        channel.addListener(new LXChannel.AbstractListener() {
+          public void patternWillChange(LXChannel channel, LXPattern pattern, LXPattern nextPattern) {
+            setPattern(apc40, channel);
           }
-          public void patternDidChange(LXDeck deck, LXPattern pattern) {
-            setPattern(apc40, deck);
+          public void patternDidChange(LXChannel channel, LXPattern pattern) {
+            setPattern(apc40, channel);
           }
         });
-        uiDeck.patternLists[deck.index].scrollOffset.addListener(new LXParameterListener() {
+        uiDeck.patternLists[channel.getIndex()].scrollOffset.addListener(new LXParameterListener() {
           public void onParameterChanged(LXParameter parameter) {
-            setPattern(apc40, deck);
+            setPattern(apc40, channel);
           }
         });
-        setPattern(apc40, deck);
-        TreesTransition transition = getFaderTransition(deck);
-        apc40.bindController(deck.getFader(), deck.index, APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
-        apc40.bindNoteOn(transition.left, deck.index, APC40.SOLO_CUE, LXMidiDevice.TOGGLE);
-        apc40.bindNoteOn(transition.right, deck.index, APC40.RECORD_ARM, LXMidiDevice.TOGGLE);
+        setPattern(apc40, channel);
+        TreesTransition transition = getFaderTransition(channel);
+        apc40.bindController(channel.getFader(), channel.getIndex(), APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
+        apc40.bindNoteOn(transition.left, channel.getIndex(), APC40.SOLO_CUE, LXMidiDevice.TOGGLE);
+        apc40.bindNoteOn(transition.right, channel.getIndex(), APC40.RECORD_ARM, LXMidiDevice.TOGGLE);
       }
       for (int i = 0; i < 8; ++i) {
         apc40.sendController(0, APC40.TRACK_CONTROL_LED_MODE + i, APC40.LED_MODE_VOLUME);
@@ -170,10 +170,10 @@ class MidiEngine {
       
       // Pattern control
       apc40.bindDeviceControlKnobs(lx.engine);
-      lx.engine.focusedDeck.addListener(new LXParameterListener() {
+      lx.engine.focusedChannel.addListener(new LXParameterListener() {
         public void onParameterChanged(LXParameter parameter) {
           apc40.bindNotes(
-            getFaderTransition(lx.engine.getFocusedDeck()).blendMode,
+            getFaderTransition(lx.engine.getFocusedChannel()).blendMode,
             0,
             new int[] { APC40.CLIP_TRACK, APC40.DEVICE_ON_OFF, APC40.LEFT_ARROW, APC40.RIGHT_ARROW }
           );
@@ -190,7 +190,7 @@ class MidiEngine {
       apc40.bindNote(bpmTool.nudgeDownTempo, 0, APC40.NUDGE_MINUS, APC40.DIRECT);
       
       apc40.bindNotes(
-        getFaderTransition(lx.engine.getFocusedDeck()).blendMode,
+        getFaderTransition(lx.engine.getFocusedChannel()).blendMode,
         0,
         new int[] { APC40.CLIP_TRACK, APC40.DEVICE_ON_OFF, APC40.LEFT_ARROW, APC40.RIGHT_ARROW }
       );
@@ -219,11 +219,11 @@ class MidiEngine {
     apc40.bindNote(automationStop[automationSlot.getValuei()], 0, APC40.STOP, LXMidiDevice.DIRECT);
   }
   
-  void setPattern(APC40 apc40, LXDeck deck) {
-    int activeIndex = deck.getActivePatternIndex() - uiDeck.patternLists[deck.index].scrollOffset.getValuei();
-    int nextIndex = deck.getNextPatternIndex() - uiDeck.patternLists[deck.index].scrollOffset.getValuei();
+  void setPattern(APC40 apc40, LXChannel channel) {
+    int activeIndex = channel.getActivePatternIndex() - uiDeck.patternLists[channel.getIndex()].scrollOffset.getValuei();
+    int nextIndex = channel.getNextPatternIndex() - uiDeck.patternLists[channel.getIndex()].scrollOffset.getValuei();
     for (int i = 0; i < 5; ++i) {
-      apc40.sendNoteOn(deck.index, APC40.CLIP_LAUNCH + i, (i == activeIndex) ? APC40.GREEN : ((i == nextIndex) ? APC40.YELLOW : APC40.OFF));
+      apc40.sendNoteOn(channel.getIndex(), APC40.CLIP_LAUNCH + i, (i == activeIndex) ? APC40.GREEN : ((i == nextIndex) ? APC40.YELLOW : APC40.OFF));
     }
   }
   
@@ -377,68 +377,68 @@ class UIChannelFaders extends UIContext {
     final UIButton[] rights = new UIButton[NUM_CHANNELS];
     final UILabel[] labels = new UILabel[NUM_CHANNELS];
     for (int i = 0; i < NUM_CHANNELS; i++) {
-      final LXDeck deck = lx.engine.getDeck(i);
-      float xPos = PADDING + deck.index*(PADDING+FADER_WIDTH) + SPACER;
+      final LXChannel channel = lx.engine.getChannel(i);
+      float xPos = PADDING + channel.getIndex()*(PADDING+FADER_WIDTH) + SPACER;
       
-      previewChannels[deck.index] = new BooleanParameter("PRV");
+      previewChannels[channel.getIndex()] = new BooleanParameter("PRV");
       
-      previewChannels[deck.index].addListener(new LXParameterListener() {
+      previewChannels[channel.getIndex()].addListener(new LXParameterListener() {
         public void onParameterChanged(LXParameter parameter) {
-          cues[deck.index].setActive(previewChannels[deck.index].isOn());
+          cues[channel.getIndex()].setActive(previewChannels[channel.getIndex()].isOn());
         }
       });
       
-      cues[deck.index] = new UIButton(xPos, PADDING, FADER_WIDTH, BUTTON_HEIGHT) {
+      cues[channel.getIndex()] = new UIButton(xPos, PADDING, FADER_WIDTH, BUTTON_HEIGHT) {
         void onToggle(boolean active) {
-          previewChannels[deck.index].setValue(active);
+          previewChannels[channel.getIndex()].setValue(active);
         }
       };
-      cues[deck.index]
-      .setActive(previewChannels[deck.index].isOn())
+      cues[channel.getIndex()]
+      .setActive(previewChannels[channel.getIndex()].isOn())
       .addToContainer(this);
       
-      lefts[deck.index] = new UIButton(xPos, 2*PADDING+BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
-      lefts[deck.index]
-      .setParameter(getFaderTransition(deck).left)
+      lefts[channel.getIndex()] = new UIButton(xPos, 2*PADDING+BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
+      lefts[channel.getIndex()]
+      .setParameter(getFaderTransition(channel).left)
       .setActiveColor(ui.getSelectionColor())
       .addToContainer(this);
       
-      rights[deck.index] = new UIButton(xPos, 3*PADDING+2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
-      rights[deck.index]
-      .setParameter(getFaderTransition(deck).right)
+      rights[channel.getIndex()] = new UIButton(xPos, 3*PADDING+2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
+      rights[channel.getIndex()]
+      .setParameter(getFaderTransition(channel).right)
       .setActiveColor(#993333)
       .addToContainer(this);
       
-      sliders[deck.index] = new UISlider(UISlider.Direction.VERTICAL, xPos, 3*BUTTON_HEIGHT + 4*PADDING, FADER_WIDTH, this.height - 5*BUTTON_HEIGHT - 7*PADDING) {
+      sliders[channel.getIndex()] = new UISlider(UISlider.Direction.VERTICAL, xPos, 3*BUTTON_HEIGHT + 4*PADDING, FADER_WIDTH, this.height - 5*BUTTON_HEIGHT - 7*PADDING) {
         public void onFocus() {
-          lx.engine.focusedDeck.setValue(deck.index);
+          lx.engine.focusedChannel.setValue(channel.getIndex());
         }
       };
-      sliders[deck.index]
-      .setParameter(deck.getFader())
+      sliders[channel.getIndex()]
+      .setParameter(channel.getFader())
       .addToContainer(this);
             
-      labels[deck.index] = new UILabel(xPos, this.height - 2*PADDING - 2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
-      labels[deck.index]
-      .setLabel(shortPatternName(deck.getActivePattern()))
+      labels[channel.getIndex()] = new UILabel(xPos, this.height - 2*PADDING - 2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
+      labels[channel.getIndex()]
+      .setLabel(shortPatternName(channel.getActivePattern()))
       .setAlignment(CENTER, CENTER)
       .setColor(#999999)
       .setBackgroundColor(#292929)
       .setBorderColor(#666666)
       .addToContainer(this);
       
-      deck.addListener(new LXDeck.AbstractListener() {
+      channel.addListener(new LXChannel.AbstractListener() {
 
-        void patternWillChange(LXDeck deck, LXPattern pattern, LXPattern nextPattern) {
-          labels[deck.index].setLabel(shortPatternName(nextPattern));
-          labels[deck.index].setColor(#292929);
-          labels[deck.index].setBackgroundColor(#666699);
+        void patternWillChange(LXChannel channel, LXPattern pattern, LXPattern nextPattern) {
+          labels[channel.getIndex()].setLabel(shortPatternName(nextPattern));
+          labels[channel.getIndex()].setColor(#292929);
+          labels[channel.getIndex()].setBackgroundColor(#666699);
         }
         
-        void patternDidChange(LXDeck deck, LXPattern pattern) {
-          labels[deck.index].setLabel(shortPatternName(pattern));
-          labels[deck.index].setColor(#999999);
-          labels[deck.index].setBackgroundColor(#292929);
+        void patternDidChange(LXChannel channel, LXPattern pattern) {
+          labels[channel.getIndex()].setLabel(shortPatternName(pattern));
+          labels[channel.getIndex()].setColor(#999999);
+          labels[channel.getIndex()].setBackgroundColor(#292929);
         }
       });
       
@@ -450,14 +450,14 @@ class UIChannelFaders extends UIContext {
     .addToContainer(this);
     
     LXParameterListener listener;
-    lx.engine.focusedDeck.addListener(listener = new LXParameterListener() {
+    lx.engine.focusedChannel.addListener(listener = new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         for (int i = 0; i < sliders.length; ++i) {
-          sliders[i].setBackgroundColor((i == focusedDeck()) ? ui.getHighlightColor() : #333333);
+          sliders[i].setBackgroundColor((i == focusedChannel()) ? ui.getHighlightColor() : #333333);
         }
       }
     });
-    listener.onParameterChanged(lx.engine.focusedDeck);
+    listener.onParameterChanged(lx.engine.focusedChannel);
     
     float labelX = PADDING;
     
@@ -521,11 +521,11 @@ class UIChannelFaders extends UIContext {
     
     public void onDraw(UI ui, PGraphics pg) {
       for (int i = 0; i < NUM_CHANNELS; i++) {
-        LXDeck deck = lx.engine.getDeck(i);
-        LXPattern pattern = deck.getActivePattern();
-        float goMillis = pattern.timer.goNanos / 1000000.;
+        LXChannel channel = lx.engine.getChannel(i);
+        LXPattern pattern = channel.getActivePattern();
+        float goMillis = pattern.timer.runNanos / 1000000.;
         float fps60 = 1000 / 60. / 3.;
-        perfs[deck.index].setValue(constrain((goMillis-1) / fps60, 0, 1));
+        perfs[channel.getIndex()].setValue(constrain((goMillis-1) / fps60, 0, 1));
       }
       float engMillis = lx.engine.timer.runNanos / 1000000.;
       perfs[NUM_CHANNELS].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
@@ -553,25 +553,25 @@ public class UIMultiDeck extends UIWindow {
 
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
-  final LXDeck.Listener[] lxListeners;
+  final LXChannel.Listener[] lxListeners;
   final UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
-    super(ui, "CHANNEL " + (focusedDeck()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 108 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 108 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
     patternLists = new UIItemList[NUM_CHANNELS];
     blendModes = new UIToggleSet[NUM_CHANNELS];
-    lxListeners = new LXDeck.Listener[patternLists.length];
+    lxListeners = new LXChannel.Listener[patternLists.length];
     for (int i = 0; i < NUM_CHANNELS; i++) {
-      LXDeck deck = lx.engine.getDeck(i);
+      LXChannel channel = lx.engine.getChannel(i);
       List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
-      for (LXPattern p : deck.getPatterns()) {
-        items.add(new PatternScrollItem(deck, p));
+      for (LXPattern p : channel.getPatterns()) {
+        items.add(new PatternScrollItem(channel, p));
       }
-      patternLists[deck.index] = new UIItemList(1, yp, this.width - 2, 100).setItems(items);
-      patternLists[deck.index].setVisible(deck.index == focusedDeck());
-      patternLists[deck.index].addToContainer(this);      
+      patternLists[channel.getIndex()] = new UIItemList(1, yp, this.width - 2, 100).setItems(items);
+      patternLists[channel.getIndex()].setVisible(channel.getIndex() == focusedChannel());
+      patternLists[channel.getIndex()].addToContainer(this);      
     }
     
     yp += patternLists[0].getHeight() + 10;
@@ -584,34 +584,34 @@ public class UIMultiDeck extends UIWindow {
     
     yp += 100;
     for (int i = 0; i < NUM_CHANNELS; i++) {
-      LXDeck deck = lx.engine.getDeck(i);
-      blendModes[deck.index] = new UIToggleSet(4, yp, this.width-8, 18)
+      LXChannel channel = lx.engine.getChannel(i);
+      blendModes[channel.getIndex()] = new UIToggleSet(4, yp, this.width-8, 18)
       .setOptions(new String[] { "ADD", "MLT", "LITE", "SUBT" })
-      .setParameter(getFaderTransition(deck).blendMode)
+      .setParameter(getFaderTransition(channel).blendMode)
       .setEvenSpacing();
-      blendModes[deck.index].setVisible(deck.index == focusedDeck());
-      blendModes[deck.index].addToContainer(this);
+      blendModes[channel.getIndex()].setVisible(channel.getIndex() == focusedChannel());
+      blendModes[channel.getIndex()].addToContainer(this);
     }
      
     for (int i = 0; i < NUM_CHANNELS; i++) {
-      LXDeck deck = lx.engine.getDeck(i); 
-      lxListeners[deck.index] = new LXDeck.AbstractListener() {
-        public void patternWillChange(LXDeck deck, LXPattern pattern,
+      LXChannel channel = lx.engine.getChannel(i); 
+      lxListeners[channel.getIndex()] = new LXChannel.AbstractListener() {
+        public void patternWillChange(LXChannel channel, LXPattern pattern,
             LXPattern nextPattern) {
-          patternLists[deck.index].redraw();
+          patternLists[channel.getIndex()].redraw();
         }
 
-        public void patternDidChange(LXDeck deck, LXPattern pattern) {
-          LXPattern[] patterns = deck.getPatterns();
-          for (int i = 0; i < patterns.length; ++i) {
-            if (patterns[i] == pattern) {
-              patternLists[deck.index].setFocusIndex(i);
+        public void patternDidChange(LXChannel channel, LXPattern pattern) {
+          List<LXPattern> patterns = channel.getPatterns();
+          for (int i = 0; i < patterns.size(); ++i) {
+            if (patterns.get(i) == pattern) {
+              patternLists[channel.getIndex()].setFocusIndex(i);
               break;
             }
           }  
           
-          patternLists[deck.index].redraw();
-          if (deck.index == focusedDeck()) {
+          patternLists[channel.getIndex()].redraw();
+          if (channel.getIndex() == focusedChannel()) {
             int pi = 0;
             for (LXParameter parameter : pattern.getParameters()) {
               if (pi >= knobs.length) {
@@ -627,27 +627,27 @@ public class UIMultiDeck extends UIWindow {
           }
         }
       };
-      deck.addListener(lxListeners[deck.index]);
-      lxListeners[deck.index].patternDidChange(deck, deck.getActivePattern());
+      channel.addListener(lxListeners[channel.getIndex()]);
+      lxListeners[channel.getIndex()].patternDidChange(channel, channel.getActivePattern());
     }
     
-    lx.engine.focusedDeck.addListener(new LXParameterListener() {
+    lx.engine.focusedChannel.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        LXDeck deck = lx.engine.getDecks().get(focusedDeck()); 
+        LXChannel channel = lx.engine.getChannel(focusedChannel()); 
         
-        setTitle("CHANNEL " + (deck.index + 1));
+        setTitle("CHANNEL " + (channel.getIndex() + 1));
         redraw();
         
-        lxListeners[deck.index].patternDidChange(deck, deck.getActivePattern());
+        lxListeners[channel.getIndex()].patternDidChange(channel, channel.getActivePattern());
         
         int pi = 0;
         for (UIItemList patternList : patternLists) {
-          patternList.setVisible(pi == focusedDeck());
+          patternList.setVisible(pi == focusedChannel());
           ++pi;
         }
         pi = 0;
         for (UIToggleSet blendMode : blendModes) {
-          blendMode.setVisible(pi == focusedDeck());
+          blendMode.setVisible(pi == focusedChannel());
           ++pi;
         }
       }
@@ -656,7 +656,7 @@ public class UIMultiDeck extends UIWindow {
   }
   
   void select() {
-    patternLists[focusedDeck()].select();
+    patternLists[focusedChannel()].select();
   }
   
   float amt = 0;
@@ -675,7 +675,7 @@ public class UIMultiDeck extends UIWindow {
   }
   
   void selectPattern(int channel, int index) {
-    lx.engine.getDeck(channel).goIndex(patternLists[channel].getScrollOffset() + index);
+    lx.engine.getChannel(channel).goIndex(patternLists[channel].getScrollOffset() + index);
   }
   
   void pagePatterns(int channel) {
@@ -687,19 +687,19 @@ public class UIMultiDeck extends UIWindow {
   }
   
   void scroll(int delta) {
-    UIItemList list = patternLists[focusedDeck()]; 
+    UIItemList list = patternLists[focusedChannel()]; 
     list.setFocusIndex(list.getFocusIndex() + delta);
   } 
 
   private class PatternScrollItem extends UIItemList.AbstractItem {
 
-    private final LXDeck deck;
+    private final LXChannel channel;
     private final LXPattern pattern;
 
     private final String label;
 
-    PatternScrollItem(LXDeck deck, LXPattern pattern) {
-      this.deck = deck;
+    PatternScrollItem(LXChannel channel, LXPattern pattern) {
+      this.channel = channel;
       this.pattern = pattern;
       this.label = UI.uiClassName(pattern, "Pattern");
     }
@@ -709,15 +709,15 @@ public class UIMultiDeck extends UIWindow {
     }
 
     public boolean isSelected() {
-      return this.deck.getActivePattern() == this.pattern;
+      return this.channel.getActivePattern() == this.pattern;
     }
 
     public boolean isPending() {
-      return this.deck.getNextPattern() == this.pattern;
+      return this.channel.getNextPattern() == this.pattern;
     }
 
     public void onMousePressed() {
-      this.deck.goPattern(this.pattern);
+      this.channel.goPattern(this.pattern);
     }
   }
 }

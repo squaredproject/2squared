@@ -19,12 +19,16 @@ class MappingTool extends LXEffect {
     return model.clustersByIp.get(getConfig().getString("ipAddress"));
   }
 
-  public void apply(int[] colors) {
+  public void run(double deltaMs) {
   }
   
   class MappingLayer extends LXLayer {
     
-    public void run(double deltaMs, int[] colors) {
+    MappingLayer() {
+      super(MappingTool.this.lx);
+    }
+    
+    public void run(double deltaMs) {
       if (isEnabled()) {
         for (Cube cube : getCluster().cubes) {
           colors[cube.index] = blendColor(lx.hsb(0, 0, strobe.getValuef()), colors[cube.index], ADD);

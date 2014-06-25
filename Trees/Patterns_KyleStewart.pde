@@ -9,7 +9,7 @@ class APattern extends MultiObjectPattern<SnowFlake> {
   }
    
   SnowFlake generateObject(float strength) {
-    SnowFlake snowFlake = new SnowFlake();
+    SnowFlake snowFlake = new SnowFlake(lx);
     snowFlake.runningTimer = 0;
     snowFlake.runningTimerEnd = 90 + random(50);
     snowFlake.decayTime = snowFlake.runningTimerEnd;
@@ -47,6 +47,10 @@ class SnowFlake extends MultiObject {
   PVector currentPoint;
   float currentTheta;
   float currentY;
+  
+  SnowFlake(LX lx) {
+    super(lx);
+  }
   
   public void run(double deltaMs) {
     if (running) {
