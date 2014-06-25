@@ -143,7 +143,7 @@ LXPattern[] patterns(LX lx) {
 }
 
 void setup() {
-  size(1024, 640, OPENGL);
+  size(1024, 680, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
@@ -512,9 +512,9 @@ class UIOutput extends UIWindow {
   }
 }
 
-class UILoopRecorder extends UIWindow {
+public class UILoopRecorder extends UIWindow {
   UILoopRecorder(UI ui) {
-    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 104, 140, 100);
+    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 128, 140, 124);
     float yPos = TITLE_LABEL_HEIGHT;
     new UIToggleSet(4, yPos, this.width-8, 20)
     .setOptions(new String[] { "A", "B", "C", "D" })
@@ -546,6 +546,29 @@ class UILoopRecorder extends UIWindow {
     .setActiveLabel("Looping")
     .addToContainer(this);
     
+    yPos += 24;
+    new UIButton(4, yPos, (this.width-12)/2, 20) {
+      protected void onToggle(boolean active) {
+        if (active) {
+          selectOutput("Save Set",  "saveSet", new File(dataPath("set.json")), UILoopRecorder.this);
+        }
+      }
+    }
+    .setMomentary(true)
+    .setLabel("Save")
+    .addToContainer(this);
+    
+    new UIButton(this.width - (this.width-12)/2 - 4, yPos, (this.width-12)/2, 20) {
+      protected void onToggle(boolean active) {
+        if (active) {
+          selectInput("Load Set",  "loadSet", new File(dataPath("set.json")), UILoopRecorder.this);
+        }
+      }
+    }
+    .setMomentary(true)
+    .setLabel("Load")
+    .addToContainer(this);
+    
     final LXParameterListener listener;
     automationSlot.addListener(listener = new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
@@ -558,6 +581,16 @@ class UILoopRecorder extends UIWindow {
     });
     listener.onParameterChanged(null);
   }
+
+  public void saveSet(File file) {
+    saveJSONArray(automation[automationSlot.getValuei()].toJSON(), file.getPath());
+  }
+  
+  public void loadSet(File file) {
+    JSONArray jsonArr = loadJSONArray(file.getPath());
+    automation[automationSlot.getValuei()].loadJSON(jsonArr);
+  }
+
 }
 
 class TreesTransition extends LXTransition {

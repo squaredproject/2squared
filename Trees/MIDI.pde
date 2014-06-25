@@ -557,7 +557,7 @@ public class UIMultiDeck extends UIWindow {
   final UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
-    super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 108 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 132 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
     patternLists = new UIItemList[NUM_CHANNELS];
