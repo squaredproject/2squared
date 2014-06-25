@@ -513,8 +513,12 @@ class UIOutput extends UIWindow {
 }
 
 public class UILoopRecorder extends UIWindow {
+  
+  private final UILabel slotLabel;
+  private final String[] labels = new String[] { "-", "-", "-", "-" };
+  
   UILoopRecorder(UI ui) {
-    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 128, 140, 124);
+    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 152, 140, 148);
     float yPos = TITLE_LABEL_HEIGHT;
     new UIToggleSet(4, yPos, this.width-8, 20)
     .setOptions(new String[] { "A", "B", "C", "D" })
@@ -547,10 +551,20 @@ public class UILoopRecorder extends UIWindow {
     .addToContainer(this);
     
     yPos += 24;
+    slotLabel = new UILabel(4, yPos, this.width-8, 20);
+    slotLabel
+    .setLabel("-")
+    .setAlignment(CENTER, CENTER)
+    .setBackgroundColor(#333333)
+    .setBorderColor(#666666)
+    .addToContainer(this); 
+    
+    yPos += 24;
     new UIButton(4, yPos, (this.width-12)/2, 20) {
       protected void onToggle(boolean active) {
         if (active) {
-          selectOutput("Save Set",  "saveSet", new File(dataPath("set.json")), UILoopRecorder.this);
+          String fileName = labels[automationSlot.getValuei()].equals("-") ? "set.json" : labels[automationSlot.getValuei()]; 
+          selectOutput("Save Set",  "saveSet", new File(dataPath(fileName)), UILoopRecorder.this);
         }
       }
     }
@@ -561,7 +575,7 @@ public class UILoopRecorder extends UIWindow {
     new UIButton(this.width - (this.width-12)/2 - 4, yPos, (this.width-12)/2, 20) {
       protected void onToggle(boolean active) {
         if (active) {
-          selectInput("Load Set",  "loadSet", new File(dataPath("set.json")), UILoopRecorder.this);
+          selectInput("Load Set",  "loadSet", new File(dataPath("")), UILoopRecorder.this);
         }
       }
     }
@@ -577,18 +591,25 @@ public class UILoopRecorder extends UIWindow {
         playButton.setParameter(auto.isRunning);
         armButton.setParameter(auto.armRecord);
         loopButton.setParameter(auto.looping);
+        slotLabel.setLabel(labels[automationSlot.getValuei()]);
       }
     });
     listener.onParameterChanged(null);
   }
 
   public void saveSet(File file) {
-    saveJSONArray(automation[automationSlot.getValuei()].toJSON(), file.getPath());
+    if (file != null) {
+      saveJSONArray(automation[automationSlot.getValuei()].toJSON(), file.getPath());
+      slotLabel.setLabel(labels[automationSlot.getValuei()] = file.getName());
+    }
   }
   
   public void loadSet(File file) {
-    JSONArray jsonArr = loadJSONArray(file.getPath());
-    automation[automationSlot.getValuei()].loadJSON(jsonArr);
+    if (file != null) {
+      JSONArray jsonArr = loadJSONArray(file.getPath());
+      automation[automationSlot.getValuei()].loadJSON(jsonArr);
+      slotLabel.setLabel(labels[automationSlot.getValuei()] = file.getName());
+    }
   }
 
 }
