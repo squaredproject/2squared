@@ -116,7 +116,7 @@ LXPattern[] patterns(LX lx) {
   patterns.add(new Springs(lx));
   patterns.add(new Lattice(lx));
   patterns.add(new Fire(lx));
-  patterns.add(new Fireflies(lx));
+  patterns.add(new FirefliesExp(lx));
   patterns.add(new Fumes(lx));
   patterns.add(new Voronoi(lx));
   patterns.add(new Bubbles(lx));
