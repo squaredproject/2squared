@@ -133,6 +133,9 @@ LXPattern[] patterns(LX lx) {
   patterns.add(new Pixels(lx));
   patterns.add(new Wedges(lx));
   patterns.add(new Parallax(lx));
+  patterns.add(new LowEQ(lx));
+  patterns.add(new MidEQ(lx));
+  patterns.add(new HighEQ(lx));
 
   LXPattern[] l_patterns = patterns.toArray(new LXPattern[patterns.size()]);
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
