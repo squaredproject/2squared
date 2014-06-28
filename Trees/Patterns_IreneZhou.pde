@@ -1,3 +1,145 @@
+import ddf.minim.*;
+
+class FirefliesExp extends LXPattern {
+  final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
+  final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 7.5); 
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
+  private float radius = 40;
+  private int numFireflies = 20;
+  private Firefly[] fireflies;
+  private Firefly[] queue;
+  private SinLFO[] blinkers = new SinLFO[10];
+  
+  
+  private class Firefly {
+    public float theta = 0;
+    public float yPos = 0;
+    public PVector velocity = new PVector(0,0);
+    public float radius = 0;
+    public int blinkIndex = 0;
+
+    public Firefly() {
+      theta = random(0, 360);
+      yPos = random(model.yMin, model.yMax);
+      velocity = new PVector(random(-1,1), random(0.25, 1));
+      radius = 30;
+      blinkIndex = (int) random(0, blinkers.length);
+    }
+
+    public void move(float speed) {
+      theta = (theta + speed * velocity.x) % 360;
+      yPos += speed * velocity.y;
+
+    }
+  }
+  
+  FirefliesExp(LX lx) {
+    super(lx);
+    addParameter(flyCount);
+    addParameter(speed);
+    addParameter(hue);
+
+    for (int i = 0; i < blinkers.length; ++i) {
+      blinkers[i] = new SinLFO(0, 75, 1000  * random(1.0, 3.0));      
+      addModulator(blinkers[i].start().setValue(random(0,50)));
+    }
+    
+    fireflies = new Firefly[numFireflies];
+    queue = new Firefly[0];
+    for (int i = 0; i < numFireflies; ++i) {
+      fireflies[i] = new Firefly();
+    }
+  }
+  
+  public void addToQueue(int numFlies) {
+    int oldQueueLength = queue.length;
+    queue = Arrays.copyOf(queue, oldQueueLength + numFlies);
+    for (int i = oldQueueLength; i < queue.length; ++i) {
+      queue[i] = new Firefly();
+    }
+  }
+
+  public Firefly removeFromQueue(int index) {
+    Firefly[] newQueue = Arrays.copyOf(queue, queue.length - 1);
+    for (int i = index; i < newQueue.length; ++i) {
+      newQueue[i] = queue[i + 1];
+    }
+    Firefly addedFly = queue[index];
+    queue = newQueue;
+    return addedFly;
+  }
+
+  public void addFirefly(Firefly fly) {
+    Firefly[] newFireflies = Arrays.copyOf(fireflies, fireflies.length + 1);
+    newFireflies[newFireflies.length - 1] = fly;
+    fireflies = newFireflies;
+  }
+  
+  public void removeFirefly(int index) {
+    Firefly[] newFireflies = Arrays.copyOf(fireflies, fireflies.length - 1);
+    for (int i = index; i < newFireflies.length; ++i) {
+      newFireflies[i] = fireflies[i + 1];
+    }
+    fireflies = newFireflies;
+  }
+  
+  public void run(double deltaMs) {
+    for (Cube cube : model.cubes) {
+      colors[cube.index] = lx.hsb(
+        0,
+        0,
+        0
+      );
+    }
+
+    numFireflies = flyCount.getValuei();
+
+    if (fireflies.length < numFireflies) { 
+      addToQueue(numFireflies - fireflies.length);
+    }
+
+    for (int i = 0; i < queue.length; ++i) { //only add fireflies when they're about to blink on
+      if (blinkers[queue[i].blinkIndex].getValuef() > 70) {
+        addFirefly(removeFromQueue(i));
+      }
+    }
+
+    for (int i = 0; i < fireflies.length; ++i) { //remove fireflies while blinking off
+      if (numFireflies < fireflies.length) {
+        if (blinkers[fireflies[i].blinkIndex].getValuef() > 70) {
+          removeFirefly(i);
+        }
+      }
+    }
+
+    for (int i = 0; i < fireflies.length; ++i) {
+      if (fireflies[i].yPos > model.yMax + radius) {
+          fireflies[i].yPos = model.yMin - radius;
+      }
+    }
+
+    for (Firefly fly:fireflies) {
+      for (Cube cube: model.cubes) {
+        if (abs(fly.yPos - cube.y) <= radius && abs(fly.theta - cube.theta) <= radius) {
+          float distSq = pow((LXUtils.wrapdistf(fly.theta, cube.theta, 360)), 2) + pow(fly.yPos - cube.y, 2);
+          float brt = max(0, 100 - sqrt(distSq * 4) - blinkers[fly.blinkIndex].getValuef());
+          if (brt > lx.b(colors[cube.index])) {
+            colors[cube.index] = lx.hsb(
+              (lx.getBaseHuef() + hue.getValuef()) % 360,
+              100 - brt,
+              brt
+            );
+          }
+        }
+      }
+    }
+
+    for (Firefly firefly: fireflies) {
+      firefly.move(speed.getValuef());
+    }
+  }
+}
+
 class Lattice extends LXPattern {
   final SawLFO spin = new SawLFO(0, 4320, 24000); 
   final SinLFO yClimb = new SinLFO(60, 30, 24000);
@@ -113,133 +255,32 @@ class Fire extends LXPattern {
   }
 }
 
-class BouncyBalls extends LXPattern {
-  final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 25);
-  final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
-  final BasicParameter maxBounce = new BasicParameter("MAXBOUNCE", 0.9, 0, 1);
-  final BasicParameter minBounce = new BasicParameter("MINBOUNCE", 0.5, 0, 1);
-  final BasicParameter acceleration = new BasicParameter("ACCEL", 400, 0, 1000); 
-  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
-    
-  private int numBalls = 10;
-  private Ball[] balls;
-  
-  private class Ball {
-    public float theta = random(0, 360);
-    public float bHue = random(0, 25);
-    public Accelerator gravity = new Accelerator(model.yMax,0,0);
-    public float radius = 0;
-    
-    public Ball(float maxRadius, boolean starterBall) {
-      radius = random(5, maxRadius);
-      gravity.setAcceleration(-acceleration.getValuef());
-      if (starterBall) {
-        gravity.setValue(random(0, model.yMax));
-      }
-      lx.addModulator(gravity.start());
-    }
-  }
-  
-  BouncyBalls(LX lx) {
-    super(lx);
-    addParameter(ballCount);
-    addParameter(maxRadius);
-    addParameter(maxBounce);
-    addParameter(minBounce);
-    addParameter(acceleration);
-    addParameter(hue);
-    
-    balls = new Ball[numBalls];
-    for (int i = 0; i < numBalls; ++i) {
-      balls[i] = new Ball(maxRadius.getValuef(), true);
-    }
-  }
-  
-  public void updateNumBalls(int numBalls) {
-    Ball[] newBalls = Arrays.copyOf(balls, numBalls);
-    if (balls.length < numBalls) {
-      for (int i = balls.length; i < numBalls; ++i) {
-        newBalls[i] = new Ball(maxRadius.getValuef(), false);
-      }
-    }
-    balls = newBalls;
-  }
-  
-  public void run(double deltaMs) {
-    for (int i = 0; i < balls.length; ++i) {
-      if (balls[i].gravity.getValuef() > model.yMax) {
-        balls[i].gravity.setValue(model.yMax);
-      }
-    }
-    
-    for (Cube cube : model.cubes) {
-      colors[cube.index] = lx.hsb(
-        0,
-        0,
-        0
-      );
-    }
-    numBalls = (int) ballCount.getValuef();
-    if (balls.length != numBalls) {
-      updateNumBalls(numBalls);
-    }
-    for (int i = 0; i < balls.length; ++i) {
-      float gravVel = balls[i].gravity.getVelocityf();
-      float gravVal = balls[i].gravity.getValuef();
-      
-      if (abs(gravVel) < 1 && gravVal < 20) { //destroy finished balls
-        lx.removeModulator(balls[i].gravity);
-        balls[i] = new Ball(maxRadius.getValuef(), false);
-      }
-      
-      if (gravVal < 0) { //bounce!
-          balls[i].gravity.setValue(-gravVal);
-          balls[i].gravity.setVelocity(-gravVel * random(minBounce.getValuef(), maxBounce.getValuef()));
-      }
-      for (Cube cube : model.cubes) {
-        float dist = sqrt(pow((LXUtils.wrapdistf(balls[i].theta, cube.theta, 360)) * 0.8, 2) + pow(balls[i].gravity.getValuef() - (cube.y - model.yMin), 2));
-        if (dist < balls[i].radius) {
-          colors[cube.index] = lx.hsb(
-            (balls[i].bHue + hue.getValuef()) % 360,
-            100,
-            constrain(cube.y/model.yMax * 125 - 50 * (dist/balls[i].radius), 0, 100)
-          );
-        }
-      }
-    }
-  }
-}
-
 class Bubbles extends LXPattern {
-  final BasicParameter ballCount = new BasicParameter("NUM", 10, 1, 150);
+  final DiscreteParameter ballCount = new DiscreteParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
-  final BasicParameter speed = new BasicParameter("ACCEL", 1, -10, 25); 
+  final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
     
-  private int numBalls = 10;
+  private int numBubbles = 10;
   private Bubble[] bubbles;
   
   private class Bubble {
-    public float theta = random(0, 360);
-    public float bHue = random(0, 30);
-    public Accelerator gravity = new Accelerator(random(-50, 0),0,0);
+    public float theta = 0;
+    public float yPos = 0;
+    public float bHue = 0;
+    public float baseSpeed = 0;
     public float radius = 0;
-    public float baseAcceleration = 0;
-    
+
     public Bubble(float maxRadius) {
+      theta = random(0, 360);
+      bHue = random(0, 30);
+      baseSpeed = random(2, 5);
       radius = random(5, maxRadius);
-      baseAcceleration = 100 * random(0.25, 1);
-      gravity.setVelocity(random(-10,10)).setAcceleration(baseAcceleration);
-      lx.addModulator(gravity.start());
+      yPos = model.yMin - radius * random(1,10);
     }
-  }
-  
-  void onParameterChanged(LXParameter parameter) {
-    super.onParameterChanged(parameter);
-    if (parameter == speed) {
-      for (Bubble b : bubbles) {
-        b.gravity.setAcceleration(b.baseAcceleration * speed.getValuef());
-      }
+
+    public void move(float speed) {
+      yPos += baseSpeed * speed;
     }
   }
   
@@ -250,20 +291,26 @@ class Bubbles extends LXPattern {
     addParameter(speed);
     addParameter(hue);
     
-    bubbles = new Bubble[numBalls];
-    for (int i = 0; i < numBalls; ++i) {
+    bubbles = new Bubble[numBubbles];
+    for (int i = 0; i < numBubbles; ++i) {
       bubbles[i] = new Bubble(maxRadius.getValuef());
     }
   }
   
-  public void updateNumBalls(int numBalls) {
-    Bubble[] newBubbless = Arrays.copyOf(bubbles, numBalls);
-    if (bubbles.length < numBalls) {
-      for (int i = bubbles.length; i < numBalls; ++i) {
-        newBubbless[i] = new Bubble(maxRadius.getValuef());
-      }
+  public void addBubbles(int numBubbles) {
+    Bubble[] newBubbles = Arrays.copyOf(bubbles, numBubbles);
+    for (int i = bubbles.length; i < numBubbles; ++i) {
+      newBubbles[i] = new Bubble(maxRadius.getValuef());
     }
-    bubbles = newBubbless;
+    bubbles = newBubbles;
+  }
+  
+  public void removeBubble(int index) {
+    Bubble[] newBubbles = Arrays.copyOf(bubbles, bubbles.length - 1);
+    for (int i = index; i < newBubbles.length; ++i) {
+      newBubbles[i] = bubbles[i + 1];
+    }
+    bubbles = newBubbles;
   }
   
   public void run(double deltaMs) {
@@ -274,34 +321,41 @@ class Bubbles extends LXPattern {
         0
       );
     }
-    numBalls = (int) ballCount.getValuef();
-    if (bubbles.length != numBalls) {
-      updateNumBalls(numBalls);
+
+    numBubbles = ballCount.getValuei();
+    if (bubbles.length < numBubbles) {
+      addBubbles(numBubbles);
     }
     
     for (int i = 0; i < bubbles.length; ++i) {
-      float gravVel = bubbles[i].gravity.getVelocityf();
-      float gravVal = bubbles[i].gravity.getValuef();
-      if (gravVel <= 0) {
-        bubbles[i].gravity.setVelocity(0);
+      if (bubbles[i].yPos > model.yMax + bubbles[i].radius) { //bubble is now off screen
+        if (numBubbles < bubbles.length) {
+          removeBubble(i);
+        } else {
+          bubbles[i] = new Bubble(maxRadius.getValuef());
+        }
       }
-      if (abs(gravVal) > model.yMax) { //destroy finished balls
-        lx.removeModulator(bubbles[i].gravity);
-        bubbles[i] = new Bubble(maxRadius.getValuef());
-      }
+    }
+      
+    for (Bubble bubble: bubbles) {
       for (Cube cube : model.cubes) {
-        if (abs(bubbles[i].theta - cube.theta) < bubbles[i].radius && abs(bubbles[i].gravity.getValuef() - (cube.y - model.yMin)) < bubbles[i].radius) {
-          float dist = sqrt(pow((LXUtils.wrapdistf(bubbles[i].theta, cube.theta, 360)) * 0.8, 2) + pow(bubbles[i].gravity.getValuef() - (cube.y - model.yMin), 2));
+        if (abs(bubble.theta - cube.theta) < bubble.radius && abs(bubble.yPos - (cube.y - model.yMin)) < bubble.radius) {
+          float distTheta = LXUtils.wrapdistf(bubble.theta, cube.theta, 360) * 0.8;
+          float distY = bubble.yPos - (cube.y - model.yMin);
+          float distSq = distTheta * distTheta + distY * distY;
           
-          if (dist < bubbles[i].radius) {
+          if (distSq < bubble.radius * bubble.radius) {
+            float dist = sqrt(distSq);
             colors[cube.index] = lx.hsb(
-              (bubbles[i].bHue + hue.getValuef()) % 360,
-              50 + dist/bubbles[i].radius * 50,
-              constrain(cube.y/model.yMax * 125 - 50 * (dist/bubbles[i].radius), 0, 100)
+              (bubble.bHue + hue.getValuef()) % 360,
+              50 + dist/bubble.radius * 50,
+              constrain(cube.y/model.yMax * 125 - 50 * (dist/bubble.radius), 0, 100)
             );
           }
         }
       }
+    
+      bubble.move(speed.getValuef());
     }
   }
 }
@@ -373,8 +427,9 @@ class Voronoi extends LXPattern {
 }
 
 class Fumes extends LXPattern {
-  final BasicParameter speed = new BasicParameter("SPEED", 2, 0, 8);
+  final BasicParameter speed = new BasicParameter("SPEED", 2, 0, 20);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
+  final BasicParameter sat = new BasicParameter("SAT", 25, 0, 100);
   final int NUM_SITES = 15;
   private Site[] sites = new Site[NUM_SITES];
   
@@ -386,17 +441,17 @@ class Fumes extends LXPattern {
     public Site() {
       theta = random(0, 360);
       yPos = random(model.yMin, model.yMax);
-      velocity = new PVector(random(-1,1), random(0,1));
+      velocity = new PVector(random(0,1), random(0,0.75));
     }
     
     public void move(float speed) {
       theta = (theta + speed * velocity.x) % 360;
       yPos += speed * velocity.y;
-      if (yPos < model.yMin - 20) {
+      if (yPos < model.yMin - 50) {
         velocity.y *= -1;
       }
       if (yPos > model.yMax + 50) {
-        yPos = model.yMin - 10;
+        yPos = model.yMin - 50;
       }
     }
   }
@@ -405,12 +460,14 @@ class Fumes extends LXPattern {
     super(lx);
     addParameter(hue);
     addParameter(speed);
+    addParameter(sat);
     for (int i = 0; i < sites.length; ++i) {
       sites[i] = new Site();
     }
   }
   
   public void run(double deltaMs) {
+    float minSat = sat.getValuef();
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
@@ -427,10 +484,11 @@ class Fumes extends LXPattern {
           }
         }
       }
+      float brt = max(0, 100 - sqrt(nextMinDistSq));
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + hue.getValuef()) % 360,
-        100,
-        max(0, 100 - sqrt(nextMinDistSq - minDistSq * 0.05))
+        100 - min( minSat, brt),
+        brt
       );
     }
     for (Site site: sites) {
@@ -628,3 +686,6 @@ class Springs extends LXPattern {
     }
   }
 }
+
+
+
