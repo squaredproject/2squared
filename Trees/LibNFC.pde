@@ -12,7 +12,8 @@ interface LibNFC extends Library {
 //00088 NFC_EXPORT int nfc_register_driver(const nfc_driver *driver);
 //00089 
 //00090 /* NFC Device/Hardware manipulation */
-  nfc_device nfc_open(Pointer context, Pointer connstring);
+  //nfc_device nfc_open(Pointer context, Pointer connstring);
+  Pointer nfc_open(Pointer context, Pointer connstring);
 //00091 NFC_EXPORT nfc_device *nfc_open(nfc_context *context, const nfc_connstring connstring) ATTRIBUTE_NONNULL(1);
 //00092 NFC_EXPORT void nfc_close(nfc_device *pnd);
 //00093 NFC_EXPORT int nfc_abort_command(nfc_device *pnd);
@@ -21,8 +22,10 @@ interface LibNFC extends Library {
 //00096 
 //00097 /* NFC initiator: act as "reader" */
 //00098 NFC_EXPORT int nfc_initiator_init(nfc_device *pnd);
+  int nfc_initiator_init(Pointer p);
 //00099 NFC_EXPORT int nfc_initiator_init_secure_element(nfc_device *pnd);
 //00100 NFC_EXPORT int nfc_initiator_select_passive_target(nfc_device *pnd, const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
+  int nfc_initiator_select_passive_target(Pointer pnd, nfc_modulation nm, Pointer pbtInitData, long szInitData, nfc_target p);
 //00101 NFC_EXPORT int nfc_initiator_list_passive_targets(nfc_device *pnd, const nfc_modulation nm, nfc_target ant[], const size_t szTargets);
 //00102 NFC_EXPORT int nfc_initiator_poll_target(nfc_device *pnd, const nfc_modulation *pnmTargetTypes, const size_t szTargetTypes, const uint8_t uiPollNr, const uint8_t uiPeriod, nfc_target *pnt);
 //00103 NFC_EXPORT int nfc_initiator_select_dep_target(nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout);
@@ -49,6 +52,7 @@ interface LibNFC extends Library {
 //00124 
 //00125 /* Special data accessors */
 //00126 NFC_EXPORT const char *nfc_device_get_name(nfc_device *pnd);
+    String nfc_device_get_name(Pointer p);
 //00127 NFC_EXPORT const char *nfc_device_get_connstring(nfc_device *pnd);
 //00128 NFC_EXPORT int nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode,  const nfc_modulation_type **const supported_mt);
 //00129 NFC_EXPORT int nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
@@ -104,16 +108,6 @@ interface LibNFC extends Library {
   
 }
 
-void libNFCTest() {
-  nfc_device pnd;
-  PointerByReference context = new PointerByReference();
-  LibNFC.INSTANCE.nfc_init(context);
-  
-  pnd = LibNFC.INSTANCE.nfc_open(context.getValue(), Pointer.NULL);
-  
-  println(pnd);
-}
-
 public class nfc_user_defined_device extends Structure {
   public String name;
   public char[] connstring;
@@ -141,7 +135,8 @@ public class nfc_context extends Structure {
 }
 
 public class nfc_device extends Structure {
-  public nfc_context context;
+  //public nfc_context context;
+  public Pointer context;
   public Pointer driver;
   public Pointer driver_data;
   public Pointer chip_data;
@@ -165,4 +160,193 @@ public class nfc_device extends Structure {
       "name", "connstring", "bCrc", "bPar", "bEasyFraming", "bInfiniteSelect", "bAutoIso14443_4",
       "btSupportByte", "last_error" });
   }
+}
+
+public class nfc_modulation extends Structure {
+    public int nmt; // nfc_modulation_type nmt;
+    public int nbr; // nfc_baud_rate nbr;
+    protected List getFieldOrder() {
+      return Arrays.asList(new String[] {"nmt", "nbr"});
+    }
+}
+
+public class nfc_iso14443a_info extends Structure {
+  public byte abtAtqa[];
+  public byte btSak;
+  public long szUidLen;
+  public byte abtUid[];
+  public long szAtsLen;
+  public byte abtAts[]; // Maximal theoretical ATS is FSD-2, FSD=256 for FSDI=8 in RATS
+
+  public nfc_iso14443a_info() {
+    abtAtqa = new byte[2];
+    abtUid = new byte[10];
+    abtAts = new byte[254];
+  }
+
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "abtAtqa", "btSak", "szUidLen", "abtUid", "szAtsLen", "abtAts"});
+  }
+}
+
+public class nfc_felica_info {
+  public long  szLen;
+  public byte  btResCode;
+  public byte  abtId[];
+  public byte  abtPad[];
+  public byte  abtSysCode[];
+  public nfc_felica_info() {
+    abtId = new byte[8];
+    abtPad = new byte[8];
+    abtSysCode = new byte[2];
+  }
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "szLen", "btResCode", "abtId", "abtPad", "abtSysCode"});
+  }
+}
+
+public class nfc_iso14443b_info {
+  public byte abtPupi[];
+  public byte abtApplicationData[];
+  public byte abtProtocolInfo[];
+  public byte ui8CardIdentifier;
+  public nfc_iso14443b_info() {
+    abtPupi = new byte[4];
+    abtApplicationData = new byte[4];
+    abtProtocolInfo = new byte[3];
+  }
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "abtPupi", "abtApplicationData", "abtProtocolInfo", "ui8CardIdentifier"});
+  }
+}
+
+public class nfc_iso14443bi_info {
+  public byte abtDIV[];
+  public byte btVerLog;
+  public byte btConfig;
+  public long szAtrLen;
+  public byte  abtAtr[];
+  public nfc_iso14443bi_info(){
+    abtDIV = new byte[4];
+    abtAtr = new byte[33];
+  }
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "abtDIV", "btVerLog", "btConfig", "szAtrLen", "abtAtr" });
+  }
+}
+
+public class nfc_iso14443b2sr_info {
+  public byte abtUID[];
+  public nfc_iso14443b2sr_info() {
+    abtUID = new byte[8];
+  }
+/*
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] {});
+  }
+*/
+}
+
+public class nfc_iso14443b2ct_info {
+  public byte abtUID[];
+  public byte btProdCode;
+  public byte btFabCode;
+  public nfc_iso14443b2ct_info() {
+    abtUID = new byte[4];
+  }
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "abtUID", "btProdCode", "btFabCode" });
+  }
+}
+
+public class nfc_jewel_info {
+  public byte  btSensRes[];
+  public byte  btId[];
+  public nfc_jewel_info(){
+    btSensRes = new byte[2];
+    btId = new byte[4];
+  }
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "btSensRes", "btId" });
+  }
+}
+
+public class nfc_dep_info {
+  public byte  abtNFCID3[];
+  public byte  btDID;
+  public byte  btBS;
+  public byte  btBR;
+  public byte  btTO;
+  public byte  btPP;
+  public byte  abtGB[];
+  public long  szGB;
+  //nfc_dep_mode ndm;
+  public int ndm;
+  public nfc_dep_info(){
+    abtNFCID3 = new byte[10];
+    abtGB = new byte[48];
+  }
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] { "abtNFCID3", "btDID", "btBS", "btBR", "btTO", "btPP", "abtGB", "szGB", "ndm" });
+  }
+}
+
+public class nfc_target_info extends Structure {
+  public nfc_iso14443a_info nai;
+  public nfc_felica_info nfi;
+  public nfc_iso14443b_info nbi;
+  public nfc_iso14443bi_info nii;
+  public nfc_iso14443b2sr_info nsi;
+  public nfc_iso14443b2ct_info nci;
+  public nfc_jewel_info nji;
+  public nfc_dep_info ndi;
+  //public nfc_target_info() {
+  //  nai = new nfc_i
+  //}
+  protected List getFieldOrder() {
+    return Arrays.asList(new String[] {"nai", "nfi", "nbi", "nii", "nsi", "nci", "nji", "ndi"});
+  }
+}
+
+public class nfc_target extends Structure {
+    public nfc_target_info nti;
+    public nfc_modulation nm;
+    protected List getFieldOrder() {
+      return Arrays.asList(new String[] {"nti", "nm"});
+    }
+}
+
+void libNFCTest() {
+  //nfc_device pnd;
+  Pointer pnd;
+  //nfc_device pnd = new nfc_device();
+  PointerByReference context = new PointerByReference();
+  LibNFC.INSTANCE.nfc_init(context);
+  println("context", context.getValue());
+  if (context.getValue() == Pointer.NULL){
+    println("nfc_init failed");
+    return;
+  } 
+  pnd = LibNFC.INSTANCE.nfc_open(context.getValue(), Pointer.NULL);
+  println("pnd", pnd);
+  if (LibNFC.INSTANCE.nfc_initiator_init(pnd) < 0) {
+    println("failed initiator init");
+    return;
+  }
+  println("NFC reader:", LibNFC.INSTANCE.nfc_device_get_name(pnd));
+  nfc_modulation nmMifare = new nfc_modulation();
+  nmMifare.nmt = 1; //NMT_ISO14443A
+  nmMifare.nbr = 1; //NBR_106
+  nfc_iso14443a_info nai = new nfc_iso14443a_info();
+  //nfc_target_info nti  = new nfc_target_info();
+  //nfc_target nt = new nfc_target();
+  //println("nt", nt, nt);
+/**
+  if (LibNFC.INSTANCE.nfc_initiator_select_passive_target(pnd, nmMifare, Pointer.NULL, 0, nt) > 0){
+    println("found");
+  } else {
+    println("No card");
+  }
+**/
+  //  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) > 0) {
 }
