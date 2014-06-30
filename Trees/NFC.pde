@@ -1,23 +1,33 @@
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+interface NFCRecognizer {
+  public void cardOn(String serialNumber);
+  public void cardOff(String serialNumber);
+}
+
 // "34f662a3", "360558b3", "14a563a3", "1490aec6", "446bebc4", "04836632"
 
 final static RequestAPDU serialNumberRequestAPDU = new RequestAPDU(0xFF, 0xCA, 0x00, 0x00, 4);
 final static RequestAPDU noBeepRequestAPDU = new RequestAPDU(0xFF, 0x00, 0x52, 0x00, 6);
 
+class NFCEngine {
+}
+
 void configureNFC() {
-  turnOffSmartcardLibraryLogging();
+  libNFCTest();
   
-  if (!isPCSCDaemonRunning()) {
-    Logger.getGlobal().warning("NFC not configured: couldn't establish connection to PC/SC daemon");
-    return;
-  }
+//  turnOffSmartcardLibraryLogging();
   
-  ICardSystem cardSystem = new StandardCardSystem(PCSCContextFactory.get());
-  CardSystemMonitor cardSystemMonitor = new CardSystemMonitor(cardSystem);
-  cardSystemMonitor.addCardSystemListener(new NFCCardSystemMonitor());
-  cardSystemMonitor.start();
+//  if (!isPCSCDaemonRunning()) {
+//    Logger.getGlobal().warning("NFC not configured: couldn't establish connection to PC/SC daemon");
+//    return;
+//  }
+//  
+//  ICardSystem cardSystem = new StandardCardSystem(PCSCContextFactory.get());
+//  CardSystemMonitor cardSystemMonitor = new CardSystemMonitor(cardSystem);
+//  cardSystemMonitor.addCardSystemListener(new NFCCardSystemMonitor());
+//  cardSystemMonitor.start();
   
   println("NFC configured");
 }
