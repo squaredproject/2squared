@@ -25,7 +25,8 @@ interface LibNFC extends Library {
   int nfc_initiator_init(Pointer p);
 //00099 NFC_EXPORT int nfc_initiator_init_secure_element(nfc_device *pnd);
 //00100 NFC_EXPORT int nfc_initiator_select_passive_target(nfc_device *pnd, const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
-  int nfc_initiator_select_passive_target(Pointer pnd, nfc_modulation nm, Pointer pbtInitData, long szInitData, nfc_target p);
+  //int nfc_initiator_select_passive_target(Pointer pnd, long nm, Pointer pbtInitData, long szInitData, nfc_target p);
+  int nfc_initiator_select_passive_target(Pointer pnd, long nm, Pointer pbtInitData, long szInitData, Memory nt);
 //00101 NFC_EXPORT int nfc_initiator_list_passive_targets(nfc_device *pnd, const nfc_modulation nm, nfc_target ant[], const size_t szTargets);
 //00102 NFC_EXPORT int nfc_initiator_poll_target(nfc_device *pnd, const nfc_modulation *pnmTargetTypes, const size_t szTargetTypes, const uint8_t uiPollNr, const uint8_t uiPeriod, nfc_target *pnt);
 //00103 NFC_EXPORT int nfc_initiator_select_dep_target(nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout);
@@ -334,19 +335,18 @@ void libNFCTest() {
     return;
   }
   println("NFC reader:", LibNFC.INSTANCE.nfc_device_get_name(pnd));
-  nfc_modulation nmMifare = new nfc_modulation();
-  nmMifare.nmt = 1; //NMT_ISO14443A
-  nmMifare.nbr = 1; //NBR_106
-  nfc_iso14443a_info nai = new nfc_iso14443a_info();
-  //nfc_target_info nti  = new nfc_target_info();
-  //nfc_target nt = new nfc_target();
-  //println("nt", nt, nt);
-/**
-  if (LibNFC.INSTANCE.nfc_initiator_select_passive_target(pnd, nmMifare, Pointer.NULL, 0, nt) > 0){
+
+  Memory nt = new Memory(292);
+
+  if (LibNFC.INSTANCE.nfc_initiator_select_passive_target(pnd, 0x100000001l, Pointer.NULL, 0, nt) > 0){
     println("found");
+    System.out.printf("len: %d\n", nt.getByte(3));
+    for(int j=0; j<nt.getByte(3); ++j){
+        System.out.printf("%0x ", nt.getByte(11+j));
+    }
+    System.out.println();
   } else {
     println("No card");
   }
-**/
   //  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) > 0) {
 }
