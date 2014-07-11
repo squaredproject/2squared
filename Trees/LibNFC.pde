@@ -67,12 +67,9 @@ public class LibNFC {
             Memory m = new Memory(100);
             m.setByte((long)0, (byte)1);
             m.setByte((long)4, (byte)1);
-            //int err = NFCLib.INSTANCE.nfc_initiator_poll_target(pnd, m.share(0), 1, 1, 1, nt.getPointer());
+            int before = millis();
             int err = NFCLib.INSTANCE.nfc_initiator_poll_target(pnd, m.share(0), 1, 1, 1, nt);
-
-            //println("err", err);
-
-            //int err = NFCLib.INSTANCE.nfc_initiator_select_passive_target(pnd, DEFAULT_MODULATION, Pointer.NULL, 0, nt);
+            println("Poll time:", millis() - before);
 
             if (err > 0){
                 //println("card", new LibNFC.card_id(nt));
