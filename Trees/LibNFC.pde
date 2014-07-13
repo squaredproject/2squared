@@ -4,6 +4,7 @@ static final int DEVICE_PORT_LENGTH = 64;
 static final int MAX_READERS = 10;
 static final int NFC_ENOTSUCHDEV = -4;
 static final int NFC_EIO = -1;
+static final int NFC_PROPERTY_INFINITE_SELECT = 7;
 
 static final long DEFAULT_MODULATION = 0x100000001l;
 
@@ -16,6 +17,8 @@ interface NFCLib extends Library {
     int nfc_initiator_init(Pointer p);
 
     int nfc_list_devices(Pointer context, Pointer connstring, int connstring_len);
+
+    int nfc_device_set_property_bool(Pointer pnd, int property, boolean value);
 
     // list_passive just calls select_passive
     int nfc_initiator_select_passive_target(Pointer pnd, long nm, Pointer pbtInitData, int szInitData, LibNFC.nfc_target nt);
@@ -62,13 +65,13 @@ public class LibNFC {
         }
         public LibNFC.card_id get_card_id(){
             LibNFC.nfc_target nt = new LibNFC.nfc_target();
-            //int err = NFCLib.INSTANCE.nfc_initiator_select_passive_target(pnd, DEFAULT_MODULATION, Pointer.NULL, 0, nt);
 
             Memory m = new Memory(100);
             m.setByte((long)0, (byte)1);
             m.setByte((long)4, (byte)1);
             int before = millis();
-            int err = NFCLib.INSTANCE.nfc_initiator_poll_target(pnd, m.share(0), 1, 1, 1, nt);
+            //int err = NFCLib.INSTANCE.nfc_initiator_poll_target(pnd, m.share(0), 1, 1, 1, nt);
+            int err = NFCLib.INSTANCE.nfc_initiator_select_passive_target(pnd, DEFAULT_MODULATION, Pointer.NULL, 0, nt);
             println("Poll time:", millis() - before);
 
             if (err > 0){
@@ -122,6 +125,7 @@ public class LibNFC {
         if (NFCLib.INSTANCE.nfc_initiator_init(pnd) < 0) {
             throw new Exception("Failed initiator init.");
         }
+        NFCLib.INSTANCE.nfc_device_set_property_bool(pnd, NFC_PROPERTY_INFINITE_SELECT, false);
         return new LibNFC.Reader(pnd, connstring);
     }
 
