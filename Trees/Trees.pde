@@ -83,6 +83,7 @@ DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION)
 MidiEngine midiEngine;
 TSDrumpad drumpad;
 TSKeyboard keyboard;
+Minim minim;
 
 LXPattern[] patterns(LX lx) {
   ArrayList <LXPattern> patterns = new ArrayList<LXPattern>();
@@ -153,7 +154,9 @@ void setup() {
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
   model = new Model();
-      
+  
+  minim = new Minim(this);
+  
   lx = new LX(this, model);
   lx.setPatterns(patterns(lx));
   for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
