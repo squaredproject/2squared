@@ -265,7 +265,7 @@ class LibNFCQueryThread extends Thread {
 
             if (!Arrays.equals(cid.id, old_cid.id)){
                 if (Arrays.equals(cid.id, zero_cid.id))
-                    card_reader.cardRemoved(reader.connstring);
+                    card_reader.cardRemoved(reader.connstring, old_cid);
                 else
                     card_reader.cardAdded(reader.connstring, cid);
                 //println("Card changed:", reader, cid);
@@ -281,7 +281,7 @@ class LibNFCQueryThread extends Thread {
 
 interface CardReader {
     public void cardAdded(String reader, LibNFC.card_id cid);
-    public void cardRemoved(String reader);
+    public void cardRemoved(String reader, LibNFC.card_id cid);
 }
 
 void libNFCTest() {
@@ -289,7 +289,7 @@ void libNFCTest() {
 
     CardReader cr = new CardReader() {
         public void cardAdded(String reader, LibNFC.card_id cid) { println(reader, "added card", cid); }
-        public void cardRemoved(String reader) { println(reader, "card removed."); }
+        public void cardRemoved(String reader, LibNFC.card_id cid) { println(reader, "card removed:", cid); }
     };
 
 
