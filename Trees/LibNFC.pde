@@ -35,7 +35,7 @@ interface NFCLib extends Library {
 
 public class LibNFC {
     private PointerByReference context;
-    private List nd_list;
+    private List<LibNFC.Reader> nd_list;
     private int num_readers;
     private int max_num_readers;
 
@@ -59,9 +59,9 @@ public class LibNFC {
     public class Reader {
         public Pointer pnd;
         public String connstring;
-        public Reader (Pointer p, String n) {
-            pnd = p;
-            connstring = n;
+        public Reader(Pointer pnd, String connstring) {
+            this.pnd = pnd;
+            this.connstring = connstring;
         }
         public LibNFC.card_id get_card_id(){
             LibNFC.nfc_target nt = new LibNFC.nfc_target();
@@ -132,8 +132,7 @@ public class LibNFC {
     public void add_unconnected_readers(int current_num_readers, String []connstrings) throws Exception{
         for (String conn: connstrings) {
             boolean found = false;
-            for(Object obj: nd_list){
-                LibNFC.Reader r = (LibNFC.Reader)obj;
+            for (LibNFC.Reader r : nd_list) {
                 if (conn.equals(r.connstring)){
                     found = true;
                     break;
@@ -146,10 +145,9 @@ public class LibNFC {
     }
 
     public void disconnect_unconnected_readers(int current_num_readers, String []connstrings){
-        Iterator<Object> loop = nd_list.iterator();
+        Iterator<LibNFC.Reader> loop = nd_list.iterator();
         while (loop.hasNext()){
-            Object obj = loop.next();
-            LibNFC.Reader r = (LibNFC.Reader)obj;
+            LibNFC.Reader r = loop.next();
             boolean found = false;
             for (String conn : connstrings) {
                 if (conn.equals(r.connstring)){
@@ -186,7 +184,7 @@ public class LibNFC {
 
     public void close(){
         for(int i=0; i<num_readers; ++i)
-            NFCLib.INSTANCE.nfc_close((Pointer)nd_list.get(i));
+            NFCLib.INSTANCE.nfc_close(nd_list.get(i).pnd);
         NFCLib.INSTANCE.nfc_exit(context.getValue());
     }
 }
@@ -194,28 +192,26 @@ public class LibNFC {
 class LibNFCMainThread extends Thread {
     LibNFC nfc;
     int start;
-    ArrayList threads;
+    ArrayList<LibNFCQueryThread> threads;
     CardReader card_reader;
     public LibNFCMainThread (LibNFC n, CardReader c){
         nfc = n;
         card_reader = c;
-        threads = new ArrayList();
+        threads = new ArrayList<LibNFCQueryThread>();
     }
     void run() {
         while (true) {
             try{
                 nfc.connect_to_readers();
             } catch (Exception e) {
-                println("Lib error connecting to readers.");
+                println("Lib error connecting to readers: " + e);
                 break;
             }
             // start threads that need to start
-            for(Object obj : nfc.nd_list){
-                LibNFC.Reader r = (LibNFC.Reader)obj;
+            for (LibNFC.Reader r : nfc.nd_list) {
                 boolean found = false;
 
-                for(Object t_obj : threads){
-                    LibNFCQueryThread t = (LibNFCQueryThread)t_obj;
+                for (LibNFCQueryThread t : threads) {
                     if (t.reader == r){
                         found = true;
                         break;
@@ -223,15 +219,14 @@ class LibNFCMainThread extends Thread {
                 }
 
                 if (!found) {
-                    Thread t = new LibNFCQueryThread(nfc, r, card_reader);
+                    LibNFCQueryThread t = new LibNFCQueryThread(nfc, r, card_reader);
                     t.start();
                     threads.add(t);
                     println("Added thread for", r);
                 }
             }
             // stop threads that need to stop
-            for(Object obj : threads){
-                LibNFCQueryThread t = (LibNFCQueryThread)obj;
+            for (LibNFCQueryThread t : threads) {
                 if (!nfc.nd_list.contains(t.reader) && t.running == true) {
                     println("Quit thread for", t.reader);
                     t.quit();
