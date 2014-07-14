@@ -8,13 +8,13 @@ class EQPattern extends LXPattern {
     final BasicParameter lowerFreq;
     final BasicParameter topFreq;
 
-    Minim minim;
+    
     AudioInput in;
     GraphicEQ geq;
 
     EQPattern(LX lx) {
         super(lx);
-        minim = new Minim(this);
+        
         in = minim.getLineIn(Minim.STEREO, int(1024));
         geq = new GraphicEQ(in);
         geq.start();

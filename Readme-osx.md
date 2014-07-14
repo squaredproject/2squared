@@ -16,3 +16,10 @@ below:
   <string>-i</string> 
 
 and reboot the system.
+
+Additionally, the config file for libnfc can be found at:
+  /usr/local/Cellar/libnfc/1.7.0/etc/nfc/libnfc.conf
+
+add:
+  log_level=0
+to this file to disable the verbose error logging.

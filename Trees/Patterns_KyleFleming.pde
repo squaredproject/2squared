@@ -168,7 +168,7 @@ abstract class MultiObject extends LXLayer {
     }
   }
   
-  private void advance(double deltaMs) {
+  protected void advance(double deltaMs) {
     if (running) {
       runningTimer += deltaMs;
       if (runningTimer >= runningTimerEnd) {
@@ -279,7 +279,7 @@ class Explosion extends MultiObject {
     explosionFade = new LinearEnvelope(1, 0, 1000);
   }
   
-  public void run(double deltaMs) {
+  protected void advance(double deltaMs) {
     switch (state) {
       case EXPLOSION_STATE_IMPLOSION_EXPAND:
         if (implosionRadius.getVelocityf() <= 0) {
@@ -435,7 +435,7 @@ class RainDrop extends MultiObject {
     super(lx);
   }
   
-  public void run(double deltaMs) {
+  protected void advance(double deltaMs) {
     if (running) {
       runningTimer += deltaMs;
       if (runningTimer >= runningTimerEnd + decayTime) {
