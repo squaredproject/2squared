@@ -222,6 +222,7 @@ class LibNFCMainThread extends Thread {
                     t.start();
                     threads.add(t);
                     println("Added thread for", r);
+                    card_reader.onReaderAdded(r.connstring);
                 }
             }
             // stop threads that need to stop
@@ -230,6 +231,7 @@ class LibNFCMainThread extends Thread {
                     println("Quit thread for", t.reader);
                     t.quit();
                     // remove t from threads
+                    card_reader.onReaderRemoved(t.reader.connstring);
                 }
             }
             try{
@@ -278,6 +280,9 @@ class LibNFCQueryThread extends Thread {
 }
 
 interface NFCCardListener {
+    public void onReaderAdded(String reader);
+    public void onReaderRemoved(String reader);
+
     public void onCardAdded(String reader, String cardId);
     public void onCardRemoved(String reader, String cardId);
 }
@@ -286,6 +291,8 @@ void libNFCTest() {
     LibNFC n;
 
     NFCCardListener cr = new NFCCardListener() {
+        public void onReaderAdded(String cardId) {}
+        public void onReaderRemoved(String cardId) {}
         public void onCardAdded(String reader, String cardId) { println(reader, "added card", cardId); }
         public void onCardRemoved(String reader, String cardId) { println(reader, "card removed:", cardId); }
     };
