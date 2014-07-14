@@ -9,7 +9,7 @@ static final int NFC_PROPERTY_INFINITE_SELECT = 7;
 static final long DEFAULT_MODULATION = 0x100000001l;
 
 public interface NFCLib extends Library {
-    NFCLib INSTANCE = (NFCLib)Native.loadLibrary("nfc", NFCLib.class);
+    public NFCLib INSTANCE = (NFCLib)Native.loadLibrary("nfc", NFCLib.class);
 
     public void nfc_init(PointerByReference context);
     public Pointer nfc_open(Pointer context, String connstring);
@@ -17,7 +17,7 @@ public interface NFCLib extends Library {
 
     public int nfc_list_devices(Pointer context, Pointer connstring, int connstring_len);
 
-    int nfc_device_set_property_bool(Pointer pnd, int property, boolean value);
+    public int nfc_device_set_property_bool(Pointer pnd, int property, boolean value);
 
     // list_passive just calls select_passive
     public int nfc_initiator_select_passive_target(Pointer pnd, long nm, Pointer pbtInitData, int szInitData, LibNFC.nfc_target nt);
@@ -71,7 +71,7 @@ public class LibNFC {
             int before = millis();
             //int err = NFCLib.INSTANCE.nfc_initiator_poll_target(pnd, m.share(0), 1, 1, 1, nt);
             int err = NFCLib.INSTANCE.nfc_initiator_select_passive_target(pnd, DEFAULT_MODULATION, Pointer.NULL, 0, nt);
-            println("Poll time:", millis() - before);
+//            println("Poll time:", millis() - before);
 
             if (err > 0){
                 //println("card", new LibNFC.card_id(nt));
@@ -96,7 +96,7 @@ public class LibNFC {
         public String toString(){
             String s = "";
             for(byte b : id){
-                s += String.format("%02x ", b);
+                s += String.format("%02x", b);
             }
             return s;
         }
@@ -119,7 +119,7 @@ public class LibNFC {
     private LibNFC.Reader connect_reader(String connstring) throws Exception {
         Pointer pnd = NFCLib.INSTANCE.nfc_open(context.getValue(), connstring);
         if (Pointer.nativeValue(pnd) == 0l){ // if (pnd == NULL)
-            throw new Exception("Problem opening NFC reader.");
+            throw new Exception("Problem opening NFC reader. Another program accessing NFC maybe?");
         }
         if (NFCLib.INSTANCE.nfc_initiator_init(pnd) < 0) {
             throw new Exception("Failed initiator init.");
@@ -192,8 +192,8 @@ class LibNFCMainThread extends Thread {
     LibNFC nfc;
     int start;
     ArrayList<LibNFCQueryThread> threads;
-    CardReader card_reader;
-    public LibNFCMainThread (LibNFC n, CardReader c){
+    NFCCardListener card_reader;
+    public LibNFCMainThread (LibNFC n, NFCCardListener c){
         nfc = n;
         card_reader = c;
         threads = new ArrayList<LibNFCQueryThread>();
@@ -233,7 +233,7 @@ class LibNFCMainThread extends Thread {
                 }
             }
             try{
-                sleep(100);
+                sleep(5000);
             } catch(Exception e){
                 println("Sleep in LibNFCMainThread failed.");
             }
@@ -246,9 +246,9 @@ class LibNFCQueryThread extends Thread {
     boolean running;
     LibNFC.card_id old_cid;
     LibNFC.card_id zero_cid;
-    CardReader card_reader;
+    NFCCardListener card_reader;
 
-    LibNFCQueryThread (LibNFC nfc, LibNFC.Reader r, CardReader cr) {
+    LibNFCQueryThread (LibNFC nfc, LibNFC.Reader r, NFCCardListener cr) {
         reader = r;
         zero_cid = old_cid = nfc.new card_id(0);
         card_reader = cr;
@@ -263,9 +263,9 @@ class LibNFCQueryThread extends Thread {
 
             if (!Arrays.equals(cid.id, old_cid.id)){
                 if (Arrays.equals(cid.id, zero_cid.id))
-                    card_reader.cardRemoved(reader.connstring, old_cid);
+                    card_reader.onCardRemoved(reader.connstring, old_cid.toString());
                 else
-                    card_reader.cardAdded(reader.connstring, cid);
+                    card_reader.onCardAdded(reader.connstring, cid.toString());
                 //println("Card changed:", reader, cid);
             }
             old_cid = cid;
@@ -277,17 +277,17 @@ class LibNFCQueryThread extends Thread {
     }
 }
 
-interface CardReader {
-    public void cardAdded(String reader, LibNFC.card_id cid);
-    public void cardRemoved(String reader, LibNFC.card_id cid);
+interface NFCCardListener {
+    public void onCardAdded(String reader, String cardId);
+    public void onCardRemoved(String reader, String cardId);
 }
 
 void libNFCTest() {
     LibNFC n;
 
-    CardReader cr = new CardReader() {
-        public void cardAdded(String reader, LibNFC.card_id cid) { println(reader, "added card", cid); }
-        public void cardRemoved(String reader, LibNFC.card_id cid) { println(reader, "card removed:", cid); }
+    NFCCardListener cr = new NFCCardListener() {
+        public void onCardAdded(String reader, String cardId) { println(reader, "added card", cardId); }
+        public void onCardRemoved(String reader, String cardId) { println(reader, "card removed:", cardId); }
     };
 
 

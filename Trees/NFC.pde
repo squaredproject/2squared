@@ -1,120 +1,110 @@
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
-interface NFCRecognizer {
-  public void cardOn(String serialNumber);
-  public void cardOff(String serialNumber);
-}
-
-// "34f662a3", "360558b3", "14a563a3", "1490aec6", "446bebc4", "04836632"
-
-final static RequestAPDU serialNumberRequestAPDU = new RequestAPDU(0xFF, 0xCA, 0x00, 0x00, 4);
-final static RequestAPDU noBeepRequestAPDU = new RequestAPDU(0xFF, 0x00, 0x52, 0x00, 6);
-
-class NFCEngine {
-}
+NFCEngine nfcEngine = null;
 
 void configureNFC() {
-  libNFCTest();
+  nfcEngine = new NFCEngine(lx);
+  nfcEngine.start();
   
-//  turnOffSmartcardLibraryLogging();
-  
-//  if (!isPCSCDaemonRunning()) {
-//    Logger.getGlobal().warning("NFC not configured: couldn't establish connection to PC/SC daemon");
-//    return;
-//  }
-//  
-//  ICardSystem cardSystem = new StandardCardSystem(PCSCContextFactory.get());
-//  CardSystemMonitor cardSystemMonitor = new CardSystemMonitor(cardSystem);
-//  cardSystemMonitor.addCardSystemListener(new NFCCardSystemMonitor());
-//  cardSystemMonitor.start();
+  populateNFCEngine();
   
   println("NFC configured");
 }
 
-void turnOffSmartcardLibraryLogging() {
-  Logger[] loggers = {
-    Logger.getLogger("de.intarsys.security.smartcard.pcsc"),
-    Logger.getLogger("de.intarsys.security.smartcard.card")
-  };
-  for (Logger l : loggers) {
-    l.setLevel(Level.OFF);
-  }
+void populateNFCEngine() {
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(colorEffect.rainbow));
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(colorEffect.mono));
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(colorEffect.desaturation));
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(colorEffect.sharp));
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(blurEffect.amount));
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(ghostEffect.amount));
+  nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(scrambleEffect.amount));
+
+  configurePattern("", new Brightness(lx));
+  configurePattern("", new Explosions(lx));
+  configurePattern("", new Wisps(lx));
+  // configurePattern("", new Lightning(lx)); // a little slow
+  // configurePattern("", new Pulley(lx)); // broken?
+
+  configurePattern("", new Twister(lx));
+  // configurePattern("", new MarkLottor(lx)); // a little slow
+  configurePattern("", new DoubleHelix(lx));
+  configurePattern("", new Ripple(lx));
+  // configurePattern("", new IceCrystals(lx)); // slow
+  configurePattern("", new Stripes(lx));
+  configurePattern("", new AcidTrip(lx));
+  configurePattern("", new Lattice(lx));
+  configurePattern("", new Fire(lx));
+  configurePattern("", new FirefliesExp(lx));
+  // configurePattern("", new Fumes(lx)); // a little slow
+  // configurePattern("", new Voronoi(lx)); // a little slow
+  configurePattern("", new Bubbles(lx));
+  configurePattern("04ad5f62312c80", new RandomColorAll(lx));
 }
 
-boolean isPCSCDaemonRunning() {
-  try {
-    PCSCContextFactory.get().establishContext().dispose();
-  } catch (Exception e) {
-    return false;
+void configurePattern(String serialNumber, LXPattern pattern) {
+  LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
+  pattern.setTransition(t);
+  LXChannel channel = lx.engine.addChannel(new LXPattern[] { pattern });
+  channel.setFaderTransition(new TreesTransition(lx, channel));
+
+  Triggerable triggerable;
+  if (pattern instanceof Triggerable) {
+    triggerable = (Triggerable)pattern;
+    triggerable.enableTriggerableMode();
+    channel.getFader().setValue(1);
+  } else {
+    triggerable = new ParameterTriggerableAdapter(channel.getFader());
   }
-  return true;
+  nfcEngine.registerTriggerable(serialNumber, triggerable);
 }
 
-class NFCCardSystemMonitor implements CardSystemMonitor.ICardSystemListener {
-  private boolean willBeep = true;
-  
-  private void turnOffBeep(ICardConnection connection) {
-    try {
-      connection.transmit(noBeepRequestAPDU);
-      willBeep = false;
-    } catch (Exception e) {
-      Logger.getGlobal().warning("" + e);
-    }
-  }
-  
-  private String getSerialNumber(ICardConnection connection) {
-    ResponseAPDU response;
-    try {
-      response = connection.transmit(serialNumberRequestAPDU);
-    } catch (Exception e) {
-      Logger.getGlobal().warning("" + e);
-      return null;
-    }
-    byte[] serialNumberBytes = response.getData();
-    StringBuilder sb = new StringBuilder(serialNumberBytes.length * 2);
-    for (byte b : serialNumberBytes) {
-      sb.append(String.format("%02x", b));
-    }
-    return sb.toString();
-  }
-  
-  private void closeConnection(ICardConnection connection) {
-    try {
-      connection.close(ICardConnection.MODE_RESET);
-    } catch (Exception e) {
-      Logger.getGlobal().warning("" + e);
-    }
-  }
-  
-  public void onCardInserted(ICard card) {
-    // TODO: cache serial numbers. possible?
-    card.connectShared(_IPCSC.SCARD_PROTOCOL_T1, new IConnectionCallback() {
-      public void connected(ICardConnection connection) {
-        try {
-          if (willBeep) {
-            turnOffBeep(connection);
-          }
-          String serialNumber = getSerialNumber(connection);
-          if (serialNumber != null) {
-            println(serialNumber);
-            // TODO: Trigger cube placed
-          }
-        } finally {
-          closeConnection(connection);
-        }
+public class NFCEngine {
+  private class NFCEngineCardListener implements NFCCardListener {
+    public void onCardAdded(String reader, String cardId) {
+      Triggerable triggerable = cardToTriggerableMap.get(cardId);
+      if (triggerable != null) {
+        triggerable.onTriggered(1);
       }
-      
-      public void connectionFailed(CardException exception) {}
-    });
+    }
+    
+    public void onCardRemoved(String reader, String cardId) {
+      Triggerable triggerable = cardToTriggerableMap.get(cardId);
+      if (triggerable != null) {
+        triggerable.onRelease();
+      }
+    }
   }
-  
-  public void onCardRemoved(ICard card) {
-    // TODO: Trigger cube removed
-  }
-  
-  public void onCardChanged(ICard card) {}
-  public void onCardTerminalConnected(ICardTerminal terminal) {}
-  public void onCardTerminalDisconnected(ICardTerminal terminal) {}
-}
 
+  private final LX lx;
+  private LibNFC libNFC;
+  private LibNFCMainThread libNFCMainThread;
+  private final NFCEngineCardListener cardReader = new NFCEngineCardListener();
+  private final Map<String, Triggerable> cardToTriggerableMap = new HashMap<String, Triggerable>();
+  
+  public NFCEngine(LX lx) {
+    this.lx = lx;
+    try {
+      libNFC = new LibNFC();
+      libNFCMainThread = new LibNFCMainThread(libNFC, cardReader);
+    } catch(Exception e) {
+      println("nfc engine initialization error: " + e.toString());
+      libNFC = null;
+      libNFCMainThread = null;
+    }
+  }
+  
+  public void start() {
+    if (libNFCMainThread != null) {
+      libNFCMainThread.start();
+    }
+  }
+  
+  public void stop() {
+    if (libNFCMainThread != null) {
+      libNFCMainThread.stop();
+    }
+  }
+  
+  public void registerTriggerable(String serialNumber, Triggerable triggerable) {
+    cardToTriggerableMap.put(serialNumber, triggerable);
+  }
+}

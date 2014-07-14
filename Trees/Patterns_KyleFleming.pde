@@ -31,7 +31,7 @@ class BassSlam extends LXPattern {
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern implements TriggerablePattern, KeyboardPlayablePattern {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern implements Triggerable, KeyboardPlayablePattern {
   
   BasicParameter frequency;
   
@@ -455,7 +455,7 @@ class RainDrop extends MultiObject {
   }
 }
 
-class Strobe extends LXPattern implements TriggerablePattern {
+class Strobe extends LXPattern implements Triggerable {
   
   final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
   final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
@@ -500,7 +500,7 @@ class Strobe extends LXPattern implements TriggerablePattern {
   }
 }
 
-class Brightness extends LXPattern implements TriggerablePattern {
+class Brightness extends LXPattern implements Triggerable {
   
   Brightness(LX lx) {
     super(lx);

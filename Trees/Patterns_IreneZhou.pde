@@ -497,7 +497,7 @@ class Fumes extends LXPattern {
   }
 }
 
-class Pulley extends LXPattern implements TriggerablePattern{ //ported from SugarCubes
+class Pulley extends LXPattern implements Triggerable { //ported from SugarCubes
   final int NUM_DIVISIONS = 2;
   private final Accelerator[] gravity = new Accelerator[NUM_DIVISIONS];
   private final float[] baseSpeed = new float[NUM_DIVISIONS];

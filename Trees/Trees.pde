@@ -74,6 +74,8 @@ final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
 BlurEffect blurEffect;
 ColorEffect colorEffect;
+GhostEffect ghostEffect;
+ScrambleEffect scrambleEffect;
 BPMTool bpmTool;
 MappingTool mappingTool;
 LXListenableNormalizedParameter[] effectKnobParameters;
@@ -107,13 +109,13 @@ LXPattern[] patterns(LX lx) {
   } catch (Throwable e) {
     ;
   }
-  patterns.add(new TestPattern(lx).setEligible(false));
-  patterns.add(new TestCluster(lx).setEligible(false));
-  patterns.add(new OrderTest(lx));
-  patterns.add(new ClusterLineTest(lx));
-  patterns.add(new Zebra(lx));
+  // patterns.add(new TestPattern(lx).setEligible(false));
+  // patterns.add(new TestCluster(lx).setEligible(false));
+  // patterns.add(new OrderTest(lx));
+  // patterns.add(new ClusterLineTest(lx));
+  // patterns.add(new Zebra(lx));
   patterns.add(new AcidTrip(lx));
-  patterns.add(new Pulley(lx));
+  // patterns.add(new Pulley(lx)); // broken
   patterns.add(new Springs(lx));
   patterns.add(new Lattice(lx));
   patterns.add(new Fire(lx));
@@ -174,8 +176,6 @@ void setup() {
   }
   
   // Effects
-  GhostEffect ghostEffect;
-  ScrambleEffect scrambleEffect;
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(ghostEffect = new GhostEffect(lx));

@@ -222,7 +222,7 @@ class SparkleTakeOver extends LXPattern {
   }
 }
 
-class Lightning extends LXPattern implements TriggerablePattern {
+class Lightning extends LXPattern implements Triggerable {
   private LightningLine[] bolts = new LightningLine[2];
   final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
