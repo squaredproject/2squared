@@ -71,7 +71,7 @@ class MidiEngine {
             }
             break;
             
-          case APC40.ACTIVATOR:
+          case APC40.SOLO_CUE:
             if (previewChannels[channel].isOn() && channel != focusedChannel()) {
               lx.engine.focusedChannel.setValue(channel);
             }
@@ -122,7 +122,7 @@ class MidiEngine {
       
       // Cue activators
       for (int i = 0; i < NUM_CHANNELS; i++) {
-        apc40.bindNote(previewChannels[i], i, APC40.ACTIVATOR, LXMidiDevice.TOGGLE);
+        apc40.bindNote(previewChannels[i], i, APC40.SOLO_CUE, LXMidiDevice.TOGGLE);
       }
       
       for (int i = 0; i < NUM_CHANNELS; i++) {
@@ -143,8 +143,6 @@ class MidiEngine {
         setPattern(apc40, channel);
         TreesTransition transition = getFaderTransition(channel);
         apc40.bindController(channel.getFader(), channel.getIndex(), APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
-        apc40.bindNoteOn(transition.left, channel.getIndex(), APC40.SOLO_CUE, LXMidiDevice.TOGGLE);
-        apc40.bindNoteOn(transition.right, channel.getIndex(), APC40.RECORD_ARM, LXMidiDevice.TOGGLE);
       }
       for (int i = 0; i < 8; ++i) {
         apc40.sendController(0, APC40.TRACK_CONTROL_LED_MODE + i, APC40.LED_MODE_VOLUME);

@@ -294,7 +294,7 @@ class UIChannelFaders extends UIContext {
   final static int BUTTON_HEIGHT = 14;
   final static int FADER_WIDTH = 40;
   final static int WIDTH = SPACER + PADDING + MASTER + (PADDING+FADER_WIDTH)*(NUM_CHANNELS+1);
-  final static int HEIGHT = 176;
+  final static int HEIGHT = 140;
   
   UIChannelFaders(final UI ui) {
     super(ui, Trees.this.width/2-WIDTH/2, Trees.this.height-HEIGHT-PADDING, WIDTH, HEIGHT);
@@ -303,8 +303,6 @@ class UIChannelFaders extends UIContext {
     int di = 0;
     final UISlider[] sliders = new UISlider[NUM_CHANNELS];
     final UIButton[] cues = new UIButton[NUM_CHANNELS];
-    final UIButton[] lefts = new UIButton[NUM_CHANNELS];
-    final UIButton[] rights = new UIButton[NUM_CHANNELS];
     final UILabel[] labels = new UILabel[NUM_CHANNELS];
     for (int i = 0; i < NUM_CHANNELS; i++) {
       final LXChannel channel = lx.engine.getChannel(i);
@@ -327,19 +325,7 @@ class UIChannelFaders extends UIContext {
       .setActive(previewChannels[channel.getIndex()].isOn())
       .addToContainer(this);
       
-      lefts[channel.getIndex()] = new UIButton(xPos, 2*PADDING+BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
-      lefts[channel.getIndex()]
-      .setParameter(getFaderTransition(channel).left)
-      .setActiveColor(ui.getSelectionColor())
-      .addToContainer(this);
-      
-      rights[channel.getIndex()] = new UIButton(xPos, 3*PADDING+2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
-      rights[channel.getIndex()]
-      .setParameter(getFaderTransition(channel).right)
-      .setActiveColor(#993333)
-      .addToContainer(this);
-      
-      sliders[channel.getIndex()] = new UISlider(UISlider.Direction.VERTICAL, xPos, 3*BUTTON_HEIGHT + 4*PADDING, FADER_WIDTH, this.height - 5*BUTTON_HEIGHT - 7*PADDING) {
+      sliders[channel.getIndex()] = new UISlider(UISlider.Direction.VERTICAL, xPos, 1*BUTTON_HEIGHT + 2*PADDING, FADER_WIDTH, this.height - 3*BUTTON_HEIGHT - 5*PADDING) {
         public void onFocus() {
           lx.engine.focusedChannel.setValue(channel.getIndex());
         }
@@ -397,16 +383,6 @@ class UIChannelFaders extends UIContext {
     .addToContainer(this);
     
     new UILabel(labelX, 2*PADDING+1*BUTTON_HEIGHT+2, 0, 0)
-    .setColor(#666666)
-    .setLabel("LEFT")
-    .addToContainer(this);
-    
-    new UILabel(labelX, 3*PADDING+2*BUTTON_HEIGHT+2, 0, 0)
-    .setColor(#666666)
-    .setLabel("RIGHT")
-    .addToContainer(this);
-    
-    new UILabel(labelX, 4*PADDING+3*BUTTON_HEIGHT+6, 0, 0)
     .setColor(#666666)
     .setLabel("LEVEL")
     .addToContainer(this);
