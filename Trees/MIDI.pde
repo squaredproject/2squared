@@ -32,7 +32,7 @@ class MidiEngine {
   
   MPK25 mpk25 = null;
   
-  public MidiEngine() {
+  public MidiEngine(LXListenableNormalizedParameter[] effectKnobParameters) {
     try{
         setAPC40Mode();
     } catch (java.lang.UnsatisfiedLinkError e){

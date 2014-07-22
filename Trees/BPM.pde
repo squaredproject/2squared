@@ -24,7 +24,7 @@ class BPMTool {
   final private ParameterModulatorController[] modulatorControllers;
   final private ParameterModulationController modulationController;
   
-  BPMTool(LX lx) {
+  BPMTool(LX lx, LXListenableNormalizedParameter[] effectKnobParameters) {
     this.lx = lx;
     
     ParameterModulatorControllerFactory factory = new ParameterModulatorControllerFactory();
@@ -39,10 +39,10 @@ class BPMTool {
     
     modulationController = new ParameterModulationController(lx, modulatorControllers);
     
-    addActionListeners();
+    addActionListeners(effectKnobParameters);
   }
   
-  public void addActionListeners() {
+  public void addActionListeners(final LXListenableNormalizedParameter[] effectKnobParameters) {
 
     tapTempo.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {

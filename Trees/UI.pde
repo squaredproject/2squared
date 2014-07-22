@@ -632,7 +632,7 @@ class UIEffects extends UIWindow {
   
   final int KNOBS_PER_ROW = 4;
   
-  UIEffects(UI ui) {
+  UIEffects(UI ui, LXListenableNormalizedParameter[] effectKnobParameters) {
     super(ui, "MASTER EFFECTS", Trees.this.width-144, 110, 140, 120);
     
     int yp = TITLE_LABEL_HEIGHT;

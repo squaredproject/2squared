@@ -78,7 +78,6 @@ GhostEffect ghostEffect;
 ScrambleEffect scrambleEffect;
 BPMTool bpmTool;
 MappingTool mappingTool;
-LXListenableNormalizedParameter[] effectKnobParameters;
 LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
 BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
@@ -182,7 +181,7 @@ void setup() {
   lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
   lx.addEffect(mappingTool = new MappingTool(lx));
   
-  effectKnobParameters = new LXListenableNormalizedParameter[] {
+  LXListenableNormalizedParameter[] effectKnobParameters = new LXListenableNormalizedParameter[] {
       colorEffect.hueShift,
       colorEffect.rainbow,
       colorEffect.mono,
@@ -193,7 +192,7 @@ void setup() {
       scrambleEffect.amount,
   };
   
-  bpmTool = new BPMTool(lx);
+  bpmTool = new BPMTool(lx, effectKnobParameters);
 
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {
@@ -246,13 +245,13 @@ void setup() {
   lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   lx.ui.addLayer(new UIMapping(lx.ui));
   lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
-  lx.ui.addLayer(new UIEffects(lx.ui));
+  lx.ui.addLayer(new UIEffects(lx.ui, effectKnobParameters));
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UILoopRecorder(lx.ui));
   lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4, bpmTool));
   
   // MIDI control
-  midiEngine = new MidiEngine();
+  midiEngine = new MidiEngine(effectKnobParameters);
   if (midiEngine.mpk25 != null) {
     // Drumpad
     drumpad = new TSDrumpad();
