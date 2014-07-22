@@ -88,23 +88,21 @@ class MidiEngine {
         }
       };
       
-      int[] channels = new int[NUM_CHANNELS];
+      int[] channelIndices = new int[NUM_CHANNELS];
       for (int i = 0; i < NUM_CHANNELS; ++i) {
-        channels[i] = i;
+        channelIndices[i] = i;
       }
       
       // Track selection
-      apc40.bindNotes(lx.engine.focusedChannel, channels, APC40.TRACK_SELECTION);
+      apc40.bindNotes(lx.engine.focusedChannel, channelIndices, APC40.TRACK_SELECTION);
       
-      // Cue activators
       for (int i = 0; i < NUM_CHANNELS; i++) {
+        // Cue activators
         apc40.bindNote(previewChannels[i], i, APC40.SOLO_CUE, LXMidiDevice.TOGGLE);
+
+        apc40.bindController(lx.engine.getChannel(i).getFader(), i, APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
       }
       
-      for (int i = 0; i < NUM_CHANNELS; i++) {
-        final LXChannel channel = lx.engine.getChannel(i);
-        apc40.bindController(channel.getFader(), channel.getIndex(), APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
-      }
       for (int i = 0; i < 8; ++i) {
         apc40.sendController(0, APC40.TRACK_CONTROL_LED_MODE + i, APC40.LED_MODE_VOLUME);
         apc40.sendController(0, APC40.DEVICE_CONTROL_LED_MODE + i, APC40.LED_MODE_VOLUME);
