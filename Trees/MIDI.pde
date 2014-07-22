@@ -47,30 +47,6 @@ class MidiEngine {
         protected void noteOn(LXMidiNoteOn note) {
           int channel = note.getChannel();
           switch (note.getPitch()) {
-          case APC40.CLIP_LAUNCH:
-          case APC40.CLIP_LAUNCH+1:
-          case APC40.CLIP_LAUNCH+2:
-          case APC40.CLIP_LAUNCH+3:
-          case APC40.CLIP_LAUNCH+4:
-            uiDeck.selectPattern(note.getChannel(), note.getPitch() - APC40.CLIP_LAUNCH);        
-            break;
-            
-          case APC40.SCENE_LAUNCH:
-          case APC40.SCENE_LAUNCH+1:
-          case APC40.SCENE_LAUNCH+2:
-          case APC40.SCENE_LAUNCH+3:
-          case APC40.SCENE_LAUNCH+4:
-            uiDeck.selectPattern(focusedChannel(), note.getPitch() - APC40.SCENE_LAUNCH);        
-            break;
-            
-          case APC40.CLIP_STOP:
-            if (channel != focusedChannel()) {
-              lx.engine.focusedChannel.setValue(channel);
-            } else {
-              uiDeck.pagePatterns(channel);
-            }
-            break;
-            
           case APC40.SOLO_CUE:
             if (previewChannels[channel].isOn() && channel != focusedChannel()) {
               lx.engine.focusedChannel.setValue(channel);
@@ -127,33 +103,11 @@ class MidiEngine {
       
       for (int i = 0; i < NUM_CHANNELS; i++) {
         final LXChannel channel = lx.engine.getChannel(i);
-        channel.addListener(new LXChannel.AbstractListener() {
-          public void patternWillChange(LXChannel channel, LXPattern pattern, LXPattern nextPattern) {
-            setPattern(apc40, channel);
-          }
-          public void patternDidChange(LXChannel channel, LXPattern pattern) {
-            setPattern(apc40, channel);
-          }
-        });
-        uiDeck.patternLists[channel.getIndex()].scrollOffset.addListener(new LXParameterListener() {
-          public void onParameterChanged(LXParameter parameter) {
-            setPattern(apc40, channel);
-          }
-        });
-        setPattern(apc40, channel);
-        TreesTransition transition = getFaderTransition(channel);
         apc40.bindController(channel.getFader(), channel.getIndex(), APC40.VOLUME, LXMidiDevice.TakeoverMode.PICKUP);
       }
       for (int i = 0; i < 8; ++i) {
         apc40.sendController(0, APC40.TRACK_CONTROL_LED_MODE + i, APC40.LED_MODE_VOLUME);
         apc40.sendController(0, APC40.DEVICE_CONTROL_LED_MODE + i, APC40.LED_MODE_VOLUME);
-      }
-      
-      for (int i = 0; i < 5; ++i) {
-        apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.SCENE_LAUNCH + i, APC40.DIRECT);
-      }
-      for (int i = 0; i < NUM_CHANNELS; ++i) {
-        apc40.bindNote(new BooleanParameter("ANON", false), i, APC40.CLIP_STOP, APC40.DIRECT);
       }
       
       // Master fader
@@ -215,14 +169,6 @@ class MidiEngine {
     apc40.bindNoteOn(auto.isRunning, 0, APC40.PLAY, LXMidiDevice.TOGGLE);
     apc40.bindNoteOn(auto.armRecord, 0, APC40.REC, LXMidiDevice.TOGGLE);
     apc40.bindNote(automationStop[automationSlot.getValuei()], 0, APC40.STOP, LXMidiDevice.DIRECT);
-  }
-  
-  void setPattern(APC40 apc40, LXChannel channel) {
-    int activeIndex = channel.getActivePatternIndex() - uiDeck.patternLists[channel.getIndex()].scrollOffset.getValuei();
-    int nextIndex = channel.getNextPatternIndex() - uiDeck.patternLists[channel.getIndex()].scrollOffset.getValuei();
-    for (int i = 0; i < 5; ++i) {
-      apc40.sendNoteOn(channel.getIndex(), APC40.CLIP_LAUNCH + i, (i == activeIndex) ? APC40.GREEN : ((i == nextIndex) ? APC40.YELLOW : APC40.OFF));
-    }
   }
   
   void setAPC40Mode() {
