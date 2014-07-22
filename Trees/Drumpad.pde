@@ -40,13 +40,13 @@ class TSDrumpad implements Drumpad {
   }
 }
 
-interface Triggerable {
+public interface Triggerable {
   public void enableTriggerableMode();
   public void onTriggered(float strength);
   public void onRelease();
 }
 
-class ParameterTriggerableAdapter implements Triggerable {
+public class ParameterTriggerableAdapter implements Triggerable {
   private final LXNormalizedParameter enabledParameter;
   private final double enabledValue;
   

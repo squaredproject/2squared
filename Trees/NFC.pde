@@ -21,7 +21,7 @@ void populateNFCEngine() {
   nfcEngine.registerTriggerable("", new ParameterTriggerableAdapter(scrambleEffect.amount), VisualType.Effect);
 
   configurePattern("", new Brightness(lx), VisualType.Pattern);
-  configurePattern("", new Explosions(lx), VisualType.Pattern);
+  configurePattern("044d575a312c80", new Explosions(lx), VisualType.Pattern);
   configurePattern("", new Wisps(lx), VisualType.Pattern);
   // configurePattern("", new Lightning(lx), VisualType.Pattern); // a little slow
   // configurePattern("", new Pulley(lx), VisualType.Pattern); // broken?
@@ -61,13 +61,14 @@ void configurePattern(String serialNumber, LXPattern pattern, VisualType VisualT
 
 void configureReaders() {
   nfcEngine.registerReaderPatternTypeRestrictions(Arrays.asList(new VisualType[] {
-    VisualType.Effect,
     VisualType.Pattern,
-    VisualType.OneShot,
     VisualType.Effect,
     VisualType.Effect,
+    VisualType.Effect,
     VisualType.OneShot,
     VisualType.OneShot,
+    VisualType.OneShot,
+    VisualType.Pattern,
     VisualType.Pattern,
     VisualType.Pattern
   }));
