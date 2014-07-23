@@ -62,6 +62,13 @@ final static float[][] TREE_POSITIONS = {
 final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 
 void registerPatterns() {
+  // Add patterns here.
+  // The order here is the order it shows up in the patterns list
+
+  // If you don't want to add it to NFC or the drumpad, don't specify the 2nd and 3rd parameters
+  // The 2nd parameter is the NFC tag serial number
+  // Specify a blank string to only add it to the apc40 drumpad
+  // The 3rd parameter is which row of the apc40 drumpad to add it to. defaults to row 1
   registerPattern(new SolidColor(lx));
   registerPattern(new Twister(lx), "");
   registerPattern(new MarkLottor(lx), null);
