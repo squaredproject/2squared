@@ -1,41 +1,16 @@
 class TSDrumpad implements Drumpad {
   
-  Triggerable[] triggerables = null;
+  Triggerable[][] triggerables = null;
   
-  private Triggerable[] triggerables(LX lx) {
-    Triggerable[] triggerables = new Triggerable[] {
-      new Brightness(lx),
-      new Explosions(lx),
-      new Wisps(lx),
-      new Lightning(lx),
-      new Pulley(lx),
-    };
-    return triggerables;
-  }
-  
-  void configure(LX lx) {
-    triggerables = triggerables(lx);
-    
-    LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
-    for (Triggerable triggerable : triggerables) {
-      LXPattern pattern = (LXPattern)triggerable; // trust they extend lxpattern
-      pattern.setTransition(t);
-      triggerable.enableTriggerableMode();
-      LXChannel channel = lx.engine.addChannel(new LXPattern[] { pattern });
-      channel.getFader().setValue(1);
-      // channel.setFaderTransition(new TreesTransition(lx, channel));
+  public void padTriggered(int row, int col, int velocity) {
+    if (triggerables != null && row < triggerables.length && col < triggerables[row].length) {
+      triggerables[row][col].onTriggered(velocity / 127.);
     }
   }
   
-  public void padTriggered(int index, int velocity) {
-    if (triggerables != null && index < triggerables.length) {
-      triggerables[index].onTriggered(velocity / 127.);
-    }
-  }
-  
-  public void padReleased(int index) {
-    if (triggerables != null && index < triggerables.length) {
-      triggerables[index].onRelease();
+  public void padReleased(int row, int col) {
+    if (triggerables != null && row < triggerables.length && col < triggerables[row].length) {
+      triggerables[row][col].onRelease();
     }
   }
 }
@@ -48,26 +23,28 @@ public interface Triggerable {
 
 public class ParameterTriggerableAdapter implements Triggerable {
   private final LXNormalizedParameter enabledParameter;
-  private final double enabledValue;
+  private final double offValue;
+  private final double onValue;
   
   ParameterTriggerableAdapter(LXNormalizedParameter enabledParameter) {
-    this(enabledParameter, 1);
+    this(enabledParameter, 0, 1);
   }
   
-  ParameterTriggerableAdapter(LXNormalizedParameter enabledParameter, double enabledValue) {
+  ParameterTriggerableAdapter(LXNormalizedParameter enabledParameter, double offValue, double onValue) {
     this.enabledParameter = enabledParameter;
-    this.enabledValue = enabledValue;
+    this.offValue = offValue;
+    this.onValue = onValue;
   }
   
   public void enableTriggerableMode() {
   }
   
   public void onTriggered(float strength) {
-    enabledParameter.setNormalized(enabledValue);
+    enabledParameter.setNormalized(onValue);
   }
   
   public void onRelease() {
-    enabledParameter.setNormalized(0);
+    enabledParameter.setNormalized(offValue);
   }
 }
 

@@ -61,6 +61,85 @@ final static float[][] TREE_POSITIONS = {
 
 final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 
+void registerPatterns() {
+  registerPattern(new SolidColor(lx));
+  registerPattern(new Twister(lx), "");
+  registerPattern(new MarkLottor(lx), null);
+  registerPattern(new DoubleHelix(lx), "");
+  registerPattern(new SparkleHelix(lx));
+  registerPattern(new Lightning(lx), null);
+  registerPattern(new SparkleTakeOver(lx));
+  registerPattern(new MultiSine(lx));
+  registerPattern(new Ripple(lx), "");
+  registerPattern(new SeeSaw(lx));
+  registerPattern(new SweepPattern(lx));
+  registerPattern(new IceCrystals(lx), null);
+  registerPattern(new ColoredLeaves(lx));
+  registerPattern(new Stripes(lx), "", 2);
+  try { registerPattern(new SyphonPattern(lx, this)); } catch (Throwable e) {}
+  registerPattern(new AcidTrip(lx), "", 2);
+  registerPattern(new Springs(lx));
+  registerPattern(new Lattice(lx), "", 2);
+  registerPattern(new Fire(lx), "", 3);
+  registerPattern(new FirefliesExp(lx), "", 3);
+  registerPattern(new Fumes(lx), null);
+  registerPattern(new Voronoi(lx), null);
+  registerPattern(new Bubbles(lx), "", 3);
+
+  registerPattern(new Wisps(lx), "", 4);
+  registerPattern(new Explosions(lx), "044d575a312c80", 4);
+  registerPattern(new BassSlam(lx));
+  registerPattern(new Rain(lx));
+  registerPattern(new Fade(lx));
+  registerPattern(new Strobe(lx));
+  registerPattern(new Twinkle(lx));
+  registerPattern(new VerticalSweep(lx));
+  registerPattern(new RandomColor(lx));
+  registerPattern(new RandomColorAll(lx), "04ad5f62312c80", 4);
+  registerPattern(new Pixels(lx));
+  registerPattern(new Wedges(lx));
+  registerPattern(new Parallax(lx));
+  registerPattern(new LowEQ(lx));
+  registerPattern(new MidEQ(lx));
+  registerPattern(new HighEQ(lx));
+}
+
+void registerEffects() {
+  BlurEffect blurEffect;
+  ColorEffect colorEffect;
+  GhostEffect ghostEffect;
+  ScrambleEffect scrambleEffect;
+
+  registerEffect(blurEffect = new BlurEffect(lx));
+  registerEffect(colorEffect = new ColorEffect(lx));
+  registerEffect(ghostEffect = new GhostEffect(lx));
+  registerEffect(scrambleEffect = new ScrambleEffect(lx));
+
+  registerEffectControlParameter(colorEffect.hueShift);
+  registerEffectControlParameter(colorEffect.rainbow, "");
+  registerEffectControlParameter(colorEffect.mono, "");
+  registerEffectControlParameter(colorEffect.desaturation, "04346762312c80");
+  registerEffectControlParameter(colorEffect.sharp, "");
+  registerEffectControlParameter(blurEffect.amount, "", 0.65);
+  registerEffectControlParameter(ghostEffect.amount, "", 0.16);
+  registerEffectControlParameter(scrambleEffect.amount, "");
+}
+
+VisualType[] readerPatternTypeRestrictions() {
+  return new VisualType[] {
+    VisualType.Pattern,
+    VisualType.Effect,
+    VisualType.Effect,
+    VisualType.Effect,
+    VisualType.OneShot,
+    VisualType.OneShot,
+    VisualType.OneShot,
+    VisualType.Pattern,
+    VisualType.Pattern,
+    VisualType.Pattern
+  };
+}
+
 static JSONArray clusterConfig;
 static Geometry geometry = new Geometry();
 
@@ -72,81 +151,18 @@ UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
-BlurEffect blurEffect;
-ColorEffect colorEffect;
-GhostEffect ghostEffect;
-ScrambleEffect scrambleEffect;
 BPMTool bpmTool;
 MappingTool mappingTool;
 LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
 BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
+LXListenableNormalizedParameter[] effectKnobParameters;
 MidiEngine midiEngine;
-TSDrumpad drumpad;
+TSDrumpad mpk25Drumpad;
+TSDrumpad apc40Drumpad;
 TSKeyboard keyboard;
 Minim minim;
-
-LXPattern[] patterns(LX lx) {
-  ArrayList <LXPattern> patterns = new ArrayList<LXPattern>();
-  patterns.add(new SolidColor(lx));
-  patterns.add(new Twister(lx));
-  patterns.add(new MarkLottor(lx));
-  patterns.add(new DoubleHelix(lx));
-  patterns.add(new SparkleHelix(lx));
-  patterns.add(new Lightning(lx));
-  patterns.add(new SparkleTakeOver(lx));
-  patterns.add(new MultiSine(lx));
-  patterns.add(new Ripple(lx));
-  patterns.add(new SeeSaw(lx));
-  patterns.add(new SweepPattern(lx));
-  patterns.add(new IceCrystals(lx));
-  patterns.add(new ColoredLeaves(lx));
-  patterns.add(new Stripes(lx));
-  try {
-    LXPattern syphon = new SyphonPattern(lx, this);
-    patterns.add(syphon);
-  } catch (Throwable e) {
-    ;
-  }
-  // patterns.add(new TestPattern(lx).setEligible(false));
-  // patterns.add(new TestCluster(lx).setEligible(false));
-  // patterns.add(new OrderTest(lx));
-  // patterns.add(new ClusterLineTest(lx));
-  // patterns.add(new Zebra(lx));
-  patterns.add(new AcidTrip(lx));
-  // patterns.add(new Pulley(lx)); // broken
-  patterns.add(new Springs(lx));
-  patterns.add(new Lattice(lx));
-  patterns.add(new Fire(lx));
-  patterns.add(new FirefliesExp(lx));
-  patterns.add(new Fumes(lx));
-  patterns.add(new Voronoi(lx));
-  patterns.add(new Bubbles(lx));
-  
-  patterns.add(new Wisps(lx));
-  patterns.add(new Explosions(lx));
-  patterns.add(new BassSlam(lx));
-  patterns.add(new Rain(lx));
-  patterns.add(new Fade(lx));
-  patterns.add(new Strobe(lx));
-  patterns.add(new Twinkle(lx));
-  patterns.add(new VerticalSweep(lx));
-  patterns.add(new RandomColor(lx));
-  patterns.add(new RandomColorAll(lx));
-  patterns.add(new Pixels(lx));
-  patterns.add(new Wedges(lx));
-  patterns.add(new Parallax(lx));
-  patterns.add(new LowEQ(lx));
-  patterns.add(new MidEQ(lx));
-  patterns.add(new HighEQ(lx));
-
-  LXPattern[] l_patterns = patterns.toArray(new LXPattern[patterns.size()]);
-  LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
-  for (LXPattern p : l_patterns) {
-    p.setTransition(t);
-  }
-  return l_patterns;
-}
+NFCEngine nfcEngine;
 
 void setup() {
   size(1024, 680, OPENGL);
@@ -159,41 +175,165 @@ void setup() {
   minim = new Minim(this);
   
   lx = new LX(this, model);
-  lx.setPatterns(patterns(lx));
-  for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
-    lx.engine.addChannel(patterns(lx));
-  }
+
+  configureChannels();
+
+  configureKeyboard();
+
+  configureNFC();
+
+  configureTriggerables();
+
+  configureEffects();
+
+  registerEffect(mappingTool = new MappingTool(lx));
+
+  configureBMPTool();
+
+  configureAutomation();
+
+  configureExternalOutput();
+
+  configureUI();
+
+  configureMIDI();
   
-  if (isMPK25Connected()) {
-    keyboard = new TSKeyboard();
-    keyboard.configure(lx);
+  // bad code I know
+  // (shouldn't mess with engine internals)
+  // maybe need a way to specify a deck shouldn't be focused?
+  // essentially this lets us have extra decks for the drumpad
+  // patterns without letting them be assigned to channels
+  // -kf
+  lx.engine.focusedChannel.setRange(NUM_CHANNELS);
+  
+  // Engine threading
+  lx.engine.framesPerSecond.setValue(60);  
+  lx.engine.setThreaded(true);
+}
+
+/* configureChannels */
+
+ArrayList<LXPattern> patterns;
+boolean configurePatternsAsTriggerables;
+
+void configureChannels() {
+  configurePatternsAsTriggerables = false;
+
+  patterns = new ArrayList<LXPattern>();
+  registerPatterns();
+  lx.setPatterns(patterns.toArray(new LXPattern[patterns.size()]));
+  for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
+    patterns = new ArrayList<LXPattern>();
+    registerPatterns();
+    lx.engine.addChannel(patterns.toArray(new LXPattern[patterns.size()]));
   }
   
   for (LXChannel channel : lx.engine.getChannels()) {
     channel.goIndex(channel.getIndex());
     channel.setFaderTransition(new TreesTransition(lx, channel));
   }
-  
-  // Effects
-  lx.addEffect(blurEffect = new BlurEffect(lx));
-  lx.addEffect(colorEffect = new ColorEffect(lx));
-  lx.addEffect(ghostEffect = new GhostEffect(lx));
-  lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
-  lx.addEffect(mappingTool = new MappingTool(lx));
-  
-  LXListenableNormalizedParameter[] effectKnobParameters = new LXListenableNormalizedParameter[] {
-      colorEffect.hueShift,
-      colorEffect.rainbow,
-      colorEffect.mono,
-      colorEffect.desaturation,
-      colorEffect.sharp,
-      blurEffect.amount,
-      ghostEffect.amount,
-      scrambleEffect.amount,
-  };
-  
-  bpmTool = new BPMTool(lx, effectKnobParameters);
+  patterns = null;
+}
 
+void registerPattern(LXPattern pattern) {
+  registerPattern(pattern, null);
+}
+
+void registerPattern(LXPattern pattern, String nfcSerialNumber) {
+  registerPattern(pattern, nfcSerialNumber, 1);
+}
+
+void registerPattern(LXPattern pattern, String nfcSerialNumber, int apc40DrumpadRow) {
+  if (configurePatternsAsTriggerables && nfcSerialNumber == null) {
+    return;
+  }
+
+  LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
+  pattern.setTransition(t);
+
+  if (configurePatternsAsTriggerables) {
+    Triggerable triggerable = configurePatternAsTriggerable(pattern);
+    nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Pattern);
+    apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
+  } else {
+    patterns.add(pattern);
+  }
+}
+
+Triggerable configurePatternAsTriggerable(LXPattern pattern) {
+  LXChannel channel = lx.engine.addChannel(new LXPattern[] { pattern });
+  channel.setFaderTransition(new TreesTransition(lx, channel));
+
+  Triggerable triggerable;
+  if (pattern instanceof Triggerable) {
+    triggerable = (Triggerable)pattern;
+    triggerable.enableTriggerableMode();
+    channel.getFader().setValue(1);
+  } else {
+    triggerable = new ParameterTriggerableAdapter(channel.getFader());
+  }
+  return triggerable;
+}
+
+/* configureEffects */
+
+ArrayList<LXListenableNormalizedParameter> effectKnobParametersList;
+boolean configureEffectsAsTriggerables;
+
+void configureEffects() {
+  configureEffectsAsTriggerables = false;
+  effectKnobParametersList = new ArrayList<LXListenableNormalizedParameter>();
+  registerEffects();
+  effectKnobParameters = effectKnobParametersList.toArray(new LXListenableNormalizedParameter[effectKnobParametersList.size()]);
+  effectKnobParametersList = null;
+}
+
+void registerEffect(LXEffect effect) {
+  lx.addEffect(effect);
+}
+
+void registerEffectControlParameter(LXListenableNormalizedParameter parameter) {
+  registerEffectControlParameter(parameter, null);
+}
+
+void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber) {
+  registerEffectControlParameter(parameter, nfcSerialNumber, 0, 1);
+}
+
+void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double onValue) {
+  registerEffectControlParameter(parameter, nfcSerialNumber, 0, onValue);
+}
+
+void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue) {
+  if (configureEffectsAsTriggerables) {
+    Triggerable triggerable = new ParameterTriggerableAdapter(parameter, offValue, onValue);
+    if (nfcSerialNumber != null) {
+      nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
+      apc40DrumpadTriggerablesLists[0].add(triggerable);
+    }
+  } else {
+    effectKnobParametersList.add(parameter);
+  }
+}
+
+/* configureKeyboard */
+
+void configureKeyboard() {
+  if (isMPK25Connected()) {
+    keyboard = new TSKeyboard();
+    keyboard.configure(lx);
+  }
+}
+
+/* configureBMPTool */
+
+void configureBMPTool() {
+  bpmTool = new BPMTool(lx, effectKnobParameters);
+}
+
+/* configureAutomation */
+
+void configureAutomation() {
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {
     final int ii = i;
@@ -209,21 +349,65 @@ void setup() {
       }
     });
   }
+}
 
-  // Output stage
-  try {
-    output = new LXDatagramOutput(lx);
-    datagrams = new LXDatagram[model.clusters.size()];
-    int ci = 0;
-    for (Cluster cluster : model.clusters) {
-      output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
-    }
-    output.enabled.setValue(false);
-    lx.addOutput(output);
-  } catch (Exception x) {
-    println(x);
+/* configureTriggerables */
+
+ArrayList<Triggerable>[] apc40DrumpadTriggerablesLists;
+Triggerable[][] apc40DrumpadTriggerables;
+
+void configureTriggerables() {
+  apc40DrumpadTriggerablesLists = new ArrayList[] {
+    new ArrayList<Triggerable>(),
+    new ArrayList<Triggerable>(),
+    new ArrayList<Triggerable>(),
+    new ArrayList<Triggerable>(),
+    new ArrayList<Triggerable>()
+  };
+
+  configurePatternsAsTriggerables = true;
+  registerPatterns();
+
+  configureEffectsAsTriggerables = true;
+  registerEffects();
+
+  apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
+  for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
+    ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
+    apc40DrumpadTriggerables[i] = triggerablesList.toArray(new Triggerable[triggerablesList.size()]);
   }
-  
+  apc40DrumpadTriggerablesLists = null;
+}
+
+/* configureMIDI */
+
+void configureMIDI() {
+  apc40Drumpad = new TSDrumpad();
+  apc40Drumpad.triggerables = apc40DrumpadTriggerables;
+
+  // MIDI control
+  midiEngine = new MidiEngine(effectKnobParameters);
+  if (midiEngine.mpk25 != null) {
+    // Drumpad
+    mpk25Drumpad = new TSDrumpad();
+    midiEngine.mpk25.setDrumpad(mpk25Drumpad);
+
+    midiEngine.mpk25.setKeyboard(keyboard);
+  }
+}
+
+/* configureNFC */
+
+void configureNFC() {
+  nfcEngine = new NFCEngine(lx);
+  nfcEngine.start();
+
+  nfcEngine.registerReaderPatternTypeRestrictions(Arrays.asList(readerPatternTypeRestrictions()));
+}
+
+/* configureUI */
+
+void configureUI() {
   // UI initialization
   lx.ui.addLayer(new UICameraLayer(lx.ui) {
       protected void beforeDraw() {
@@ -249,31 +433,24 @@ void setup() {
   lx.ui.addLayer(uiDeck = new UIMultiDeck(lx.ui));
   lx.ui.addLayer(new UILoopRecorder(lx.ui));
   lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4, bpmTool));
-  
-  // MIDI control
-  midiEngine = new MidiEngine(effectKnobParameters);
-  if (midiEngine.mpk25 != null) {
-    // Drumpad
-    drumpad = new TSDrumpad();
-    drumpad.configure(lx);
-    midiEngine.mpk25.setDrumpad(drumpad);
+}
 
-    midiEngine.mpk25.setKeyboard(keyboard);
+/* configureExternalOutput */
+
+void configureExternalOutput() {
+  // Output stage
+  try {
+    output = new LXDatagramOutput(lx);
+    datagrams = new LXDatagram[model.clusters.size()];
+    int ci = 0;
+    for (Cluster cluster : model.clusters) {
+      output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
+    }
+    output.enabled.setValue(false);
+    lx.addOutput(output);
+  } catch (Exception x) {
+    println(x);
   }
-  
-  configureNFC();
-  
-  // bad code I know
-  // (shouldn't mess with engine internals)
-  // maybe need a way to specify a deck shouldn't be focused?
-  // essentially this lets us have extra decks for the drumpad
-  // patterns without letting them be assigned to channels
-  // -kf
-  lx.engine.focusedChannel.setRange(NUM_CHANNELS);
-  
-  // Engine threading
-  lx.engine.framesPerSecond.setValue(60);  
-  lx.engine.setThreaded(true);
 }
 
 void draw() {

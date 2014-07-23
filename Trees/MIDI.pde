@@ -47,6 +47,17 @@ class MidiEngine {
         protected void noteOn(LXMidiNoteOn note) {
           int channel = note.getChannel();
           switch (note.getPitch()) {
+          case APC40.CLIP_LAUNCH:
+          case APC40.CLIP_LAUNCH+1:
+          case APC40.CLIP_LAUNCH+2:
+          case APC40.CLIP_LAUNCH+3:
+          case APC40.CLIP_LAUNCH+4:
+            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[note.getPitch() - APC40.CLIP_LAUNCH];
+            if (triggerablesRow.length > channel) {
+              triggerablesRow[channel].onTriggered(127);
+            }
+            break;
+
           case APC40.SOLO_CUE:
             if (previewChannels[channel].isOn() && channel != focusedChannel()) {
               lx.engine.focusedChannel.setValue(channel);
@@ -78,6 +89,22 @@ class MidiEngine {
             break;
           }
         }
+
+        protected void noteOff(LXMidiNoteOff note) {
+          int channel = note.getChannel();
+          switch (note.getPitch()) {
+          case APC40.CLIP_LAUNCH:
+          case APC40.CLIP_LAUNCH+1:
+          case APC40.CLIP_LAUNCH+2:
+          case APC40.CLIP_LAUNCH+3:
+          case APC40.CLIP_LAUNCH+4:
+            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[note.getPitch() - APC40.CLIP_LAUNCH];
+            if (triggerablesRow.length > channel) {
+              triggerablesRow[channel].onRelease();
+            }
+            break;
+          }
+        }
         
         protected void controlChange(LXMidiControlChange controller) {
           switch (controller.getCC()) {
@@ -87,6 +114,12 @@ class MidiEngine {
           }
         }
       };
+
+      for (int row = 0; row < apc40Drumpad.triggerables.length; row++) {
+        for (int col = 0; col < apc40Drumpad.triggerables[row].length; col++) {
+          apc40.bindNote(new BooleanParameter("ANON", false), col, APC40.CLIP_LAUNCH + row, APC40.DIRECT);
+        }
+      }
       
       int[] channelIndices = new int[NUM_CHANNELS];
       for (int i = 0; i < NUM_CHANNELS; ++i) {
@@ -182,8 +215,8 @@ class MidiEngine {
 }
 
 interface Drumpad {
-  public void padTriggered(int index, int velocity);
-  public void padReleased(int index);
+  public void padTriggered(int row, int col, int velocity);
+  public void padReleased(int row, int col);
 }
 
 interface Keyboard {
@@ -209,19 +242,11 @@ class MPK25 extends LXMidiDevice {
   final static int PAD11_PITCH = 77;
   final static int PAD12_PITCH = 78;
   
-  final int[] PAD_PITCHES = {
-    PAD1_PITCH,
-    PAD2_PITCH,
-    PAD3_PITCH,
-    PAD4_PITCH,
-    PAD5_PITCH,
-    PAD6_PITCH,
-    PAD7_PITCH,
-    PAD8_PITCH,
-    PAD9_PITCH,
-    PAD10_PITCH,
-    PAD11_PITCH,
-    PAD12_PITCH
+  final int[][] PAD_PITCHES = {
+    { PAD10_PITCH, PAD11_PITCH, PAD12_PITCH },
+    { PAD7_PITCH, PAD8_PITCH, PAD9_PITCH },
+    { PAD4_PITCH, PAD5_PITCH, PAD6_PITCH },
+    { PAD1_PITCH, PAD2_PITCH, PAD3_PITCH }
   };
   
   final static int KEYBOARD_CHANNEL = 0;
@@ -250,17 +275,6 @@ class MPK25 extends LXMidiDevice {
     this.keyboard = keyboard;
   }
   
-  private int getPadIndex(LXMidiNote note) {
-    if (note.getChannel() == PAD_CHANNEL) {
-      for (int i = 0; i < PAD_PITCHES.length; i++) {
-        if (note.getPitch() == PAD_PITCHES[i]) {
-          return i;
-        }
-      }
-    }
-    return -1;
-  }
-  
   private boolean isKeyboard(LXMidiNote note) {
     return note.getChannel() == KEYBOARD_CHANNEL
         && note.getPitch() >= KEYBOARD_PITCH_FIRST
@@ -269,9 +283,15 @@ class MPK25 extends LXMidiDevice {
   
   protected void noteOn(LXMidiNoteOn note) {
     if (drumpad != null) {
-      int padIndex = getPadIndex(note);
-      if (padIndex != -1) {
-        drumpad.padTriggered(padIndex, note.getVelocity());
+      if (note.getChannel() == PAD_CHANNEL) {
+        for (int row = 0; row < PAD_PITCHES.length; row++) {
+          int[] padPitchesRow = PAD_PITCHES[row];
+          for (int col = 0; col < padPitchesRow.length; col++) {
+            if (note.getPitch() == padPitchesRow[col]) {
+              drumpad.padTriggered(row, col, note.getVelocity());
+            }
+          }
+        }
       }
     }
     if (keyboard != null && isKeyboard(note)) {
@@ -281,9 +301,15 @@ class MPK25 extends LXMidiDevice {
 
   protected void noteOff(LXMidiNoteOff note) {
     if (drumpad != null) {
-      int padIndex = getPadIndex(note);
-      if (padIndex != -1) {
-        drumpad.padReleased(padIndex);
+      if (note.getChannel() == PAD_CHANNEL) {
+        for (int row = 0; row < PAD_PITCHES.length; row++) {
+          int[] padPitchesRow = PAD_PITCHES[row];
+          for (int col = 0; col < padPitchesRow.length; col++) {
+            if (note.getPitch() == padPitchesRow[col]) {
+              drumpad.padReleased(row, col);
+            }
+          }
+        }
       }
     }
     if (keyboard != null && isKeyboard(note)) {
