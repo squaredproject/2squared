@@ -1,6 +1,6 @@
 import ddf.minim.*;
 
-class FirefliesExp extends LXPattern {
+class Fireflies extends LXPattern {
   final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 7.5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
@@ -33,7 +33,7 @@ class FirefliesExp extends LXPattern {
     }
   }
   
-  FirefliesExp(LX lx) {
+  Fireflies(LX lx) {
     super(lx);
     addParameter(flyCount);
     addParameter(speed);
@@ -686,6 +686,203 @@ class Springs extends LXPattern {
     }
   }
 }
+
+class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
+  private BasicParameter sz = new BasicParameter("SIZE", 0.5);
+  private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
+  private BooleanParameter automated = new BooleanParameter("AUTO", true);
+  private BasicParameter speed = new BasicParameter("SPEED", 1, -3, 3);
+  private final Click turnOff = new Click(9000);
+  final DiscreteParameter pulleyCount = new DiscreteParameter("NUM", 1, 1, 5);
+
+  private boolean isRising = false; //are the pulleys rising or falling
+  boolean triggered = true; //has the trigger to rise/fall been pulled
+  boolean autoMode = true; //triggerMode vs autoMode.
+  private int numPulleys = 1;
+  private Pulley[] pulleys = new Pulley[numPulleys];
+  
+
+  private class Pulley {
+    public float baseSpeed = 0;
+    public Click delay = new Click(0);
+    public Click turnOff = new Click(9000);
+    public final Accelerator gravity = new Accelerator(0,0,0);
+    public float baseHue = 0;
+    public LinearEnvelope maxBrt = new LinearEnvelope(0,0,0);
+    
+    public Pulley() {
+      baseSpeed = random(10,50);
+      baseHue = random(0, 30);
+      delay.setDuration(random(0,500));
+      gravity.setSpeed(this.baseSpeed, 0);
+      maxBrt.setRange(0,1,3000);
+      lx.addModulator(gravity);
+      lx.addModulator(delay);
+      lx.addModulator(maxBrt.start());
+    }
+  }
+
+  Pulleys(LX lx) {
+    super(lx);
+    addParameter(sz);
+    addParameter(beatAmount);
+    addParameter(speed);
+    addParameter(automated);
+    addParameter(pulleyCount);
+    onParameterChanged(speed);
+    // addModulator(turnOff);
+
+    for (int i = 0; i < pulleys.length; i++) {
+      pulleys[i] = new Pulley();
+    } 
+  }
+
+  void onParameterChanged(LXParameter parameter) {
+    super.onParameterChanged(parameter);
+    if (parameter == speed && isRising) {
+      for (int i = 0; i < pulleys.length; i++) {
+        pulleys[i].gravity.setVelocity(pulleys[i].baseSpeed * speed.getValuef());
+      }
+    }
+    if (parameter == automated) {
+      if (automated.isOn()) {
+        trigger();
+      }
+    }
+  }
+
+  private void trigger() {
+    if (autoMode) {
+      isRising = !isRising;
+    }
+    for (int j = 0; j < pulleys.length; j++) {
+      if (isRising) {
+        pulleys[j].gravity.setSpeed(pulleys[j].baseSpeed,0).start();
+      } 
+      else {
+        pulleys[j].gravity.setVelocity(0).setAcceleration(-420);
+        pulleys[j].delay.trigger();
+      }
+    }
+  }
+
+  public void run(double deltaMS) {
+    if (autoMode) {
+      numPulleys = pulleyCount.getValuei();
+      
+      if (numPulleys < pulleys.length) {
+        for (int i = numPulleys; i < pulleys.length; i++) {
+          pulleys[i].maxBrt.start();
+        }
+      }
+      
+      if (numPulleys > pulleys.length) {
+        addPulleys(numPulleys);
+      }
+    }
+    
+    for (int i = 0; i < pulleys.length; i++) {
+      if (pulleys[i].maxBrt.finished()) {
+        if (pulleys[i].maxBrt.getValuef() == 1) {
+          pulleys[i].maxBrt.setRange(1,0,3000).reset();
+        } else {
+          removePulley(i);
+        }
+      }
+    }
+
+    for (int i = 0; i < pulleys.length; i++) {
+      if (pulleys[i].turnOff.click()) {
+        pulleys[i].maxBrt.start();
+      }
+    }
+    
+    if(triggered) {
+      if (!isRising) {
+        for (int j = 0; j < pulleys.length; ++j) {
+          if (pulleys[j].delay.click()) {
+            pulleys[j].gravity.start();
+            pulleys[j].delay.stop();
+          }
+          if (pulleys[j].gravity.getValuef() < 0) { //bouncebounce
+            pulleys[j].gravity.setValue(-pulleys[j].gravity.getValuef());
+            pulleys[j].gravity.setVelocity(-pulleys[j].gravity.getVelocityf() * random(0.74,0.84));
+          }
+        }
+      }
+  
+      float fPos = 1 -lx.tempo.rampf();
+      if (fPos < .2) {
+        fPos = .2 + 4 * (.2 - fPos);
+      }
+  
+      float falloff = 100. / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
+      for (Cube cube : model.cubes) {
+        float cBrt = 0;
+        float cHue = 0;
+        for (int j = 0; j < pulleys.length; ++j) {
+          cHue = (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4 + pulleys[j].baseHue) % 360;
+          cBrt += max(0, pulleys[j].maxBrt.getValuef() * (100 - abs(cube.y/2 - 50 - pulleys[j].gravity.getValuef())*falloff));
+        }
+        float yn =  cube.y/model.yMax;
+        colors[cube.index] = lx.hsb(
+          cHue, 
+          constrain(100 *(0.8 -  yn * yn), 0, 100), 
+          min(100, cBrt)
+        );
+      }
+    }
+  }
+
+  public void addPulleys(int numPulleys) {
+    Pulley[] newPulleys = Arrays.copyOf(pulleys, numPulleys);
+    for (int i = pulleys.length; i < numPulleys; ++i) {
+      Pulley newPulley = new Pulley();
+      if (isRising) {
+        newPulley.gravity.setSpeed(newPulley.baseSpeed,0).start();
+      } else {
+        if (autoMode) {
+          newPulley.gravity.setValue(random(0,225));
+        } else {
+          newPulley.gravity.setValue(225);
+        }
+
+        newPulley.gravity.setVelocity(0).setAcceleration(-420);
+        newPulley.delay.trigger();
+      }
+      newPulleys[i] = newPulley;
+    }
+    pulleys = newPulleys;
+  }
+
+  public void removePulley(int index) {
+    Pulley[] newPulleys = Arrays.copyOf(pulleys, pulleys.length - 1);
+    Pulley pulley = pulleys[index];
+
+    for (int i = index; i < newPulleys.length; ++i) {
+      newPulleys[i] = pulleys[i+1];
+    }
+    pulleys = newPulleys;
+    lx.removeModulator(pulley.turnOff);
+    lx.removeModulator(pulley.gravity);
+    lx.removeModulator(pulley.maxBrt);
+  }
+
+  public void enableTriggerableMode() {
+    autoMode = false;
+    isRising = true;
+    trigger();
+  }
+
+  public void onTriggered(float strength) {
+    addPulleys(pulleys.length + 1);    
+  }
+  
+  public void onRelease() {
+  }
+}
+
+
 
 
 

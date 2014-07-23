@@ -81,10 +81,11 @@ void registerPatterns() {
   registerPattern(new Springs(lx));
   registerPattern(new Lattice(lx), "", 2);
   registerPattern(new Fire(lx), "", 3);
-  registerPattern(new FirefliesExp(lx), "", 3);
+  registerPattern(new Fireflies(lx), "", 3);
   registerPattern(new Fumes(lx), null);
   registerPattern(new Voronoi(lx), null);
   registerPattern(new Bubbles(lx), "", 3);
+  registerPattern(new Pulleys(lx), "", 3);
 
   registerPattern(new Wisps(lx), "", 4);
   registerPattern(new Explosions(lx), "044d575a312c80", 4);
