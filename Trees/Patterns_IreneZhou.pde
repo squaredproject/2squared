@@ -154,7 +154,7 @@ class Fireflies extends LXPattern implements Triggerable{
 
   public void onTriggered(float strength) {
     numFireflies += 25;
-    decay.setRange(numFireflies, 5);
+    decay.setRange(numFireflies, 10);
     decay.reset().start();
   }
 
@@ -203,23 +203,26 @@ class Lattice extends LXPattern {
   }
 }
 
-class Fire extends LXPattern {
+class Fire extends LXPattern  implements Triggerable{
   final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
-  final BasicParameter flameSize = new BasicParameter("SIZE", 30, 10, 75);  
+  final BasicParameter flameSize = new BasicParameter("SIZE", 50, 10, 75);  
   final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 75);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
-  
+  private LinearEnvelope fireHeight = new LinearEnvelope(0,0,500);
+
+  private boolean triggerable = false;
+  private float height = 0;
   private int numFlames = 75;
   private Flame[] flames;
   
   private class Flame {
-    public float height = 0;
+    public float flameHeight = 0;
     public float theta = random(0, 360);
     public LinearEnvelope decay = new LinearEnvelope(0,0,0);
   
     public Flame(float maxHeight, boolean groundStart){
-      float height = random(0.2, maxHeight);
-      decay.setRange(75, model.yMax * height, 1200 * height);
+      float flameHeight = random(0, maxHeight);
+      decay.setRange(75, model.yMax * flameHeight, 1200 * flameHeight);
       if (!groundStart) {
         decay.setBasis(random(0,1));
       }
@@ -233,10 +236,11 @@ class Fire extends LXPattern {
     addParameter(flameSize);
     addParameter(flameCount);
     addParameter(hue);
+    addModulator(fireHeight);
 
     flames = new Flame[numFlames];
     for (int i = 0; i < numFlames; ++i) {
-      flames[i] = new Flame(maxHeight.getValuef(), false);
+      flames[i] = new Flame(height, false);
     }
   }
 
@@ -244,7 +248,7 @@ class Fire extends LXPattern {
     Flame[] newFlames = Arrays.copyOf(flames, numFlames);
     if (flames.length < numFlames) {
       for (int i = flames.length; i < numFlames; ++i) {
-        newFlames[i] = new Flame(maxHeight.getValuef(), false);
+        newFlames[i] = new Flame(height, false);
       }
     }
     flames = newFlames;
@@ -253,14 +257,20 @@ class Fire extends LXPattern {
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
 
-    numFlames = (int) flameCount.getValuef();
+    if (!triggerable) {
+      height = maxHeight.getValuef();
+      numFlames = (int) flameCount.getValuef();
+    } else {
+      height = fireHeight.getValuef();
+    }
+
     if (flames.length != numFlames) {
       updateNumFlames(numFlames);
     }
     for (int i = 0; i < flames.length; ++i) {
       if (flames[i].decay.finished()) {
         lx.removeModulator(flames[i].decay);
-        flames[i] = new Flame(maxHeight.getValuef(), true);
+        flames[i] = new Flame(height, true);
       }
     }
 
@@ -278,9 +288,23 @@ class Fire extends LXPattern {
       colors[cube.index] = lx.hsb(
         (cHue + hue.getValuef()) % 360,
         100,
-        min(100, cBrt + (1- yn)* (1- yn) * 50)
+        min(100, cBrt + (float) Math.pow(height, 0.25) * (1 - yn)  * (1 - yn) * 75)
       );
     }
+  }
+
+  public void enableTriggerableMode() {
+    triggerable = true;
+  }
+
+  public void onTriggered(float strength) {
+    fireHeight.setRange(1,0.5);
+    fireHeight.reset().start();
+  };
+
+  public void onRelease() {
+    fireHeight.setRange(height, 0);
+    fireHeight.reset().start();
   }
 }
 
@@ -298,7 +322,7 @@ class Bubbles extends LXPattern implements Triggerable {
     public float theta = 0;
     public float yPos = 0;
     public float bHue = 0;
-    public float baseSpeed = 0;
+    public float banseSpeed = 0;
     public float radius = 0;
 
     public Bubble(float maxRadius) {
