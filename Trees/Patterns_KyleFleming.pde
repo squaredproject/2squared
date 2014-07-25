@@ -11,6 +11,8 @@ class BassSlam extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (lx.tempo.ramp() < flashTimePercent) {
       setColors(lx.hsb(patternHue, 100, 100));
     } else {
@@ -70,6 +72,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
 //  }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (triggered && !keyboardMode && objects.size() < ceil(frequency.getValuef())) {
       int missing = ceil(frequency.getValuef()) - objects.size();
       pauseTimerCountdown -= deltaMs;
@@ -472,6 +476,8 @@ class Strobe extends LXPattern implements Triggerable {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (triggered) {
       timer += deltaMs;
       if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
@@ -533,6 +539,8 @@ class RandomColor extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     frameCount++;
     if (frameCount >= speed.getValuef()) {
       for (Cube cube : model.cubes) {
@@ -568,6 +576,8 @@ class RandomColorGlitch extends LXPattern {
   final int cubeColor = (int)random(360);
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       if (cube.index == brokenCubeIndex) {
         colors[cube.index] = lx.hsb(
@@ -601,6 +611,8 @@ class Fade extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         (int)((int)colr.getValuef() * smoothness.getValuef() / 100) * 100 / smoothness.getValuef(), 
@@ -622,6 +634,8 @@ class OrderTest extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         240,
@@ -639,6 +653,8 @@ class Palette extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         cube.index % 360,
@@ -659,6 +675,8 @@ class SolidColor extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     setColors(lx.hsb(hue.getValuef(), 100, 100));
   }
 }
@@ -678,6 +696,8 @@ class ClusterLineTest extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     PVector origin = new PVector(theta.getValuef(), y.getValuef());
     for (Cube cube : model.cubes) {
       PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);

@@ -39,6 +39,8 @@ class MarkLottor extends LXPattern {
   // This is your run loop called every frame.
   // It's basically just like Processing's draw()  
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     int n;
     float theta, ntheta;
     float y, ny;

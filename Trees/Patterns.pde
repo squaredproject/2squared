@@ -12,6 +12,8 @@ class DoubleHelix extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       float coilf = coil.getValuef() * (cube.cy - model.cy);
       colors[cube.index] = lx.hsb(
@@ -43,6 +45,8 @@ class ColoredLeaves extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         (360 + movement[cube.index  % movement.length].getValuef()) % 360,
@@ -71,6 +75,8 @@ class SeeSaw extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     projection
       .reset()
       .center()
@@ -100,6 +106,8 @@ class Twister extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     float spinf = spin.getValuef();
     float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
@@ -151,6 +159,8 @@ class SweepPattern extends LXPattern {
   
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       float yp = yPos.getValuef() + amp.getValuef() * sin((cube.cx - model.cx) * .01 + offset.getValuef());
       colors[cube.index] = lx.hsb(
@@ -178,6 +188,8 @@ class DiffusionTestPattern extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     setColors(#000000);
     for (int i = 0; i < 12; ++i) {
       colors[i] = lx.hsb(
@@ -203,6 +215,8 @@ class TestPattern extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     int ci = 0;
     for (Cube cube : model.cubes) {
       setColor(cube, lx.hsb(
@@ -227,6 +241,8 @@ class TestCluster extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cluster cluster : model.clusters) {
       for (Cube cube : cluster.cubes) {
         if (lightNo.getValuei() >= 17) {

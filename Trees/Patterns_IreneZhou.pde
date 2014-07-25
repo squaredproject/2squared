@@ -84,6 +84,8 @@ class Fireflies extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         0,
@@ -159,6 +161,8 @@ class Lattice extends LXPattern {
   }
 
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     float spinf = spin.getValuef();
     float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
@@ -224,6 +228,8 @@ class Fire extends LXPattern {
   }
 
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     numFlames = (int) flameCount.getValuef();
     if (flames.length != numFlames) {
       updateNumFlames(numFlames);
@@ -314,6 +320,8 @@ class Bubbles extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         0,
@@ -398,6 +406,8 @@ class Voronoi extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
@@ -467,6 +477,8 @@ class Fumes extends LXPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     float minSat = sat.getValuef();
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
@@ -559,6 +571,8 @@ class Pulley extends LXPattern implements Triggerable { //ported from SugarCubes
   }
 
   public void run(double deltaMS) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (turnOff.click()) {
       triggered = false;
       setColors(lx.hsb(0,0,0));
@@ -662,6 +676,8 @@ class Springs extends LXPattern {
   }
 
   public void run(double deltaMS) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (!isRising) {
       gravity.start();
       if (gravity.getValuef() < 0) {
@@ -767,6 +783,8 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
   }
 
   public void run(double deltaMS) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     if (autoMode) {
       numPulleys = pulleyCount.getValuei();
       

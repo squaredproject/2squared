@@ -13,6 +13,7 @@ class AcidTrip extends LXPattern {
   }
     
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
    
      for (Cube cube : model.cubes) {
       

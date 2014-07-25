@@ -26,6 +26,8 @@ class EQPattern extends LXPattern {
     }
 
     public void run(double deltaMs) {
+        if (getChannel().getFader().getNormalized() == 0) return;
+
         geq.loop(deltaMs);
         double d = geq.getAverage(int(lowerFreq.getValuef()),
                                   int(topFreq.getValuef() - lowerFreq.getValuef()));
