@@ -71,16 +71,16 @@ void registerPatterns() {
   // The 3rd parameter is which row of the apc40 drumpad to add it to. defaults to row 1
   registerPattern(new SolidColor(lx));
   registerPattern(new Twister(lx), "");
-  registerPattern(new MarkLottor(lx), null);
+  registerPattern(new MarkLottor(lx), "");
   registerPattern(new DoubleHelix(lx), "");
   registerPattern(new SparkleHelix(lx));
-  registerPattern(new Lightning(lx), null);
+  registerPattern(new Lightning(lx), "");
   registerPattern(new SparkleTakeOver(lx));
   registerPattern(new MultiSine(lx));
   registerPattern(new Ripple(lx), "");
   registerPattern(new SeeSaw(lx));
   registerPattern(new SweepPattern(lx));
-  registerPattern(new IceCrystals(lx), null);
+  registerPattern(new IceCrystals(lx), "", 2);
   registerPattern(new ColoredLeaves(lx));
   registerPattern(new Stripes(lx), "", 2);
   try { registerPattern(new SyphonPattern(lx, this)); } catch (Throwable e) {}
@@ -89,8 +89,8 @@ void registerPatterns() {
   registerPattern(new Lattice(lx), "", 2);
   registerPattern(new Fire(lx), "", 3);
   registerPattern(new Fireflies(lx), "", 3);
-  registerPattern(new Fumes(lx), null);
-  registerPattern(new Voronoi(lx), null);
+  registerPattern(new Fumes(lx), "", 3);
+  registerPattern(new Voronoi(lx), "", 3);
   registerPattern(new Bubbles(lx), "", 3);
   registerPattern(new Pulleys(lx), "", 3);
 
