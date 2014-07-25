@@ -261,13 +261,14 @@ class Fire extends LXPattern {
   }
 }
 
-class Bubbles extends LXPattern {
+class Bubbles extends LXPattern implements Triggerable {
   final DiscreteParameter ballCount = new DiscreteParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
-    
-  private int numBubbles = 10;
+  private LinearEnvelope decay = new LinearEnvelope(0,0,2000);
+  private boolean triggerable = false;
+  private int numBubbles = 0;
   private Bubble[] bubbles;
   
   private class Bubble {
@@ -296,6 +297,7 @@ class Bubbles extends LXPattern {
     addParameter(maxRadius);
     addParameter(speed);
     addParameter(hue);
+    addModulator(decay);
     
     bubbles = new Bubble[numBubbles];
     for (int i = 0; i < numBubbles; ++i) {
@@ -329,8 +331,12 @@ class Bubbles extends LXPattern {
         0
       );
     }
-
-    numBubbles = ballCount.getValuei();
+    if (!triggerable) {
+      numBubbles = ballCount.getValuei();  
+    } else {
+      numBubbles = (int) decay.getValuef();
+    }
+    
     if (bubbles.length < numBubbles) {
       addBubbles(numBubbles);
     }
@@ -366,6 +372,22 @@ class Bubbles extends LXPattern {
       bubble.move(speed.getValuef());
     }
   }
+
+  public void enableTriggerableMode() {
+    triggerable = true;
+  }
+
+  public void onTriggered(float strength) {
+    numBubbles += 25;
+    decay.setRange(numBubbles, 10);
+    decay.reset().start();
+  }
+
+  public void onRelease() {
+    decay.setRange(numBubbles, 0);
+    decay.reset().start();
+  }
+
 }
 
 class Voronoi extends LXPattern {
@@ -708,20 +730,20 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
   private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
   private BooleanParameter automated = new BooleanParameter("AUTO", true);
   private BasicParameter speed = new BasicParameter("SPEED", 1, -3, 3);
-  private final Click turnOff = new Click(9000);
+  // private final Click turnOff = new Click(9000);
   final DiscreteParameter pulleyCount = new DiscreteParameter("NUM", 1, 1, 5);
 
   private boolean isRising = false; //are the pulleys rising or falling
   boolean triggered = true; //has the trigger to rise/fall been pulled
   boolean autoMode = true; //triggerMode vs autoMode.
-  private int numPulleys = 1;
+  private int numPulleys = 0;
   private Pulley[] pulleys = new Pulley[numPulleys];
   
 
   private class Pulley {
     public float baseSpeed = 0;
     public Click delay = new Click(0);
-    public Click turnOff = new Click(9000);
+    public Click turnOff = new Click(0);
     public final Accelerator gravity = new Accelerator(0,0,0);
     public float baseHue = 0;
     public LinearEnvelope maxBrt = new LinearEnvelope(0,0,0);
@@ -732,9 +754,11 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
       delay.setDuration(random(0,500));
       gravity.setSpeed(this.baseSpeed, 0);
       maxBrt.setRange(0,1,3000);
+      turnOff.setDuration(6000);
       lx.addModulator(gravity);
       lx.addModulator(delay);
       lx.addModulator(maxBrt.start());
+      lx.addModulator(turnOff);
     }
   }
 
@@ -746,7 +770,6 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
     addParameter(automated);
     addParameter(pulleyCount);
     onParameterChanged(speed);
-    // addModulator(turnOff);
 
     for (int i = 0; i < pulleys.length; i++) {
       pulleys[i] = new Pulley();
@@ -863,6 +886,7 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
           newPulley.gravity.setValue(random(0,225));
         } else {
           newPulley.gravity.setValue(225);
+          newPulley.turnOff.start();
         }
 
         newPulley.gravity.setVelocity(0).setAcceleration(-420);
@@ -888,8 +912,7 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
 
   public void enableTriggerableMode() {
     autoMode = false;
-    isRising = true;
-    trigger();
+    isRising = false;
   }
 
   public void onTriggered(float strength) {
