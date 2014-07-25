@@ -61,7 +61,8 @@ final static float[][] TREE_POSITIONS = {
 
 final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 
-void registerPatterns() {
+LXPattern[] getPatternListForChannels() {
+  ArrayList<LXPattern> patterns = new ArrayList<LXPattern>();
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
 
@@ -69,50 +70,82 @@ void registerPatterns() {
   // The 2nd parameter is the NFC tag serial number
   // Specify a blank string to only add it to the apc40 drumpad
   // The 3rd parameter is which row of the apc40 drumpad to add it to. defaults to row 1
-  registerPattern(new SolidColor(lx));
+  patterns.add(new SolidColor(lx));
+  patterns.add(new Twister(lx));
+  patterns.add(new MarkLottor(lx));
+  patterns.add(new DoubleHelix(lx));
+  patterns.add(new SparkleHelix(lx));
+  patterns.add(new Lightning(lx));
+  patterns.add(new SparkleTakeOver(lx));
+  patterns.add(new MultiSine(lx));
+  patterns.add(new Ripple(lx));
+  patterns.add(new SeeSaw(lx));
+  patterns.add(new SweepPattern(lx));
+  patterns.add(new IceCrystals(lx));
+  patterns.add(new ColoredLeaves(lx));
+  patterns.add(new Stripes(lx));
+  try { patterns.add(new SyphonPattern(lx, this)); } catch (Throwable e) {}
+  patterns.add(new AcidTrip(lx));
+  patterns.add(new Springs(lx));
+  patterns.add(new Lattice(lx));
+  patterns.add(new Fire(lx));
+  patterns.add(new Fireflies(lx));
+  patterns.add(new Fumes(lx));
+  patterns.add(new Voronoi(lx));
+  patterns.add(new Bubbles(lx));
+  patterns.add(new Pulleys(lx));
+
+  patterns.add(new Wisps(lx));
+  patterns.add(new Explosions(lx));
+  patterns.add(new BassSlam(lx));
+  patterns.add(new Rain(lx));
+  patterns.add(new Fade(lx));
+  patterns.add(new Strobe(lx));
+  patterns.add(new Twinkle(lx));
+  patterns.add(new VerticalSweep(lx));
+  patterns.add(new RandomColor(lx));
+  patterns.add(new RandomColorAll(lx));
+  patterns.add(new Pixels(lx));
+  patterns.add(new Wedges(lx));
+  patterns.add(new Parallax(lx));
+  patterns.add(new LowEQ(lx));
+  patterns.add(new MidEQ(lx));
+  patterns.add(new HighEQ(lx));
+
+  for (LXPattern pattern : patterns) {
+    LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
+    pattern.setTransition(t);
+  }
+
+  return patterns.toArray(new LXPattern[patterns.size()]);
+}
+
+void registerPatternTriggerables() {
   registerPattern(new Twister(lx), "");
   registerPattern(new MarkLottor(lx), "");
   registerPattern(new DoubleHelix(lx), "");
-  registerPattern(new SparkleHelix(lx));
-  registerPattern(new Lightning(lx), "");
-  registerPattern(new SparkleTakeOver(lx));
-  registerPattern(new MultiSine(lx));
   registerPattern(new Ripple(lx), "");
-  registerPattern(new SeeSaw(lx));
-  registerPattern(new SweepPattern(lx));
-  registerPattern(new IceCrystals(lx), "", 2);
-  registerPattern(new ColoredLeaves(lx));
-  registerPattern(new Stripes(lx), "", 2);
-  try { registerPattern(new SyphonPattern(lx, this)); } catch (Throwable e) {}
-  registerPattern(new AcidTrip(lx), "", 2);
-  registerPattern(new Springs(lx));
-  registerPattern(new Lattice(lx), "", 2);
+  registerPattern(new IceCrystals(lx), "");
+  registerPattern(new Stripes(lx), "", 3);
+  registerPattern(new AcidTrip(lx), "", 3);
+  registerPattern(new Lattice(lx), "", 3);
   registerPattern(new Fire(lx), "", 3);
   registerPattern(new Fireflies(lx), "", 3);
-  registerPattern(new Fumes(lx), "", 3);
-  registerPattern(new Voronoi(lx), "", 3);
-  registerPattern(new Bubbles(lx), "", 3);
-  registerPattern(new Pulleys(lx), "", 3);
-
-  registerPattern(new Wisps(lx), "", 4);
-  registerPattern(new Explosions(lx), "044d575a312c80", 4);
-  registerPattern(new BassSlam(lx));
-  registerPattern(new Rain(lx));
-  registerPattern(new Fade(lx));
-  registerPattern(new Strobe(lx));
-  registerPattern(new Twinkle(lx));
-  registerPattern(new VerticalSweep(lx));
-  registerPattern(new RandomColor(lx));
+  registerPattern(new Fumes(lx), "", 4);
+  registerPattern(new Voronoi(lx), "", 4);
+  registerPattern(new Bubbles(lx), "", 4);
+  registerPattern(new Pulleys(lx), "", 4);
   registerPattern(new RandomColorAll(lx), "04ad5f62312c80", 4);
-  registerPattern(new Pixels(lx));
-  registerPattern(new Wedges(lx));
-  registerPattern(new Parallax(lx));
-  registerPattern(new LowEQ(lx));
-  registerPattern(new MidEQ(lx));
-  registerPattern(new HighEQ(lx));
+
 }
 
-void registerEffects() {
+void registerOneShotTriggerables() {
+  registerOneShot(new Lightning(lx), "");
+  registerOneShot(new Wisps(lx), "");
+  registerOneShot(new Explosions(lx), "044d575a312c80");
+}
+
+void registerEffectTriggerables() {
   BlurEffect blurEffect;
   ColorEffect colorEffect;
   GhostEffect ghostEffect;
@@ -125,7 +158,6 @@ void registerEffects() {
   registerEffect(new SpeedEffect(lx, 0.4), "");
   registerEffect(new SpeedEffect(lx, 5), "");
 
-  registerEffectControlParameter(colorEffect.hueShift);
   registerEffectControlParameter(colorEffect.rainbow, "");
   registerEffectControlParameter(colorEffect.mono, "");
   registerEffectControlParameter(colorEffect.desaturation, "04346762312c80");
@@ -133,6 +165,29 @@ void registerEffects() {
   registerEffectControlParameter(blurEffect.amount, "", 0.65);
   registerEffectControlParameter(ghostEffect.amount, "", 0.16);
   registerEffectControlParameter(scrambleEffect.amount, "");
+}
+
+void registerMasterEffects() {
+  BlurEffect blurEffect;
+  ColorEffect colorEffect;
+  GhostEffect ghostEffect;
+  ScrambleEffect scrambleEffect;
+
+  lx.addEffect(blurEffect = new BlurEffect(lx));
+  lx.addEffect(colorEffect = new ColorEffect(lx));
+  lx.addEffect(ghostEffect = new GhostEffect(lx));
+  lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
+
+  effectKnobParameters = new LXListenableNormalizedParameter[] {
+    colorEffect.hueShift,
+    colorEffect.rainbow,
+    colorEffect.mono,
+    colorEffect.desaturation,
+    colorEffect.sharp,
+    blurEffect.amount,
+    ghostEffect.amount,
+    scrambleEffect.amount
+  };
 }
 
 VisualType[] readerPatternTypeRestrictions() {
@@ -223,51 +278,37 @@ void setup() {
 
 /* configureChannels */
 
-ArrayList<LXPattern> patterns;
-boolean configurePatternsAsTriggerables;
-
 void configureChannels() {
-  configurePatternsAsTriggerables = false;
-
-  patterns = new ArrayList<LXPattern>();
-  registerPatterns();
-  lx.setPatterns(patterns.toArray(new LXPattern[patterns.size()]));
+  lx.setPatterns(getPatternListForChannels());
   for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
-    patterns = new ArrayList<LXPattern>();
-    registerPatterns();
-    lx.engine.addChannel(patterns.toArray(new LXPattern[patterns.size()]));
+    lx.engine.addChannel(getPatternListForChannels());
   }
   
   for (LXChannel channel : lx.engine.getChannels()) {
     channel.goIndex(channel.getIndex());
     channel.setFaderTransition(new TreesTransition(lx, channel));
   }
-  patterns = null;
 }
 
-void registerPattern(LXPattern pattern) {
-  registerPattern(pattern, null);
+void registerOneShot(LXPattern pattern, String nfcSerialNumber) {
+  registerVisual(pattern, nfcSerialNumber, 1, VisualType.OneShot);
 }
 
 void registerPattern(LXPattern pattern, String nfcSerialNumber) {
-  registerPattern(pattern, nfcSerialNumber, 1);
+  registerPattern(pattern, nfcSerialNumber, 2);
 }
 
 void registerPattern(LXPattern pattern, String nfcSerialNumber, int apc40DrumpadRow) {
-  if (configurePatternsAsTriggerables && nfcSerialNumber == null) {
-    return;
-  }
+  registerVisual(pattern, nfcSerialNumber, apc40DrumpadRow, VisualType.Pattern);
+}
 
+void registerVisual(LXPattern pattern, String nfcSerialNumber, int apc40DrumpadRow, VisualType visualType) {
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
   pattern.setTransition(t);
 
-  if (configurePatternsAsTriggerables) {
-    Triggerable triggerable = configurePatternAsTriggerable(pattern);
-    nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Pattern);
-    apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
-  } else {
-    patterns.add(pattern);
-  }
+  Triggerable triggerable = configurePatternAsTriggerable(pattern);
+  nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, visualType);
+  apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
 }
 
 Triggerable configurePatternAsTriggerable(LXPattern pattern) {
@@ -287,39 +328,23 @@ Triggerable configurePatternAsTriggerable(LXPattern pattern) {
 
 /* configureEffects */
 
-ArrayList<LXListenableNormalizedParameter> effectKnobParametersList;
-boolean configureEffectsAsTriggerables;
-
 void configureEffects() {
-  configureEffectsAsTriggerables = false;
-  effectKnobParametersList = new ArrayList<LXListenableNormalizedParameter>();
-  registerEffects();
-  effectKnobParameters = effectKnobParametersList.toArray(new LXListenableNormalizedParameter[effectKnobParametersList.size()]);
-  effectKnobParametersList = null;
+  registerMasterEffects();
 }
 
 void registerEffect(LXEffect effect) {
   registerEffect(effect, null);
 }
-void registerEffect(LXEffect effect, String nfcSerialNumber) {
-  if (configurePatternsAsTriggerables && nfcSerialNumber == null) {
-    return;
-  }
 
+void registerEffect(LXEffect effect, String nfcSerialNumber) {
   lx.addEffect(effect);
 
-  if (configureEffectsAsTriggerables) {
-    if (effect instanceof Triggerable) {
-      Triggerable triggerable = (Triggerable)effect;
-      triggerable.enableTriggerableMode();
-      nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
-      apc40DrumpadTriggerablesLists[0].add(triggerable);
-    }
+  if (effect instanceof Triggerable && nfcSerialNumber != null) {
+    Triggerable triggerable = (Triggerable)effect;
+    triggerable.enableTriggerableMode();
+    nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
+    apc40DrumpadTriggerablesLists[0].add(triggerable);
   }
-}
-
-void registerEffectControlParameter(LXListenableNormalizedParameter parameter) {
-  registerEffectControlParameter(parameter, null);
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber) {
@@ -331,15 +356,9 @@ void registerEffectControlParameter(LXListenableNormalizedParameter parameter, S
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue) {
-  if (configureEffectsAsTriggerables) {
-    Triggerable triggerable = new ParameterTriggerableAdapter(parameter, offValue, onValue);
-    if (nfcSerialNumber != null) {
-      nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
-      apc40DrumpadTriggerablesLists[0].add(triggerable);
-    }
-  } else {
-    effectKnobParametersList.add(parameter);
-  }
+  ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(parameter, offValue, onValue);
+  nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
+  apc40DrumpadTriggerablesLists[0].add(triggerable);
 }
 
 /* configureKeyboard */
@@ -391,11 +410,9 @@ void configureTriggerables() {
     new ArrayList<Triggerable>()
   };
 
-  configurePatternsAsTriggerables = true;
-  registerPatterns();
-
-  configureEffectsAsTriggerables = true;
-  registerEffects();
+  registerPatternTriggerables();
+  registerOneShotTriggerables();
+  registerEffectTriggerables();
 
   apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
   for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
