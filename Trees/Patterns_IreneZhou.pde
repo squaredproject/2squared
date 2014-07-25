@@ -1,14 +1,16 @@
 import ddf.minim.*;
 
-class Fireflies extends LXPattern {
+class Fireflies extends LXPattern implements Triggerable{
   final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 7.5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private float radius = 40;
-  private int numFireflies = 20;
+  private int numFireflies = 0;
   private Firefly[] fireflies;
   private Firefly[] queue;
   private SinLFO[] blinkers = new SinLFO[10];
+  private boolean triggerable = false;
+  private LinearEnvelope decay = new LinearEnvelope(0,0,4000);
   
   
   private class Firefly {
@@ -38,6 +40,7 @@ class Fireflies extends LXPattern {
     addParameter(flyCount);
     addParameter(speed);
     addParameter(hue);
+    addModulator(decay);
 
     for (int i = 0; i < blinkers.length; ++i) {
       blinkers[i] = new SinLFO(0, 75, 1000  * random(1.0, 3.0));      
@@ -94,8 +97,12 @@ class Fireflies extends LXPattern {
       );
     }
 
-    numFireflies = flyCount.getValuei();
-
+    if (triggerable) {
+      numFireflies = (int) decay.getValuef();
+    } else {
+      numFireflies = flyCount.getValuei();  
+    }
+    
     if (fireflies.length < numFireflies) { 
       addToQueue(numFireflies - fireflies.length);
     }
@@ -140,6 +147,22 @@ class Fireflies extends LXPattern {
       firefly.move(speed.getValuef());
     }
   }
+
+  public void enableTriggerableMode() {
+    triggerable = true;
+  }
+
+  public void onTriggered(float strength) {
+    numFireflies += 25;
+    decay.setRange(numFireflies, 5);
+    decay.reset().start();
+  }
+
+  public void onRelease() {
+    decay.setRange(numFireflies, 0);
+    decay.reset().start();
+  }
+
 }
 
 class Lattice extends LXPattern {
