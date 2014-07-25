@@ -21,7 +21,11 @@ public interface Triggerable {
   public void onRelease();
 }
 
-public class ParameterTriggerableAdapter implements Triggerable {
+public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
+
+  private final BasicParameter triggeredEventParameter = new BasicParameter("ANON");
+  private final DampedParameter triggeredEventDampedParameter = new DampedParameter(triggeredEventParameter, 2);
+
   private final LXNormalizedParameter enabledParameter;
   private final double offValue;
   private final double onValue;
@@ -34,17 +38,24 @@ public class ParameterTriggerableAdapter implements Triggerable {
     this.enabledParameter = enabledParameter;
     this.offValue = offValue;
     this.onValue = onValue;
+
+    lx.engine.addLoopTask(this);
+    lx.engine.addModulator(triggeredEventDampedParameter.start());
+  }
+
+  void loop(double deltaMs) {
+    enabledParameter.setNormalized(triggeredEventDampedParameter.getValue());
   }
   
   public void enableTriggerableMode() {
   }
   
   public void onTriggered(float strength) {
-    enabledParameter.setNormalized(onValue);
+    triggeredEventParameter.setValue((onValue - offValue) * strength + offValue);
   }
   
   public void onRelease() {
-    enabledParameter.setNormalized(offValue);
+    triggeredEventParameter.setValue(offValue);
   }
 }
 

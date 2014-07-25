@@ -54,7 +54,7 @@ class MidiEngine {
           case APC40.CLIP_LAUNCH+4:
             Triggerable[] triggerablesRow = apc40Drumpad.triggerables[note.getPitch() - APC40.CLIP_LAUNCH];
             if (triggerablesRow.length > channel) {
-              triggerablesRow[channel].onTriggered(127);
+              triggerablesRow[channel].onTriggered(1);
             }
             break;
 
