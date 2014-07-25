@@ -122,6 +122,8 @@ void registerEffects() {
   registerEffect(colorEffect = new ColorEffect(lx));
   registerEffect(ghostEffect = new GhostEffect(lx));
   registerEffect(scrambleEffect = new ScrambleEffect(lx));
+  registerEffect(new SpeedEffect(lx, 0.4), "");
+  registerEffect(new SpeedEffect(lx, 5), "");
 
   registerEffectControlParameter(colorEffect.hueShift);
   registerEffectControlParameter(colorEffect.rainbow, "");
@@ -297,7 +299,23 @@ void configureEffects() {
 }
 
 void registerEffect(LXEffect effect) {
+  registerEffect(effect, null);
+}
+void registerEffect(LXEffect effect, String nfcSerialNumber) {
+  if (configurePatternsAsTriggerables && nfcSerialNumber == null) {
+    return;
+  }
+
   lx.addEffect(effect);
+
+  if (configureEffectsAsTriggerables) {
+    if (effect instanceof Triggerable) {
+      Triggerable triggerable = (Triggerable)effect;
+      triggerable.enableTriggerableMode();
+      nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
+      apc40DrumpadTriggerablesLists[0].add(triggerable);
+    }
+  }
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter) {

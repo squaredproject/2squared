@@ -848,4 +848,24 @@ class StaticEffect extends LXEffect {
   }
 }
 
+class SpeedEffect extends LXEffect implements Triggerable {
 
+  private final double speed;
+
+  SpeedEffect(LX lx, double speed) {
+    super(lx);
+    this.speed = speed;
+  }
+
+  void run(double deltaMs) {}
+
+  public void enableTriggerableMode() {}
+
+  public void onTriggered(float strength) {
+    lx.engine.setSpeed(speed);
+  }
+
+  public void onRelease() {
+    lx.engine.setSpeed(1);
+  }
+}
