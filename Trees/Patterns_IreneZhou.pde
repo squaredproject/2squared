@@ -322,7 +322,7 @@ class Bubbles extends LXPattern implements Triggerable {
     public float theta = 0;
     public float yPos = 0;
     public float bHue = 0;
-    public float banseSpeed = 0;
+    public float baseSpeed = 0;
     public float radius = 0;
 
     public Bubble(float maxRadius) {
