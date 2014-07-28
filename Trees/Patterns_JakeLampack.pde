@@ -1,4 +1,4 @@
-class AcidTrip extends LXPattern {
+class AcidTrip extends TSPattern {
   
   final SinLFO range = new SinLFO(-50, 50, 10000);
   final SawLFO trails = new SawLFO(364, 0, 7000);

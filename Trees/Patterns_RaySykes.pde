@@ -1,4 +1,4 @@
-class SparkleHelix extends LXPattern {
+class SparkleHelix extends TSPattern {
   final BasicParameter minCoil = new BasicParameter("MinCOIL", .02, .005, .05);
   final BasicParameter maxCoil = new BasicParameter("MaxCOIL", .03, .005, .05);
   final BasicParameter sparkle = new BasicParameter("Spark", 80, 160, 10);
@@ -50,7 +50,7 @@ class SparkleHelix extends LXPattern {
 
 
 
-class MultiSine extends LXPattern {
+class MultiSine extends TSPattern {
   final int numLayers = 3;
   int[][] distLayerDivisors = {{50, 140, 200}, {360, 60, 45}}; 
   final BasicParameter brightEffect = new BasicParameter("Bright", 100, 0, 100);
@@ -93,7 +93,7 @@ class MultiSine extends LXPattern {
 
 
 
-class Stripes extends LXPattern {
+class Stripes extends TSPattern {
   final BasicParameter minSpacing = new BasicParameter("MinSpacing", 0.5, .3, 2.5);
   final BasicParameter maxSpacing = new BasicParameter("MaxSpacing", 2, .3, 2.5);
   final SinLFO spacing = new SinLFO(minSpacing, maxSpacing, 8000);
@@ -118,7 +118,7 @@ class Stripes extends LXPattern {
   }
 }
 
-class Ripple extends LXPattern {
+class Ripple extends TSPattern {
   final BasicParameter speed = new BasicParameter("Speed", 15000, 25000, 8000);
   final BasicParameter baseBrightness = new BasicParameter("Bright", 0, 0, 100);
   final SawLFO rippleAge = new SawLFO(0, 100, speed);
@@ -167,7 +167,7 @@ class Ripple extends LXPattern {
 }
 
 
-class SparkleTakeOver extends LXPattern {
+class SparkleTakeOver extends TSPattern {
   int[] sparkleTimeOuts;
   int lastComplimentaryToggle = 0;
   int complimentaryToggle = 0;
@@ -232,7 +232,7 @@ class SparkleTakeOver extends LXPattern {
   }
 }
 
-class Lightning extends LXPattern implements Triggerable {
+class Lightning extends TSPattern implements Triggerable {
   private LightningLine[] bolts = new LightningLine[2];
   final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
@@ -292,7 +292,8 @@ class Lightning extends LXPattern implements Triggerable {
     return new LightningLine (millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3, forkingChance.getValuef());
   }
   
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggered = false;
   }
   
@@ -402,7 +403,7 @@ class LightningLine {
 }
 
 
-class IceCrystals extends LXPattern {
+class IceCrystals extends TSPattern {
   private IceCrystalLine crystal;
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 5, 1, 20);
   final BasicParameter lineWidth = new BasicParameter("Width", 60, 20, 150);

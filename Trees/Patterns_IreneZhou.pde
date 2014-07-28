@@ -1,6 +1,6 @@
 import ddf.minim.*;
 
-class Fireflies extends LXPattern implements Triggerable{
+class Fireflies extends TSPattern implements Triggerable{
   final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 7.5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
@@ -148,7 +148,8 @@ class Fireflies extends LXPattern implements Triggerable{
     }
   }
 
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggerable = true;
   }
 
@@ -165,7 +166,7 @@ class Fireflies extends LXPattern implements Triggerable{
 
 }
 
-class Lattice extends LXPattern {
+class Lattice extends TSPattern {
   final SawLFO spin = new SawLFO(0, 4320, 24000); 
   final SinLFO yClimb = new SinLFO(60, 30, 24000);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
@@ -203,7 +204,7 @@ class Lattice extends LXPattern {
   }
 }
 
-class Fire extends LXPattern  implements Triggerable{
+class Fire extends TSPattern  implements Triggerable{
   final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
   final BasicParameter flameSize = new BasicParameter("SIZE", 50, 10, 75);  
   final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 75);
@@ -293,7 +294,8 @@ class Fire extends LXPattern  implements Triggerable{
     }
   }
 
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggerable = true;
   }
 
@@ -308,7 +310,7 @@ class Fire extends LXPattern  implements Triggerable{
   }
 }
 
-class Bubbles extends LXPattern implements Triggerable {
+class Bubbles extends TSPattern implements Triggerable {
   final DiscreteParameter ballCount = new DiscreteParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5); 
@@ -420,7 +422,8 @@ class Bubbles extends LXPattern implements Triggerable {
     }
   }
 
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggerable = true;
   }
 
@@ -437,7 +440,7 @@ class Bubbles extends LXPattern implements Triggerable {
 
 }
 
-class Voronoi extends LXPattern {
+class Voronoi extends TSPattern {
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5);
   final BasicParameter width = new BasicParameter("WIDTH", 0.75, 0.5, 1.25);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
@@ -505,7 +508,7 @@ class Voronoi extends LXPattern {
   }
 }
 
-class Fumes extends LXPattern {
+class Fumes extends TSPattern {
   final BasicParameter speed = new BasicParameter("SPEED", 2, 0, 20);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   final BasicParameter sat = new BasicParameter("SAT", 25, 0, 100);
@@ -578,7 +581,7 @@ class Fumes extends LXPattern {
   }
 }
 
-class Pulley extends LXPattern implements Triggerable { //ported from SugarCubes
+class Pulley extends TSPattern implements Triggerable { //ported from SugarCubes
   final int NUM_DIVISIONS = 2;
   private final Accelerator[] gravity = new Accelerator[NUM_DIVISIONS];
   private final float[] baseSpeed = new float[NUM_DIVISIONS];
@@ -683,7 +686,8 @@ class Pulley extends LXPattern implements Triggerable { //ported from SugarCubes
     }
   }
 
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggered = false;
   }
 
@@ -703,7 +707,7 @@ class Pulley extends LXPattern implements Triggerable { //ported from SugarCubes
 }
 
 
-class Springs extends LXPattern {
+class Springs extends TSPattern {
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private BooleanParameter automated = new BooleanParameter("AUTO", true);
   private final Accelerator gravity = new Accelerator(0, 0, 0);
@@ -772,7 +776,7 @@ class Springs extends LXPattern {
   }
 }
 
-class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
+class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
   private BasicParameter sz = new BasicParameter("SIZE", 0.5);
   private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
   private BooleanParameter automated = new BooleanParameter("AUTO", true);
@@ -957,7 +961,8 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
     lx.removeModulator(pulley.maxBrt);
   }
 
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     autoMode = false;
     isRising = false;
   }

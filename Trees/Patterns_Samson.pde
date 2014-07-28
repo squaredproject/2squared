@@ -1,7 +1,7 @@
 import ddf.minim.*;
 import heronarts.lx.*;
 
-class EQPattern extends LXPattern {
+class EQPattern extends TSPattern {
 
     final BasicParameter scale;
     final BasicParameter hue;

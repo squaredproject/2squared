@@ -1,4 +1,4 @@
-class MarkLottor extends LXPattern {
+class MarkLottor extends TSPattern {
   
   // These parameters will be knobs on the UI
   final BasicParameter p1 = new BasicParameter("SIZ", 0.25);

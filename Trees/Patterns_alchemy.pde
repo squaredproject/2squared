@@ -1,4 +1,4 @@
-class Zebra extends LXPattern {
+class Zebra extends TSPattern {
  
  BasicParameter thickness =  new BasicParameter ("THIC", 160,0,200); 
  BasicParameter  period= new BasicParameter ("PERI", 500, 300, 3000);

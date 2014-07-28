@@ -1,4 +1,4 @@
-class DoubleHelix extends LXPattern {
+class DoubleHelix extends TSPattern {
   
   final SinLFO rate = new SinLFO(400, 3000, 11000);
   final SawLFO theta = new SawLFO(0, 180, rate);
@@ -25,7 +25,7 @@ class DoubleHelix extends LXPattern {
   }
 }
 
-class ColoredLeaves extends LXPattern {
+class ColoredLeaves extends TSPattern {
   
   private SawLFO[] movement;
   private SinLFO[] bright;
@@ -57,7 +57,7 @@ class ColoredLeaves extends LXPattern {
   }
 }
 
-class SeeSaw extends LXPattern {
+class SeeSaw extends TSPattern {
   
   final LXProjection projection = new LXProjection(model);
 
@@ -92,7 +92,7 @@ class SeeSaw extends LXPattern {
   }
 }
 
-class Twister extends LXPattern {
+class Twister extends TSPattern {
 
   final SinLFO spin = new SinLFO(0, 5*360, 16000);
   
@@ -124,7 +124,7 @@ class Twister extends LXPattern {
   }
 }
 
-class SweepPattern extends LXPattern {
+class SweepPattern extends TSPattern {
   
   final SinLFO speedMod = new SinLFO(3000, 9000, 5400);
   final SinLFO yPos = new SinLFO(model.yMin, model.yMax, speedMod);
@@ -172,7 +172,7 @@ class SweepPattern extends LXPattern {
   }
 }
 
-class DiffusionTestPattern extends LXPattern {
+class DiffusionTestPattern extends TSPattern {
   
   final BasicParameter hue = new BasicParameter("HUE", 0, 360);
   final BasicParameter sat = new BasicParameter("SAT", 1);
@@ -201,7 +201,7 @@ class DiffusionTestPattern extends LXPattern {
   }
 }
 
-class TestPattern extends LXPattern {
+class TestPattern extends TSPattern {
   
   int CUBE_MOD = 14;
   
@@ -230,7 +230,7 @@ class TestPattern extends LXPattern {
   }
 }
 
-class TestCluster extends LXPattern {
+class TestCluster extends TSPattern {
   final DiscreteParameter lightNo = new DiscreteParameter("LIGHT", 0, 19);
   final BasicParameter pos = new BasicParameter("POS", 0); 
   

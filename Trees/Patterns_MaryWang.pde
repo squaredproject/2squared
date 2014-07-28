@@ -1,4 +1,4 @@
-class Twinkle extends LXPattern {
+class Twinkle extends TSPattern {
 
   private SinLFO[] bright;
   final BasicParameter brightnessParam = new BasicParameter("Brightness", 0.8, 0.5, 1);
@@ -61,7 +61,7 @@ class Twinkle extends LXPattern {
   }
 }
 
-class VerticalSweep extends LXPattern {
+class VerticalSweep extends TSPattern {
 
   final BasicParameter saturationParam = new BasicParameter("Saturation", 100, 0, 100);
   final BasicParameter hue1Param = new BasicParameter("Hue1", 60, 0, 360);

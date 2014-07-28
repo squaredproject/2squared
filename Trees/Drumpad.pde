@@ -16,7 +16,6 @@ class TSDrumpad implements Drumpad {
 }
 
 public interface Triggerable {
-  public void enableTriggerableMode();
   public void onTriggered(float strength);
   public void onRelease();
 }
@@ -53,12 +52,8 @@ public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
     } else {
       if (triggeredEventDampedParameter.getValue() != triggeredEventParameter.getValue()) {
         isDampening = true;
-        enabledParameter.
       }
     }
-  }
-  
-  public void enableTriggerableMode() {
   }
   
   public void onTriggered(float strength) {

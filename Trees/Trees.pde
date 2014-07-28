@@ -283,19 +283,19 @@ void configureChannels() {
   }
 }
 
-void registerOneShot(LXPattern pattern, String nfcSerialNumber) {
+void registerOneShot(TSPattern pattern, String nfcSerialNumber) {
   registerVisual(pattern, nfcSerialNumber, 1, VisualType.OneShot);
 }
 
-void registerPattern(LXPattern pattern, String nfcSerialNumber) {
+void registerPattern(TSPattern pattern, String nfcSerialNumber) {
   registerPattern(pattern, nfcSerialNumber, 2);
 }
 
-void registerPattern(LXPattern pattern, String nfcSerialNumber, int apc40DrumpadRow) {
+void registerPattern(TSPattern pattern, String nfcSerialNumber, int apc40DrumpadRow) {
   registerVisual(pattern, nfcSerialNumber, apc40DrumpadRow, VisualType.Pattern);
 }
 
-void registerVisual(LXPattern pattern, String nfcSerialNumber, int apc40DrumpadRow, VisualType visualType) {
+void registerVisual(TSPattern pattern, String nfcSerialNumber, int apc40DrumpadRow, VisualType visualType) {
   LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
   pattern.setTransition(t);
 
@@ -304,19 +304,12 @@ void registerVisual(LXPattern pattern, String nfcSerialNumber, int apc40DrumpadR
   apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
 }
 
-Triggerable configurePatternAsTriggerable(LXPattern pattern) {
-  LXChannel channel = lx.engine.addChannel(new LXPattern[] { pattern });
+Triggerable configurePatternAsTriggerable(TSPattern pattern) {
+  LXChannel channel = lx.engine.addChannel(new TSPattern[] { pattern });
   channel.setFaderTransition(new TreesTransition(lx, channel));
 
-  Triggerable triggerable;
-  if (pattern instanceof Triggerable) {
-    triggerable = (Triggerable)pattern;
-    triggerable.enableTriggerableMode();
-    channel.getFader().setValue(1);
-  } else {
-    triggerable = new ParameterTriggerableAdapter(channel.getFader());
-  }
-  return triggerable;
+  pattern.onTriggerableModeEnabled();
+  return pattern.getTriggerable();
 }
 
 /* configureEffects */
@@ -324,7 +317,6 @@ Triggerable configurePatternAsTriggerable(LXPattern pattern) {
 void registerEffect(LXEffect effect, String nfcSerialNumber) {
   if (effect instanceof Triggerable) {
     Triggerable triggerable = (Triggerable)effect;
-    triggerable.enableTriggerableMode();
     nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
     apc40DrumpadTriggerablesLists[0].add(triggerable);
   }

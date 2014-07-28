@@ -24,7 +24,7 @@ public class PixelState {
   }
 }
 
-class Pixels extends LXPattern {
+class Pixels extends TSPattern {
   final BasicParameter pSpeed = new BasicParameter("SPD", 2.0/15.0);
   final BasicParameter pLifetime = new BasicParameter("LIFE", 3.0/15.0);
   final BasicParameter pHue = new BasicParameter("HUE", 0.5);
@@ -81,7 +81,7 @@ class Pixels extends LXPattern {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Wedges extends LXPattern {
+class Wedges extends TSPattern {
   final BasicParameter pSpeed = new BasicParameter("SPD", .52);
   final BasicParameter pCount = new BasicParameter("COUNT", 4.0/15.0);
   final BasicParameter pSat = new BasicParameter("SAT", 5.0/15.0);
@@ -151,7 +151,7 @@ public class ColorBar {
   }
 }
 
-class Parallax extends LXPattern {
+class Parallax extends TSPattern {
   final BasicParameter pHue = new BasicParameter("HUE", 0.5);
   final BasicParameter pSpeed = new BasicParameter("SPD", 0);
   final BasicParameter pCount = new BasicParameter("BARS", .25);

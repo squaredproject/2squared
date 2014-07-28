@@ -1,7 +1,7 @@
 int WHITE = java.awt.Color.WHITE.getRGB();
 int BLACK = java.awt.Color.BLACK.getRGB();
 
-class BassSlam extends LXPattern {
+class BassSlam extends TSPattern {
   
   final private double flashTimePercent = 0.1;
   final private int patternHue = 200;
@@ -33,7 +33,7 @@ class BassSlam extends LXPattern {
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPattern implements Triggerable, KeyboardPlayablePattern {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPattern implements Triggerable, KeyboardPlayablePattern {
   
   BasicParameter frequency;
   
@@ -113,7 +113,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends LXPat
     objects.add(object);
   }
   
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggered = false;
   }
   
@@ -459,7 +460,7 @@ class RainDrop extends MultiObject {
   }
 }
 
-class Strobe extends LXPattern implements Triggerable {
+class Strobe extends TSPattern implements Triggerable {
   
   final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
   final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
@@ -489,7 +490,8 @@ class Strobe extends LXPattern implements Triggerable {
     }
   }
   
-  public void enableTriggerableMode() {
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
     triggered = false;
   }
   
@@ -506,16 +508,13 @@ class Strobe extends LXPattern implements Triggerable {
   }
 }
 
-class Brightness extends LXPattern implements Triggerable {
+class Brightness extends TSPattern implements Triggerable {
   
   Brightness(LX lx) {
     super(lx);
   }
   
   public void run(double deltaMs) {
-  }
-  
-  public void enableTriggerableMode() {
   }
   
   public void onTriggered(float strength) {
@@ -527,7 +526,7 @@ class Brightness extends LXPattern implements Triggerable {
   }
 }
 
-class RandomColor extends LXPattern {
+class RandomColor extends TSPattern {
   
   final BasicParameter speed = new BasicParameter("Speed", 1, 1, 10);
   
@@ -555,7 +554,7 @@ class RandomColor extends LXPattern {
   }
 }
 
-class RandomColorAll extends LXPattern {
+class RandomColorAll extends TSPattern {
   
   RandomColorAll(LX lx) {
     super(lx);
@@ -566,7 +565,7 @@ class RandomColorAll extends LXPattern {
   }
 }
 
-class RandomColorGlitch extends LXPattern {
+class RandomColorGlitch extends TSPattern {
   
   RandomColorGlitch(LX lx) {
     super(lx);
@@ -596,7 +595,7 @@ class RandomColorGlitch extends LXPattern {
   }
 }
 
-class Fade extends LXPattern {
+class Fade extends TSPattern {
   
   final BasicParameter speed = new BasicParameter("SPEE", 11000, 100000, 1000, BasicParameter.Scaling.QUAD_OUT);
   final BasicParameter smoothness = new BasicParameter("SMOO", 100, 1, 100, BasicParameter.Scaling.QUAD_IN);
@@ -623,7 +622,7 @@ class Fade extends LXPattern {
   }
 }
 
-class OrderTest extends LXPattern {
+class OrderTest extends TSPattern {
   
   SawLFO sweep = new SawLFO(0, 15.999, 8000);
   int[] order = new int[] { 1, 2, 3, 4, 5, 6, 9, 8, 10, 11, 12, 13, 14, 16, 15, 7 };
@@ -646,7 +645,7 @@ class OrderTest extends LXPattern {
   }
 }
 
-class Palette extends LXPattern {
+class Palette extends TSPattern {
   
   Palette(LX lx) {
     super(lx);
@@ -665,7 +664,7 @@ class Palette extends LXPattern {
   }
 }
 
-class SolidColor extends LXPattern {
+class SolidColor extends TSPattern {
   // 235 = blue, 135 = green, 0 = red
   final BasicParameter hue = new BasicParameter("HUE", 135, 0, 360);
   
@@ -681,7 +680,7 @@ class SolidColor extends LXPattern {
   }
 }
 
-class ClusterLineTest extends LXPattern {
+class ClusterLineTest extends TSPattern {
   
   final BasicParameter y;
   final BasicParameter theta;
@@ -858,8 +857,6 @@ class SpeedEffect extends LXEffect implements Triggerable {
   }
 
   void run(double deltaMs) {}
-
-  public void enableTriggerableMode() {}
 
   public void onTriggered(float strength) {
     lx.engine.setSpeed(speed);

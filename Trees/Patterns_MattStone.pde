@@ -4,7 +4,7 @@ PGraphics buffer;
 PImage imgbuffer;
 SyphonClient client;
 
-class SyphonPattern extends LXPattern {
+class SyphonPattern extends TSPattern {
 
   int x, y, z, buffWidth, buffHeight = 0;
   float xscale, yscale = 0f;
