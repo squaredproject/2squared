@@ -111,6 +111,8 @@ public static class Model extends LXModel {
    * Cubes in the model
    */
   public final List<Cube> cubes;
+
+  private ModelTransform modelTransform;
     
   Model() {
     super(new Fixture());
@@ -152,6 +154,11 @@ public static class Model extends LXModel {
         }
       }
     }
+  }
+
+  public void setModelTransform(ModelTransform modelTransform) {
+    this.modelTransform = modelTransform;
+    modelTransform.transform(this);
   }
 }
 
@@ -499,6 +506,10 @@ public static class Cube extends LXModel {
    */
   public final PVector cylinderPoint;
 
+  public float transformedY;
+  public float transformedTheta;
+  public PVector transformedCylinderPoint;
+
   Cube(int clusterPosition, PVector treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
     super(Arrays.asList(new LXPoint[] {
       new LXPoint(transform.x() + x, transform.y() + y, transform.z() + z)
@@ -531,6 +542,20 @@ public static class Cube extends LXModel {
     this.cylinderPoint = new PVector(this.theta, this.ty);
     
     transform.pop();
+  }
+}
+
+interface ModelTransform {
+  void transform(Model model);
+}
+
+class IdentityModelTransform implements ModelTransform {
+  void transform(Model model) {
+    for (Cube cube : model.cubes) {
+      cube.transformedTheta = cube.theta;
+      cube.transformedY = cube.y;
+      cube.transformedCylinderPoint = new PVector(cube.transformedTheta, cube.transformedY);
+    }
   }
 }
 
