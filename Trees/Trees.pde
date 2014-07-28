@@ -70,7 +70,6 @@ LXPattern[] getPatternListForChannels() {
   // The 2nd parameter is the NFC tag serial number
   // Specify a blank string to only add it to the apc40 drumpad
   // The 3rd parameter is which row of the apc40 drumpad to add it to. defaults to row 1
-  patterns.add(new SolidColor(lx));
   patterns.add(new Twister(lx));
   patterns.add(new MarkLottor(lx));
   patterns.add(new DoubleHelix(lx));
@@ -84,6 +83,7 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new IceCrystals(lx));
   patterns.add(new ColoredLeaves(lx));
   patterns.add(new Stripes(lx));
+  patterns.add(new SolidColor(lx));
   try { patterns.add(new SyphonPattern(lx, this)); } catch (Throwable e) {}
   patterns.add(new AcidTrip(lx));
   patterns.add(new Springs(lx));
@@ -172,11 +172,13 @@ void registerMasterEffects() {
   ColorEffect colorEffect;
   GhostEffect ghostEffect;
   ScrambleEffect scrambleEffect;
+  RotationEffect rotationEffect;
 
   lx.addEffect(blurEffect = new BlurEffect(lx));
   lx.addEffect(colorEffect = new ColorEffect(lx));
   lx.addEffect(ghostEffect = new GhostEffect(lx));
-  lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
+  // lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
+  lx.addEffect(rotationEffect = new RotationEffect(lx));
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
@@ -186,7 +188,7 @@ void registerMasterEffects() {
     colorEffect.sharp,
     blurEffect.amount,
     ghostEffect.amount,
-    scrambleEffect.amount
+    rotationEffect.rotation
   };
 }
 

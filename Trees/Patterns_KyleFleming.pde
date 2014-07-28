@@ -869,3 +869,37 @@ class SpeedEffect extends LXEffect implements Triggerable {
     lx.engine.setSpeed(1);
   }
 }
+
+class RotationEffect extends LXEffect {
+  
+  final BasicParameter rotation = new BasicParameter("ROT", 0, 0, 360);
+
+  RotationEffect(LX lx) {
+    super(lx);
+
+    model.setModelTransform(new RotationModelTransform(rotation.getValuef()));
+    this.rotation.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        model.setModelTransform(new RotationModelTransform(rotation.getValuef()));
+      }
+    });
+  }
+
+  void run(double deltaMs) {}
+
+  private class RotationModelTransform implements ModelTransform {
+    final float rotationTheta;
+
+    RotationModelTransform(float rotationTheta) {
+      this.rotationTheta = rotationTheta;
+    }
+
+    void transform(Model model) {
+      for (Cube cube : model.cubes) {
+        cube.transformedTheta = (cube.theta + 360 - rotationTheta) % 360;
+        cube.transformedY = cube.y;
+        cube.transformedCylinderPoint = new PVector(cube.transformedTheta, cube.transformedY);
+      }
+    }
+  }
+}
