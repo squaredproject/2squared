@@ -418,10 +418,14 @@ class IceCrystals extends TSPattern {
     recursionDepth.setRange(5, 14);
     settingsObj = new IceCrystalSettings(14);
     crystal = new IceCrystalLine(0, settingsObj);
-    startCrystal();
   }
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
+    if (getChannel().getFader().getNormalized() == 0) {
+      if (crystal.lifeCycleState != -1) {
+        crystal.doReset();
+      }
+      return;
+    }
     
     if (crystal.isDone()){
       startCrystal();
@@ -459,6 +463,15 @@ class IceCrystals extends TSPattern {
     crystal.doReset();
     settingsObj.doSettings(recursionDepth.getValuei(), lineWidth.getValuef(), 150, propagationSpeed.getValuef());
     crystal.doStart(100, random(360), (7 + int(random(2.9))) % 8);
+  }
+
+  Triggerable getTriggerable() {
+    return new ParameterTriggerableAdapter(getChannel().getFader()) {
+      public void onTriggered(float strength) {
+        startCrystal();
+        super.onTriggered(strength);
+      }
+    };
   }
 }
 class IceCrystalSettings {
@@ -676,7 +689,7 @@ class IceCrystalLine {
     this.lifeCycleState = lifeCycleStateIn;
   }
   public boolean isDone(){
-    return lifeCycleState == 6;
+    return lifeCycleState == 6 || lifeCycleState == -1;
   }
 }
 
