@@ -153,6 +153,7 @@ void registerEffectTriggerables() {
   RotationEffect rotationEffect = new RotationEffect(lx);
   SpeedEffect slowSpeed = new SpeedEffect(lx, 0.4);
   SpeedEffect fastSpeed = new SpeedEffect(lx, 5);
+  ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
 
   lx.addEffect(blurEffect);
   lx.addEffect(colorEffect);
@@ -164,6 +165,7 @@ void registerEffectTriggerables() {
 
   registerEffect(slowSpeed, "");
   registerEffect(fastSpeed, "");
+  lx.addEffect(colorStrobeTextureEffect);
 
   registerEffectControlParameter(colorEffect.rainbow, "");
   registerEffectControlParameter(colorEffect.mono, "");
@@ -172,6 +174,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(blurEffect.amount, "", 0.65);
   registerEffectControlParameter(ghostEffect.amount, "", 0.16);
   registerEffectControlParameter(scrambleEffect.amount, "");
+  registerEffectControlParameter(colorStrobeTextureEffect.amount, "");
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,

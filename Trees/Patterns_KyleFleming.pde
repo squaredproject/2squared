@@ -755,7 +755,7 @@ class GhostEffect extends LXEffect {
     }
     
     public void onParameterChanged(LXParameter parameter) {
-      if (parameter.getValue() == 0) {
+      if (parameter == amount && parameter.getValue() == 0) {
         timer = 0;
       }
     }
@@ -809,7 +809,7 @@ class ScrambleEffect extends LXEffect {
   }
   
   protected void run(double deltaMs) {
-    for (Tree tree : ((Model)lx.model).trees) {
+    for (Tree tree : model.trees) {
       for (int i = min(tree.cubes.size(), amount.getValuei()); i > 0; i--) {
         colors[tree.cubes.get(i).index] = colors[tree.cubes.get((i + offset) % tree.cubes.size()).index];
       }
@@ -847,24 +847,21 @@ class StaticEffect extends LXEffect {
   }
 }
 
-class SpeedEffect extends LXEffect implements Triggerable {
+class SpeedEffect extends LXEffect {
 
-  private final double speed;
+  final BasicParameter speed = new BasicParameter("SPEED", 1, .1, 50, BasicParameter.Scaling.QUAD_IN);
 
-  SpeedEffect(LX lx, double speed) {
+  SpeedEffect(final LX lx) {
     super(lx);
-    this.speed = speed;
+
+    speed.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        lx.engine.setSpeed(speed.getValue());
+      }
+    });
   }
 
   void run(double deltaMs) {}
-
-  public void onTriggered(float strength) {
-    lx.engine.setSpeed(speed);
-  }
-
-  public void onRelease() {
-    lx.engine.setSpeed(1);
-  }
 }
 
 class RotationEffect extends LXEffect {
@@ -875,7 +872,7 @@ class RotationEffect extends LXEffect {
     super(lx);
 
     model.setModelTransform(new RotationModelTransform(rotation.getValuef()));
-    this.rotation.addListener(new LXParameterListener() {
+    rotation.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         model.setModelTransform(new RotationModelTransform(rotation.getValuef()));
       }
@@ -900,3 +897,23 @@ class RotationEffect extends LXEffect {
     }
   }
 }
+
+class ColorStrobeTextureEffect extends LXEffect {
+
+  final BasicParameter amount = new BasicParameter("SEIZ", 0, 0, 1, BasicParameter.Scaling.QUAD_IN);
+
+  ColorStrobeTextureEffect(LX lx) {
+    super(lx);
+  }
+
+  void run(double deltaMs) {
+    if (amount.getValue() > 0) {
+      float hue = random(360);
+      for (int i = 0; i < colors.length; i++) {
+        int c = colors[i];
+        colors[i] = lx.hsb(lerp(lx.h(c), hue, amount.getValuef()), 100, lx.b(c));
+      }
+    }
+  }
+}
+
