@@ -43,6 +43,8 @@ class MidiEngine {
     LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");
     
     if (apcInput != null) {
+      final BasicParameter drumpadVelocity = new BasicParameter("ANON");
+
       final APC40 apc40 = new APC40(apcInput, apcOutput) {
         protected void noteOn(LXMidiNoteOn note) {
           int channel = note.getChannel();
@@ -54,7 +56,7 @@ class MidiEngine {
           case APC40.CLIP_LAUNCH+4:
             Triggerable[] triggerablesRow = apc40Drumpad.triggerables[note.getPitch() - APC40.CLIP_LAUNCH];
             if (triggerablesRow.length > channel) {
-              triggerablesRow[channel].onTriggered(1);
+              triggerablesRow[channel].onTriggered(drumpadVelocity.getValuef());
             }
             break;
 
@@ -143,6 +145,8 @@ class MidiEngine {
       
       // Master fader
       apc40.bindController(Trees.this.output.brightness, 0, APC40.MASTER_FADER, LXMidiDevice.TakeoverMode.PICKUP);
+
+      apc40.bindController(drumpadVelocity, 0, APC40.CROSSFADER);
       
       // Effect knobs + buttons
       for (int i = 0; i < effectKnobParameters.length; ++i) {
