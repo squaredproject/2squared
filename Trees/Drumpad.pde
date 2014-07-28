@@ -25,6 +25,7 @@ public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
   private final BasicParameter triggeredEventParameter = new BasicParameter("ANON");
   private final DampedParameter triggeredEventDampedParameter = new DampedParameter(triggeredEventParameter, 2);
   private boolean isDampening = false;
+  private double strength;
 
   private final LXNormalizedParameter enabledParameter;
   private final double offValue;
@@ -40,30 +41,60 @@ public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
     this.onValue = onValue;
 
     lx.engine.addLoopTask(this);
-    lx.engine.addModulator(triggeredEventDampedParameter.start());
+    speedIndependentContainer.addLoopTask(triggeredEventDampedParameter.start());
   }
 
   void loop(double deltaMs) {
     if (isDampening) {
-      enabledParameter.setNormalized(triggeredEventDampedParameter.getValue());
+      enabledParameter.setValue((onValue - offValue) * strength * triggeredEventDampedParameter.getValue() + offValue);
       if (triggeredEventDampedParameter.getValue() == triggeredEventParameter.getValue()) {
         isDampening = false;
       }
     } else {
       if (triggeredEventDampedParameter.getValue() != triggeredEventParameter.getValue()) {
+        enabledParameter.setValue((onValue - offValue) * strength * triggeredEventDampedParameter.getValue() + offValue);
         isDampening = true;
       }
     }
   }
   
   public void onTriggered(float strength) {
-    triggeredEventDampedParameter.setValue(enabledParameter.getNormalized());
-    triggeredEventParameter.setValue((onValue - offValue) * strength + offValue);
+    this.strength = strength;
+    triggeredEventDampedParameter.setValue((enabledParameter.getValue() - offValue) / (onValue - offValue));
+    // println((enabledParameter.getValue() - offValue) / (onValue - offValue));
+    triggeredEventParameter.setValue(1);
   }
   
   public void onRelease() {
-    triggeredEventDampedParameter.setValue(enabledParameter.getNormalized());
-    triggeredEventParameter.setValue(offValue);
+    triggeredEventDampedParameter.setValue((enabledParameter.getValue() - offValue) / (onValue - offValue));
+    triggeredEventParameter.setValue(0);
+  }
+}
+
+class SpeedIndependentContainer implements LXLoopTask {
+
+  private final List<LXLoopTask> loopTasks = new ArrayList<LXLoopTask>();
+
+  private long nowMillis;
+  private long lastMillis;
+
+  SpeedIndependentContainer(LX lx) {
+    lastMillis = System.currentTimeMillis();
+  }
+
+  public void addLoopTask(LXLoopTask loopTask) {
+    this.loopTasks.add(loopTask);
+  }
+
+  public void loop(double deltaMsSkewed) {
+    this.nowMillis = System.currentTimeMillis();
+    double deltaMs = this.nowMillis - this.lastMillis;
+    this.lastMillis = this.nowMillis;
+
+    // Run loop tasks
+    for (LXLoopTask loopTask : this.loopTasks) {
+      loopTask.loop(deltaMs);
+    }
   }
 }
 

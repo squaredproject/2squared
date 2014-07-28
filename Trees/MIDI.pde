@@ -43,7 +43,7 @@ class MidiEngine {
     LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");
     
     if (apcInput != null) {
-      final BasicParameter drumpadVelocity = new BasicParameter("ANON");
+      final BasicParameter drumpadVelocity = new BasicParameter("ANON", 1);
 
       final APC40 apc40 = new APC40(apcInput, apcOutput) {
         protected void noteOn(LXMidiNoteOn note) {

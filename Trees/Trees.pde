@@ -151,8 +151,7 @@ void registerEffectTriggerables() {
   GhostEffect ghostEffect = new GhostEffect(lx);
   ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
   RotationEffect rotationEffect = new RotationEffect(lx);
-  SpeedEffect slowSpeed = new SpeedEffect(lx, 0.4);
-  SpeedEffect fastSpeed = new SpeedEffect(lx, 5);
+  SpeedEffect speedEffect = new SpeedEffect(lx);
   ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
 
   lx.addEffect(blurEffect);
@@ -160,13 +159,11 @@ void registerEffectTriggerables() {
   lx.addEffect(ghostEffect);
   lx.addEffect(scrambleEffect);
   lx.addEffect(rotationEffect);
-  lx.addEffect(slowSpeed);
-  lx.addEffect(fastSpeed);
-
-  registerEffect(slowSpeed, "");
-  registerEffect(fastSpeed, "");
+  lx.addEffect(speedEffect);
   lx.addEffect(colorStrobeTextureEffect);
 
+  registerEffectControlParameter(speedEffect.speed, "", 1, 0.4);
+  registerEffectControlParameter(speedEffect.speed, "", 1, 5);
   registerEffectControlParameter(colorEffect.rainbow, "");
   registerEffectControlParameter(colorEffect.mono, "");
   registerEffectControlParameter(colorEffect.desaturation, "04346762312c80");
@@ -181,10 +178,10 @@ void registerEffectTriggerables() {
     colorEffect.rainbow,
     colorEffect.mono,
     colorEffect.desaturation,
-    colorEffect.sharp,
     blurEffect.amount,
-    ghostEffect.amount,
-    rotationEffect.rotation
+    speedEffect.speed,
+    rotationEffect.rotation,
+    colorStrobeTextureEffect.amount
   };
 }
 
@@ -226,6 +223,7 @@ TSDrumpad apc40Drumpad;
 TSKeyboard keyboard;
 Minim minim;
 NFCEngine nfcEngine;
+SpeedIndependentContainer speedIndependentContainer;
 
 void setup() {
   size(1024, 680, OPENGL);
@@ -238,6 +236,7 @@ void setup() {
   minim = new Minim(this);
   
   lx = new LX(this, model);
+  lx.engine.addLoopTask(speedIndependentContainer = new SpeedIndependentContainer(lx));
 
   configureChannels();
 
