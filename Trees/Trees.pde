@@ -146,17 +146,24 @@ void registerOneShotTriggerables() {
 }
 
 void registerEffectTriggerables() {
-  BlurEffect blurEffect;
-  ColorEffect colorEffect;
-  GhostEffect ghostEffect;
-  ScrambleEffect scrambleEffect;
+  BlurEffect blurEffect = new BlurEffect(lx);
+  ColorEffect colorEffect = new ColorEffect(lx);
+  GhostEffect ghostEffect = new GhostEffect(lx);
+  ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
+  RotationEffect rotationEffect = new RotationEffect(lx);
+  SpeedEffect slowSpeed = new SpeedEffect(lx, 0.4);
+  SpeedEffect fastSpeed = new SpeedEffect(lx, 5);
 
-  registerEffect(blurEffect = new BlurEffect(lx));
-  registerEffect(colorEffect = new ColorEffect(lx));
-  registerEffect(ghostEffect = new GhostEffect(lx));
-  registerEffect(scrambleEffect = new ScrambleEffect(lx));
-  registerEffect(new SpeedEffect(lx, 0.4), "");
-  registerEffect(new SpeedEffect(lx, 5), "");
+  lx.addEffect(blurEffect);
+  lx.addEffect(colorEffect);
+  lx.addEffect(ghostEffect);
+  lx.addEffect(scrambleEffect);
+  lx.addEffect(rotationEffect);
+  lx.addEffect(slowSpeed);
+  lx.addEffect(fastSpeed);
+
+  registerEffect(slowSpeed, "");
+  registerEffect(fastSpeed, "");
 
   registerEffectControlParameter(colorEffect.rainbow, "");
   registerEffectControlParameter(colorEffect.mono, "");
@@ -165,20 +172,6 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(blurEffect.amount, "", 0.65);
   registerEffectControlParameter(ghostEffect.amount, "", 0.16);
   registerEffectControlParameter(scrambleEffect.amount, "");
-}
-
-void registerMasterEffects() {
-  BlurEffect blurEffect;
-  ColorEffect colorEffect;
-  GhostEffect ghostEffect;
-  ScrambleEffect scrambleEffect;
-  RotationEffect rotationEffect;
-
-  lx.addEffect(blurEffect = new BlurEffect(lx));
-  lx.addEffect(colorEffect = new ColorEffect(lx));
-  lx.addEffect(ghostEffect = new GhostEffect(lx));
-  // lx.addEffect(scrambleEffect = new ScrambleEffect(lx));
-  lx.addEffect(rotationEffect = new RotationEffect(lx));
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
@@ -251,9 +244,7 @@ void setup() {
 
   configureTriggerables();
 
-  configureEffects();
-
-  registerEffect(mappingTool = new MappingTool(lx));
+  lx.addEffect(mappingTool = new MappingTool(lx));
 
   configureBMPTool();
 
@@ -330,18 +321,8 @@ Triggerable configurePatternAsTriggerable(LXPattern pattern) {
 
 /* configureEffects */
 
-void configureEffects() {
-  registerMasterEffects();
-}
-
-void registerEffect(LXEffect effect) {
-  registerEffect(effect, null);
-}
-
 void registerEffect(LXEffect effect, String nfcSerialNumber) {
-  lx.addEffect(effect);
-
-  if (effect instanceof Triggerable && nfcSerialNumber != null) {
+  if (effect instanceof Triggerable) {
     Triggerable triggerable = (Triggerable)effect;
     triggerable.enableTriggerableMode();
     nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);

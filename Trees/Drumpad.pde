@@ -25,6 +25,7 @@ public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
 
   private final BasicParameter triggeredEventParameter = new BasicParameter("ANON");
   private final DampedParameter triggeredEventDampedParameter = new DampedParameter(triggeredEventParameter, 2);
+  private boolean isDampening = false;
 
   private final LXNormalizedParameter enabledParameter;
   private final double offValue;
@@ -44,17 +45,29 @@ public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
   }
 
   void loop(double deltaMs) {
-    enabledParameter.setNormalized(triggeredEventDampedParameter.getValue());
+    if (isDampening) {
+      enabledParameter.setNormalized(triggeredEventDampedParameter.getValue());
+      if (triggeredEventDampedParameter.getValue() == triggeredEventParameter.getValue()) {
+        isDampening = false;
+      }
+    } else {
+      if (triggeredEventDampedParameter.getValue() != triggeredEventParameter.getValue()) {
+        isDampening = true;
+        enabledParameter.
+      }
+    }
   }
   
   public void enableTriggerableMode() {
   }
   
   public void onTriggered(float strength) {
+    triggeredEventDampedParameter.setValue(enabledParameter.getNormalized());
     triggeredEventParameter.setValue((onValue - offValue) * strength + offValue);
   }
   
   public void onRelease() {
+    triggeredEventDampedParameter.setValue(enabledParameter.getNormalized());
     triggeredEventParameter.setValue(offValue);
   }
 }
