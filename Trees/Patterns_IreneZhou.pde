@@ -129,8 +129,8 @@ class Fireflies extends LXPattern implements Triggerable{
 
     for (Firefly fly:fireflies) {
       for (Cube cube: model.cubes) {
-        if (abs(fly.yPos - cube.y) <= radius && abs(fly.theta - cube.theta) <= radius) {
-          float distSq = pow((LXUtils.wrapdistf(fly.theta, cube.theta, 360)), 2) + pow(fly.yPos - cube.y, 2);
+        if (abs(fly.yPos - cube.transformedY) <= radius && abs(fly.theta - cube.transformedTheta) <= radius) {
+          float distSq = pow((LXUtils.wrapdistf(fly.theta, cube.transformedTheta, 360)), 2) + pow(fly.yPos - cube.transformedY, 2);
           float brt = max(0, 100 - sqrt(distSq * 4) - blinkers[fly.blinkIndex].getValuef());
           if (brt > lx.b(colors[cube.index])) {
             colors[cube.index] = lx.hsb(
@@ -189,13 +189,13 @@ class Lattice extends LXPattern {
     float spinf = spin.getValuef();
     float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
-      float wrapdistleft = LXUtils.wrapdistf(cube.theta, spinf + (model.yMax - cube.y) * coilf, 180);
-      float wrapdistright = LXUtils.wrapdistf(cube.theta, -spinf - (model.yMax - cube.y) * coilf, 180);
-      float width = yClimb.getValuef() + ((cube.y - yHeight.getValuef())/model.yMax) * 50;
+      float wrapdistleft = LXUtils.wrapdistf(cube.transformedTheta, spinf + (model.yMax - cube.transformedY) * coilf, 180);
+      float wrapdistright = LXUtils.wrapdistf(cube.transformedTheta, -spinf - (model.yMax - cube.transformedY) * coilf, 180);
+      float width = yClimb.getValuef() + ((cube.transformedY - yHeight.getValuef())/model.yMax) * 50;
       float df = min(100, 3 * max(0, wrapdistleft - width) + 3 * max(0, wrapdistright - width));
 
       colors[cube.index] = lx.hsb(
-        (hue.getValuef() + lx.getBaseHuef() + .2*cube.y - 360) % 360, 
+        (hue.getValuef() + lx.getBaseHuef() + .2*cube.transformedY - 360) % 360, 
         100, 
         df
       );
@@ -275,13 +275,13 @@ class Fire extends LXPattern  implements Triggerable{
     }
 
     for (Cube cube: model.cubes) {
-      float yn = cube.y / model.yMax;
+      float yn = cube.transformedY / model.yMax;
       float cBrt = 0;
       float cHue = 0;
       float flameWidth = flameSize.getValuef();
       for (int i = 0; i < flames.length; ++i) {
-        if (abs(flames[i].theta - cube.theta) < (flameWidth * (1- yn))) {
-          cBrt = min(100, max(0, 100 + cBrt- 2 * abs(cube.y - flames[i].decay.getValuef()) - flames[i].decay.getBasisf() * 25)) ;
+        if (abs(flames[i].theta - cube.transformedTheta) < (flameWidth * (1- yn))) {
+          cBrt = min(100, max(0, 100 + cBrt- 2 * abs(cube.transformedY - flames[i].decay.getValuef()) - flames[i].decay.getBasisf() * 25)) ;
           cHue = max(0,  (cHue + cBrt * 0.7) * 0.5);
         }
       }
@@ -400,9 +400,9 @@ class Bubbles extends LXPattern implements Triggerable {
       
     for (Bubble bubble: bubbles) {
       for (Cube cube : model.cubes) {
-        if (abs(bubble.theta - cube.theta) < bubble.radius && abs(bubble.yPos - (cube.y - model.yMin)) < bubble.radius) {
-          float distTheta = LXUtils.wrapdistf(bubble.theta, cube.theta, 360) * 0.8;
-          float distY = bubble.yPos - (cube.y - model.yMin);
+        if (abs(bubble.theta - cube.transformedTheta) < bubble.radius && abs(bubble.yPos - (cube.transformedY - model.yMin)) < bubble.radius) {
+          float distTheta = LXUtils.wrapdistf(bubble.theta, cube.transformedTheta, 360) * 0.8;
+          float distY = bubble.yPos - (cube.transformedY - model.yMin);
           float distSq = distTheta * distTheta + distY * distY;
           
           if (distSq < bubble.radius * bubble.radius) {
@@ -410,7 +410,7 @@ class Bubbles extends LXPattern implements Triggerable {
             colors[cube.index] = lx.hsb(
               (bubble.bHue + hue.getValuef()) % 360,
               50 + dist/bubble.radius * 50,
-              constrain(cube.y/model.yMax * 125 - 50 * (dist/bubble.radius), 0, 100)
+              constrain(cube.transformedY/model.yMax * 125 - 50 * (dist/bubble.radius), 0, 100)
             );
           }
         }
@@ -481,8 +481,8 @@ class Voronoi extends LXPattern {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
       for (int i = 0; i < sites.length; ++i) {
-        if (abs(sites[i].yPos - cube.y) < 150) { //restraint on calculation
-          float distSq = pow((LXUtils.wrapdistf(sites[i].theta, cube.theta, 360)), 2) + pow(sites[i].yPos - cube.y, 2);
+        if (abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
+          float distSq = pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + pow(sites[i].yPos - cube.transformedY, 2);
           if (distSq < nextMinDistSq) {
             if (distSq < minDistSq) {
               nextMinDistSq = minDistSq;
@@ -553,8 +553,8 @@ class Fumes extends LXPattern {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
       for (int i = 0; i < sites.length; ++i) {
-        if (abs(sites[i].yPos - cube.y) < 150) { //restraint on calculation
-          float distSq = pow((LXUtils.wrapdistf(sites[i].theta, cube.theta, 360)), 2) + pow(sites[i].yPos - cube.y, 2);
+        if (abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
+          float distSq = pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + pow(sites[i].yPos - cube.transformedY, 2);
           if (distSq < nextMinDistSq) {
             if (distSq < minDistSq) {
               nextMinDistSq = minDistSq;
@@ -673,11 +673,11 @@ class Pulley extends LXPattern implements Triggerable { //ported from SugarCubes
       float falloff = 100. / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
       for (Cube cube : model.cubes) {
         int gi = (int) constrain((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
-        float yn =  cube.y/model.yMax;
+        float yn =  cube.transformedY/model.yMax;
         colors[cube.index] = lx.hsb(
-          (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4) % 360, 
+          (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.transformedY*.4) % 360, 
           constrain(100 *(0.8 -  yn * yn), 0, 100), 
-          max(0, 100 - abs(cube.y/2 - 50 - gravity[gi].getValuef())*falloff)
+          max(0, 100 - abs(cube.transformedY/2 - 50 - gravity[gi].getValuef())*falloff)
         );
       }
     }
@@ -759,9 +759,9 @@ class Springs extends LXPattern {
     float coilf = 2*coil(spin.getBasisf());
     
     for (Cube cube : model.cubes) {
-      float yn =  cube.y/model.yMax;
+      float yn =  cube.transformedY/model.yMax;
       float width = (1-yn) * 25;
-      float wrapdist = LXUtils.wrapdistf(cube.theta, spinf + (cube.y) * 1/(gravity.getValuef() + 0.2), 360);
+      float wrapdist = LXUtils.wrapdistf(cube.transformedTheta, spinf + (cube.transformedY) * 1/(gravity.getValuef() + 0.2), 360);
       float df = max(0, 100 - max(0, wrapdist-width));
       colors[cube.index] = lx.hsb(
         max(0, (lx.getBaseHuef() - yn * 20 + hue.getValuef()) % 360), 
@@ -909,10 +909,10 @@ class Pulleys extends LXPattern implements Triggerable{ //ported from SugarCubes
         float cBrt = 0;
         float cHue = 0;
         for (int j = 0; j < pulleys.length; ++j) {
-          cHue = (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.y*.4 + pulleys[j].baseHue) % 360;
-          cBrt += max(0, pulleys[j].maxBrt.getValuef() * (100 - abs(cube.y/2 - 50 - pulleys[j].gravity.getValuef())*falloff));
+          cHue = (lx.getBaseHuef() + abs(cube.x - model.cx)*.8 + cube.transformedY*.4 + pulleys[j].baseHue) % 360;
+          cBrt += max(0, pulleys[j].maxBrt.getValuef() * (100 - abs(cube.transformedY/2 - 50 - pulleys[j].gravity.getValuef())*falloff));
         }
-        float yn =  cube.y/model.yMax;
+        float yn =  cube.transformedY/model.yMax;
         colors[cube.index] = lx.hsb(
           cHue, 
           constrain(100 *(0.8 -  yn * yn), 0, 100), 

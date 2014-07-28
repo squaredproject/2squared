@@ -67,7 +67,7 @@ class SnowFlake extends MultiObject {
   }
   
   int getColorForCube(Cube cube) {
-    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
+    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.transformedCylinderPoint);
     float distFromSource = PVector.dist(cubePointPrime, currentPoint);
     float tailFadeFactor = distFromSource / pathDist;
     return lx.hsb(displayColor, 60, max(5, (100 - 10 * distFromSource / thickness)));

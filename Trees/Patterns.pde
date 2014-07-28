@@ -17,9 +17,9 @@ class DoubleHelix extends LXPattern {
     for (Cube cube : model.cubes) {
       float coilf = coil.getValuef() * (cube.cy - model.cy);
       colors[cube.index] = lx.hsb(
-        lx.getBaseHuef() + .4*abs(cube.y - model.cy) +.2* abs(cube.theta - 180),
+        lx.getBaseHuef() + .4*abs(cube.transformedY - model.cy) +.2* abs(cube.transformedTheta - 180),
         100,
-        max(0, 100 - 2*LXUtils.wrapdistf(cube.theta, theta.getValuef() + coilf, 180))
+        max(0, 100 - 2*LXUtils.wrapdistf(cube.transformedTheta, theta.getValuef() + coilf, 180))
       );
     }
   }
@@ -111,12 +111,12 @@ class Twister extends LXPattern {
     float spinf = spin.getValuef();
     float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
-      float wrapdist = LXUtils.wrapdistf(cube.theta, spinf + (model.yMax - cube.y)*coilf, 360);
-      float yn = (cube.y / model.yMax);
+      float wrapdist = LXUtils.wrapdistf(cube.transformedTheta, spinf + (model.yMax - cube.transformedY)*coilf, 360);
+      float yn = (cube.transformedY / model.yMax);
       float width = 10 + 30 * yn;
       float df = max(0, 100 - (100 / 45) * max(0, wrapdist-width));
       colors[cube.index] = lx.hsb(
-        (lx.getBaseHuef() + .2*cube.y - 360 - wrapdist) % 360,
+        (lx.getBaseHuef() + .2*cube.transformedY - 360 - wrapdist) % 360,
         max(0, 100 - 500*max(0, yn-.8)),
         df
       );
@@ -165,7 +165,7 @@ class SweepPattern extends LXPattern {
       float yp = yPos.getValuef() + amp.getValuef() * sin((cube.cx - model.cx) * .01 + offset.getValuef());
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + abs(cube.x - model.cx) * .2 +  cube.cz*.1 + cube.cy*.1) % 360,
-        constrain(abs(cube.y - model.cy), 0, 100),
+        constrain(abs(cube.transformedY - model.cy), 0, 100),
         max(0, 100 - (100/width.getValuef())*abs(cube.cy - yp - height.getValuef()))
       );
     }
@@ -247,7 +247,7 @@ class TestCluster extends LXPattern {
       for (Cube cube : cluster.cubes) {
         if (lightNo.getValuei() >= 17) {
           float d = (lightNo.getValuei() == 17) ?
-            ((cube.y - cluster.yMin) / cluster.yRange) :
+            ((cube.transformedY - cluster.yMin) / cluster.yRange) :
             ((cube.x - cluster.xMin) / cluster.xRange); 
           setColor(cube, lx.hsb(
             lx.getBaseHuef(),

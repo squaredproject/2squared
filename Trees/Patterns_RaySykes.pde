@@ -29,9 +29,9 @@ class SparkleHelix extends LXPattern {
 
     for (Cube cube : model.cubes) {
       float compensatedWidth = (0.7 + .02 / coil.getValuef()) * width.getValuef();
-      float spiralVal = max(0, 100 - (100*TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((TWO_PI / 360) * cube.theta, 8*TWO_PI + spin.getValuef() + coil.getValuef()*(cube.y-model.cy), TWO_PI));
-      float counterSpiralVal = counterSpiralStrength.getValuef() * max(0, 100 - (100*TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((TWO_PI / 360) * cube.theta, 8*TWO_PI - spin.getValuef() - coil.getValuef()*(cube.y-model.cy), TWO_PI));
-      float hueVal = (lx.getBaseHuef() + .1*cube.y) % 360;
+      float spiralVal = max(0, 100 - (100*TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((TWO_PI / 360) * cube.transformedTheta, 8*TWO_PI + spin.getValuef() + coil.getValuef()*(cube.transformedY-model.cy), TWO_PI));
+      float counterSpiralVal = counterSpiralStrength.getValuef() * max(0, 100 - (100*TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((TWO_PI / 360) * cube.transformedTheta, 8*TWO_PI - spin.getValuef() - coil.getValuef()*(cube.transformedY-model.cy), TWO_PI));
+      float hueVal = (lx.getBaseHuef() + .1*cube.transformedY) % 360;
       if (sparkleTimeOuts[cube.index] > millis()){        
         colors[cube.index] = lx.hsb(hueVal, sparkleSaturation.getValuef(), 100);
       }
@@ -80,8 +80,8 @@ class MultiSine extends LXPattern {
     for (Cube cube : model.cubes) {
       float[] combinedDistanceSines = {0, 0};
       for (int i = 0; i < numLayers; i++){
-        combinedDistanceSines[0] += sin(TWO_PI * frequencies[i].getValuef() + cube.y / distLayerDivisors[0][i]) / numLayers;
-        combinedDistanceSines[1] += sin(TWO_PI * frequencies[i].getValuef() + TWO_PI*(cube.theta / distLayerDivisors[1][i])) / numLayers;
+        combinedDistanceSines[0] += sin(TWO_PI * frequencies[i].getValuef() + cube.transformedY / distLayerDivisors[0][i]) / numLayers;
+        combinedDistanceSines[1] += sin(TWO_PI * frequencies[i].getValuef() + TWO_PI*(cube.transformedTheta / distLayerDivisors[1][i])) / numLayers;
       }
       float hueVal = (lx.getBaseHuef() + 20 * sin(TWO_PI * (combinedDistanceSines[0] + combinedDistanceSines[1]))) % 360;
       float brightVal = (100 - brightEffect.getValuef()) + brightEffect.getValuef() * (2 + combinedDistanceSines[0] + combinedDistanceSines[1]) / 4;
@@ -111,8 +111,8 @@ class Stripes extends LXPattern {
     if (getChannel().getFader().getNormalized() == 0) return;
 
     for (Cube cube : model.cubes) {  
-      float hueVal = (lx.getBaseHuef() + .1*cube.y) % 360;
-      float brightVal = 50 + 50 * sin(spacing.getValuef() * (sin((TWO_PI / 360) * 4 * cube.theta) + slopeFactor.getValuef() * cube.y)); 
+      float hueVal = (lx.getBaseHuef() + .1*cube.transformedY) % 360;
+      float brightVal = 50 + 50 * sin(spacing.getValuef() * (sin((TWO_PI / 360) * 4 * cube.transformedTheta) + slopeFactor.getValuef() * cube.transformedY)); 
       colors[cube.index] = lx.hsb(hueVal,  100, brightVal);
     }
   }
@@ -149,8 +149,8 @@ class Ripple extends LXPattern {
     }
     float radius = pow(rippleAge.getValuef(), 2) / 3;
     for (Cube cube : model.cubes) {
-      float distVal = sqrt(pow((LXUtils.wrapdistf(thetaCenter, cube.theta, 360)) * 0.8, 2) + pow(yCenter - cube.y, 2));
-      float heightHueVariance = 0.1 * cube.y;
+      float distVal = sqrt(pow((LXUtils.wrapdistf(thetaCenter, cube.transformedTheta, 360)) * 0.8, 2) + pow(yCenter - cube.transformedY, 2));
+      float heightHueVariance = 0.1 * cube.transformedY;
       if (distVal < radius){
         float rippleDecayFactor = (100 - rippleAge.getValuef()) / 100;
         float timeDistanceCombination = distVal / 20 - rippleAge.getValuef();
@@ -211,14 +211,14 @@ class SparkleTakeOver extends LXPattern {
       resetDone = false;
     }
     for (Cube cube : model.cubes) {  
-      float newHueVal = (lx.getBaseHuef() + complimentaryToggle * hueSeparation + hueVariation.getValuef() * cube.y) % 360;
-      float oldHueVal = (lx.getBaseHuef() + lastComplimentaryToggle * hueSeparation + hueVariation.getValuef() * cube.y) % 360;
+      float newHueVal = (lx.getBaseHuef() + complimentaryToggle * hueSeparation + hueVariation.getValuef() * cube.transformedY) % 360;
+      float oldHueVal = (lx.getBaseHuef() + lastComplimentaryToggle * hueSeparation + hueVariation.getValuef() * cube.transformedY) % 360;
       if (sparkleTimeOuts[cube.index] > millis()){        
         colors[cube.index] = lx.hsb(newHueVal,  (30 + coverage.getValuef()) / 1.3, newBrightVal);
       }
       else {
         colors[cube.index] = lx.hsb(oldHueVal,  (140 - coverage.getValuef()) / 1.4, oldBrightVal);
-        float chance = random(abs(sin((TWO_PI / 360) * cube.theta * 4) * 50) + abs(sin(TWO_PI * (cube.y / 9000))) * 50);
+        float chance = random(abs(sin((TWO_PI / 360) * cube.transformedTheta * 4) * 50) + abs(sin(TWO_PI * (cube.transformedY / 9000))) * 50);
         if (chance > (100 - 100*(pow(coverage.getValuef()/100, 2)))){
           sparkleTimeOuts[cube.index] = millis() + 50000;
         }
@@ -266,7 +266,7 @@ class Lightning extends LXPattern implements Triggerable {
       }
       for (Cube cube : tree.cubes) {
         float hueVal = 300;
-        float lightningFactor = bolts[treeIndex].getLightningFactor(cube.y, cube.theta);
+        float lightningFactor = bolts[treeIndex].getLightningFactor(cube.transformedY, cube.transformedTheta);
         float brightVal = lightningFactor;
         float satVal;
         if (lightningFactor < 20){
@@ -427,7 +427,7 @@ class IceCrystals extends LXPattern {
     }
     crystal.doUpdate();
     for (Cube cube : model.cubes) {
-      float lineFactor = crystal.getLineFactor(cube.y, cube.theta);
+      float lineFactor = crystal.getLineFactor(cube.transformedY, cube.transformedTheta);
       if (lineFactor > 110) {
         lineFactor = 200 - lineFactor;  
       }

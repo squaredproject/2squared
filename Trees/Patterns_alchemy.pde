@@ -22,7 +22,7 @@ class Zebra extends LXPattern {
     float saturation;
     float brightness = 1;
     
-    if (((cube.y + position.getValue() + cube.theta) % 200) > thickness.getValue()) {
+    if (((cube.transformedY + position.getValue() + cube.transformedTheta) % 200) > thickness.getValue()) {
       saturation=0;
       brightness=1;
     } else {

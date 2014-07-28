@@ -34,17 +34,17 @@ class SyphonPattern extends LXPattern {
   }
 
   private color mode1(Cube cube, int cubeIdx) {    
-    return weighted_get(imgbuffer, int(this.buffWidth * (cube.theta / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());
+    return weighted_get(imgbuffer, int(this.buffWidth * (cube.transformedTheta / 360.0)), this.buffHeight - int(this.buffHeight * (cube.transformedY/model.yMax)), getWidth.getValuei());
   }
   
   private color mode2(Cube cube, int cubeIdx) {
     boolean reverse = false;
-    if (cube.theta > (360.0 / 2))
+    if (cube.transformedTheta > (360.0 / 2))
       reverse = true;
     if (reverse) {
-      return weighted_get(imgbuffer, int(this.buffWidth * ((((360.0 - cube.theta) * 2)) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());      
+      return weighted_get(imgbuffer, int(this.buffWidth * ((((360.0 - cube.transformedTheta) * 2)) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.transformedY/model.yMax)), getWidth.getValuei());      
     }
-    return weighted_get(imgbuffer, int(this.buffWidth * ((cube.theta * 2.0) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.ty/model.yMax)), getWidth.getValuei());
+    return weighted_get(imgbuffer, int(this.buffWidth * ((cube.transformedTheta * 2.0) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.transformedY/model.yMax)), getWidth.getValuei());
   }
   
   private color mode3(Cube cube, int cubeIdx) {

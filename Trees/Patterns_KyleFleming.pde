@@ -27,7 +27,7 @@ class BassSlam extends LXPattern {
       y = max(0, 100 * (y - 1) + 250);
       
       for (Cube cube : model.cubes) {
-        setColor(cube.index, lx.hsb(patternHue, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.y), 0, 100)));
+        setColor(cube.index, lx.hsb(patternHue, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.transformedY), 0, 100)));
       }
     }
   }
@@ -191,7 +191,7 @@ abstract class MultiObject extends LXLayer {
   }
   
   public float getBrightnessForCube(Cube cube) {
-    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
+    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.transformedCylinderPoint);
     if (insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness)) {
       float dist = PVector.dist(cubePointPrime, currentPoint);
       return 100 * max(0, (1 - dist / thickness)) * fadeIn * fadeOut;
@@ -319,7 +319,7 @@ class Explosion extends MultiObject {
   }
   
   public float getBrightnessForCube(Cube cube) {
-    PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);
+    PVector cubePointPrime = movePointToSamePlane(origin, cube.transformedCylinderPoint);
     float dist = origin.dist(cubePointPrime);
     switch (state) {
       case EXPLOSION_STATE_IMPLOSION_EXPAND:
@@ -452,7 +452,7 @@ class RainDrop extends MultiObject {
   }
   
   public float getBrightnessForCube(Cube cube) {
-    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.cylinderPoint);
+    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.transformedCylinderPoint);
     float distFromSource = PVector.dist(cubePointPrime, currentPoint);
     float tailFadeFactor = distFromSource / pathDist;
     return max(0, (100 - 10 * distFromSource / thickness));
@@ -700,7 +700,7 @@ class ClusterLineTest extends LXPattern {
     
     PVector origin = new PVector(theta.getValuef(), y.getValuef());
     for (Cube cube : model.cubes) {
-      PVector cubePointPrime = movePointToSamePlane(origin, cube.cylinderPoint);
+      PVector cubePointPrime = movePointToSamePlane(origin, cube.transformedCylinderPoint);
       float dist = origin.dist(cubePointPrime);
       float cubeTheta = (spin.getValuef() + 15) + PVector.sub(cubePointPrime, origin).heading() * 180 / PI + 360;
       colors[cube.index] = lx.hsb(135, 100, 100

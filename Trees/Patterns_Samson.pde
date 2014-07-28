@@ -33,7 +33,7 @@ class EQPattern extends LXPattern {
                                   int(topFreq.getValuef() - lowerFreq.getValuef()));
         double scaled = (d / scale.getValue())*(lx.model.yMax - lx.model.yMin) + lx.model.yMin;
         for (Cube cube : model.cubes) {
-            if (cube.y < (scaled + 5))
+            if (cube.transformedY < (scaled + 5))
                 colors[cube.index] = lx.hsb(hue.getValue(), 100, 100);
             else
                 colors[cube.index] = lx.hsb(0, 0, 0);

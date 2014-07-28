@@ -88,7 +88,7 @@ class VerticalSweep extends LXPattern {
       int saturation = (int) saturationParam.getValuef();
 
     for (Cube cube : model.cubes) {
-      float progress = ((cube.theta / 360.0) + range.getValuef()) % 1; // value is 0-1
+      float progress = ((cube.transformedTheta / 360.0) + range.getValuef()) % 1; // value is 0-1
       float scaledProgress = (colorPalette.length) * progress; // value is 0-3
       int color1Index = floor(scaledProgress);
       int color1Hue = (int) colorPalette[color1Index];

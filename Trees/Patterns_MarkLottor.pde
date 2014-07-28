@@ -108,8 +108,8 @@ class MarkLottor extends LXPattern {
 
       // light up any cubes "near" this ball
       for (Cube cube : model.cubes) {
-	if ((abs(theta - cube.theta) < (50*p1v)) &&
-	    (abs(y - cube.y) < (50*p1v)))
+	if ((abs(theta - cube.transformedTheta) < (50*p1v)) &&
+	    (abs(y - cube.transformedY) < (50*p1v)))
 	  colors[cube.index] = balls[n].getcolor();
       }
     }
@@ -136,9 +136,9 @@ class MarkLottor extends LXPattern {
         //   b: 0-100
         
         colors[cube.index] = lx.hsb(
-          (lx.getBaseHuef() + cube.y * .3) % 360,
+          (lx.getBaseHuef() + cube.transformedY * .3) % 360,
           100,
-          max(0, 100 - LXUtils.wrapdistf(cube.theta, apf, 360))
+          max(0, 100 - LXUtils.wrapdistf(cube.transformedTheta, apf, 360))
         );
       }
     }

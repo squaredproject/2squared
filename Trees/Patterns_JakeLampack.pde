@@ -18,7 +18,7 @@ class AcidTrip extends LXPattern {
      for (Cube cube : model.cubes) {
       
          colors[cube.index] = lx.hsb(
-           abs(cy - cube.y) + abs(cy - cube.x) + trails.getValuef() % 360,
+           abs(cy - cube.transformedY) + abs(cy - cube.x) + trails.getValuef() % 360,
            100,
            100
          );

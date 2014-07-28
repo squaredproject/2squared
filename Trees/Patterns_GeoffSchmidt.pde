@@ -114,7 +114,7 @@ class Wedges extends LXPattern {
 
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
-        Math.floor((rotation - cube.theta) / quant) * quant + vHue * 360.0,
+        Math.floor((rotation - cube.transformedTheta) / quant) * quant + vHue * 360.0,
         (1 - vSat) * 100,
         100);
     }     
@@ -196,7 +196,7 @@ class Parallax extends LXPattern {
       colors[cube.index] = lx.hsb(0, 0, 0);
 
       for (ColorBar colorBar : colorBars) {
-        if (colorBar.intersects(bouncedNow, cube.y)) {
+        if (colorBar.intersects(bouncedNow, cube.transformedY)) {
           colors[cube.index] = colorBar.getColor(pHue.getValuef() * 360);
           break;
         }
