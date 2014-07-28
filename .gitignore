@@ -1,2 +1,3 @@
-Trees/sketch.properties
-Trees/build-tmp/
+sketch.properties
+build-tmp/
+*.sublime-workspace
