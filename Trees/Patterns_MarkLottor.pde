@@ -17,6 +17,8 @@ class MarkLottor extends TSPattern {
   int BALLS = 100;
   int maxballs = BALLS;
   MovObj[] balls;
+
+  boolean isFresh = true;
   
   MarkLottor(LX lx) {
     super(lx);
@@ -39,7 +41,16 @@ class MarkLottor extends TSPattern {
   // This is your run loop called every frame.
   // It's basically just like Processing's draw()  
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
+    if (getChannel().getFader().getNormalized() == 0) {
+      if (!isFresh) {
+        for (n = 0; n < BALLS; n++)
+          balls[n] = new MovObj(-1,0,0,0,0,0,0);
+        clearColors();
+      }
+      return;
+    }
+
+    isFresh = false;
     
     int n;
     float theta, ntheta;
@@ -143,6 +154,19 @@ class MarkLottor extends TSPattern {
       }
     }
     */
+  }
+
+  Triggerable getTriggerable() {
+    return new ParameterTriggerableAdapter(getChannel().getFader()) {
+      public void onTriggered(float strength) {
+        if (!isFresh) {
+          for (n = 0; n < BALLS; n++)
+            balls[n] = new MovObj(-1,0,0,0,0,0,0);
+          clearColors();
+        }
+        super.onTriggered(strength);
+      }
+    };
   }
 
 public class MovObj
