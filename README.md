@@ -8,17 +8,18 @@ The way the guts work for this is that the LXEngine (http://heronarts.com/lx/api
 
 ## Installation
 
-* Download Processing: https://processing.org/download/?processing
-* Download zip or clone this repo
-* Open `trees.pde` in Processing and run the sketch
+* Download [Processing](https://processing.org/download/?processing)
+* Install [LibNFC](http://nfc-tools.org/index.php?title=Libnfc#Installation) (On Mac OS X, I recommend Homebrew; see below)
+* Clone this repo (or download the zip)
+* Open `Trees.pde` in Processing and run the sketch
 
-### Mac OS X
+#### Mac OS X LibNFC Install
 
-* Install Homebrew `ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"`
-* Do all the brewy stuff: `brew doctor`
+* Install Homebrew: `ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"`
+* Do all the brewy stuff by running: `brew doctor`
 * Install libnfc: `brew install libnfc`
 
-#### Other stuff
+#### Other OS X stuff
 
 ###### To Make NFC actually work
 
