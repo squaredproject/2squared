@@ -10,7 +10,7 @@ class Fireflies extends TSPattern implements Triggerable{
   private Firefly[] queue;
   private SinLFO[] blinkers = new SinLFO[10];
   private boolean triggerable = false;
-  private LinearEnvelope decay = new LinearEnvelope(0,0,4000);
+  private LinearEnvelope decay = new LinearEnvelope(0,0,3000);
   
   
   private class Firefly {
@@ -206,7 +206,7 @@ class Lattice extends TSPattern {
 
 class Fire extends TSPattern  implements Triggerable{
   final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
-  final BasicParameter flameSize = new BasicParameter("SIZE", 50, 10, 75);  
+  final BasicParameter flameSize = new BasicParameter("SIZE", 30, 10, 75);  
   final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 75);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private LinearEnvelope fireHeight = new LinearEnvelope(0,0,500);
@@ -300,7 +300,7 @@ class Fire extends TSPattern  implements Triggerable{
   }
 
   public void onTriggered(float strength) {
-    fireHeight.setRange(1,0.5);
+    fireHeight.setRange(1,0.6);
     fireHeight.reset().start();
   };
 
@@ -781,8 +781,9 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
   private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
   private BooleanParameter automated = new BooleanParameter("AUTO", true);
   private BasicParameter speed = new BasicParameter("SPEED", 1, -3, 3);
-  // private final Click turnOff = new Click(9000);
   final DiscreteParameter pulleyCount = new DiscreteParameter("NUM", 1, 1, 5);
+  private Click dropPulley = new Click(4000);
+
 
   private boolean isRising = false; //are the pulleys rising or falling
   boolean triggered = true; //has the trigger to rise/fall been pulled
@@ -804,7 +805,12 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
       baseHue = random(0, 30);
       delay.setDuration(random(0,500));
       gravity.setSpeed(this.baseSpeed, 0);
-      maxBrt.setRange(0,1,3000);
+      if (autoMode) {
+        maxBrt.setRange(0,1,3000);
+      } else {
+        maxBrt.setRange(0.5,1,3000);
+      }
+      
       turnOff.setDuration(6000);
       lx.addModulator(gravity);
       lx.addModulator(delay);
@@ -821,6 +827,7 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
     addParameter(automated);
     addParameter(pulleyCount);
     onParameterChanged(speed);
+    addModulator(dropPulley);
 
     for (int i = 0; i < pulleys.length; i++) {
       pulleys[i] = new Pulley();
@@ -858,27 +865,32 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
 
   public void run(double deltaMS) {
     if (getChannel().getFader().getNormalized() == 0) return;
-    
+
     if (autoMode) {
       numPulleys = pulleyCount.getValuei();
       
       if (numPulleys < pulleys.length) {
         for (int i = numPulleys; i < pulleys.length; i++) {
-          pulleys[i].maxBrt.start();
+          pulleys[i].maxBrt.start();  //fadeOut then delete
         }
       }
-      
-      if (numPulleys > pulleys.length) {
-        addPulleys(numPulleys);
+    } else {
+      if (dropPulley.click()) {
+        numPulleys += 1;
       }
     }
     
+    if (numPulleys > pulleys.length) {
+      addPulleys(numPulleys);
+    }
+
     for (int i = 0; i < pulleys.length; i++) {
       if (pulleys[i].maxBrt.finished()) {
         if (pulleys[i].maxBrt.getValuef() == 1) {
           pulleys[i].maxBrt.setRange(1,0,3000).reset();
         } else {
           removePulley(i);
+          numPulleys -= 1;
         }
       }
     }
@@ -936,7 +948,7 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
         if (autoMode) {
           newPulley.gravity.setValue(random(0,225));
         } else {
-          newPulley.gravity.setValue(225);
+          newPulley.gravity.setValue(250);
           newPulley.turnOff.start();
         }
 
@@ -968,14 +980,11 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
   }
 
   public void onTriggered(float strength) {
-    addPulleys(pulleys.length + 1);    
+    numPulleys +=1;
+    dropPulley.start();
   }
   
   public void onRelease() {
+    dropPulley.stopAndReset();
   }
 }
-
-
-
-
-
