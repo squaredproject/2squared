@@ -908,10 +908,12 @@ class ColorStrobeTextureEffect extends LXEffect {
 
   void run(double deltaMs) {
     if (amount.getValue() > 0) {
-      float hue = random(360);
+      float newHue = random(360);
+      int newColor = lx.hsb(newHue, 100, 100);
       for (int i = 0; i < colors.length; i++) {
-        int c = colors[i];
-        colors[i] = lx.hsb(lerp(lx.h(c), hue, amount.getValuef()), 100, lx.b(c));
+        int oldColor = colors[i];
+        int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
+        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
       }
     }
   }
