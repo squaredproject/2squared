@@ -88,7 +88,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
     
     if (shouldAutofade) {
       for (Cube cube : model.cubes) {
-        blendColor(cube.index, lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / 1000))), MULTIPLY);
+        blendColor(cube.index, lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / 1000))), LXColor.Blend.MULTIPLY);
       }
     } else {
       clearColors();
@@ -938,7 +938,7 @@ class ColorStrobeTextureEffect extends LXEffect {
       for (int i = 0; i < colors.length; i++) {
         int oldColor = colors[i];
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
-        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+        colors[i] = lx.hsb(LXColor.h(blendedColor), LXColor.s(blendedColor), LXColor.b(oldColor));
       }
     }
   }
@@ -963,7 +963,7 @@ class FadeTextureEffect extends LXEffect {
       for (int i = 0; i < colors.length; i++) {
         int oldColor = colors[i];
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
-        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+        colors[i] = lx.hsb(LXColor.h(blendedColor), LXColor.s(blendedColor), LXColor.b(oldColor));
       }
     }
   }
@@ -989,7 +989,7 @@ class AcidTripTextureEffect extends LXEffect {
         float newHue = abs(model.cy - cube.transformedY) + abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360;
         int newColor = lx.hsb(newHue, 100, 100);
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
-        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+        colors[i] = lx.hsb(LXColor.h(blendedColor), LXColor.s(blendedColor), LXColor.b(oldColor));
       }
     }
   }
@@ -1013,7 +1013,7 @@ class CandyTextureEffect extends LXEffect {
         float newHue = i * 127 + 9342 + (float)time % 360;
         int newColor = lx.hsb(newHue, 100, 100);
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
-        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+        colors[i] = lx.hsb(LXColor.h(blendedColor), LXColor.s(blendedColor), LXColor.b(oldColor));
       }
     }
   }
@@ -1047,7 +1047,7 @@ class CandyCloudTextureEffect extends LXEffect {
         int newColor = lx.hsb(newHue, 100, 100);
 
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
-        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+        colors[i] = lx.hsb(LXColor.h(blendedColor), LXColor.s(blendedColor), LXColor.b(oldColor));
       }
     }
   }

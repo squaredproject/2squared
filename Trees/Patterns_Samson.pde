@@ -32,7 +32,7 @@ class EQPattern extends TSPattern {
         double scaled = (d / scale.getValue())*(lx.model.yMax - lx.model.yMin) + lx.model.yMin;
         for (Cube cube : model.cubes) {
             if (cube.transformedY < (scaled + 5))
-                colors[cube.index] = lx.hsb(hue.getValue(), 100, 100);
+                colors[cube.index] = LXColor.hsb(hue.getValue(), 100, 100);
             else
                 colors[cube.index] = lx.hsb(0, 0, 0);
         }

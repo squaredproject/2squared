@@ -306,7 +306,7 @@ class ColorEffect extends LXEffect {
     if (desatf > 0 || huef > 0 || sharpf > 0 || softf > 0 || monof > 0 || rainbowf > 0) {
       float pSharp = 1/(1-.99*sharpf);
       for (int i = 0; i < colors.length; ++i) {
-        float b = lx.b(colors[i]) / 100.;
+        float b = LXColor.b(colors[i]) / 100.;
         float bOrig = b;
         if (sharpf > 0) {
           if (b < .5) {
@@ -323,7 +323,7 @@ class ColorEffect extends LXEffect {
           }
         }
         
-        float h = lx.h(colors[i]);
+        float h = LXColor.h(colors[i]);
         float bh = lx.getBaseHuef();
         if (rainbowf > 0) {
           h = bh + (h - bh) * (1+3*rainbowf);
@@ -339,7 +339,7 @@ class ColorEffect extends LXEffect {
         
         colors[i] = lx.hsb(
           (lerp(h, bh, monof) + huef) % 360,
-          lx.s(colors[i]) * (1 - desatf),
+          LXColor.s(colors[i]) * (1 - desatf),
           100*b
         );
       }

@@ -7,7 +7,7 @@ class UITrees extends UICameraComponent {
     previewBuffer = new int[lx.total];
     black = new int[lx.total];
     for (int i = 0; i < black.length; ++i) {
-      black[i] = 0xff000000;
+      black[i] = #000000;
     }
   }
   
@@ -271,15 +271,16 @@ public class UILoopRecorder extends UIWindow {
 
   public void saveSet(File file) {
     if (file != null) {
-      saveJSONArray(automation[automationSlot.getValuei()].toJSON(), file.getPath());
+      saveBytes(file.getPath(), automation[automationSlot.getValuei()].toJson().toString().getBytes());
       slotLabel.setLabel(labels[automationSlot.getValuei()] = file.getName());
     }
   }
   
   public void loadSet(File file) {
     if (file != null) {
-      JSONArray jsonArr = loadJSONArray(file.getPath());
-      automation[automationSlot.getValuei()].loadJSON(jsonArr);
+      String jsonStr = new String(loadBytes(file.getPath()));
+      JsonArray jsonArr = new Gson().fromJson(jsonStr, JsonArray.class);
+      automation[automationSlot.getValuei()].loadJson(jsonArr);
       slotLabel.setLabel(labels[automationSlot.getValuei()] = file.getName());
     }
   }

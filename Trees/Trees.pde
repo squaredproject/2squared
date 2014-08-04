@@ -1,4 +1,3 @@
-import heronarts.lx.ui.component.*;
 import heronarts.lx.*;
 import heronarts.lx.audio.*;
 import heronarts.lx.effect.*;
@@ -11,8 +10,11 @@ import heronarts.lx.transform.*;
 import heronarts.lx.transition.*;
 import heronarts.lx.midi.*;
 import heronarts.lx.modulator.*;
-import heronarts.lx.ui.*;
-import heronarts.lx.ui.control.*;
+
+import heronarts.p2lx.*;
+import heronarts.p2lx.ui.*;
+import heronarts.p2lx.ui.component.*;
+import heronarts.p2lx.ui.control.*;
 
 import ddf.minim.*;
 import processing.opengl.*;
@@ -224,7 +226,7 @@ static JSONArray clusterConfig;
 static Geometry geometry = new Geometry();
 
 Model model;
-LX lx;
+P2LX lx;
 LXDatagramOutput output;
 LXDatagram[] datagrams;
 UIChannelFaders uiFaders;
@@ -252,7 +254,7 @@ void setup() {
   geometry = new Geometry();
   model = new Model();
   
-  lx = new LX(this, model);
+  lx = new P2LX(this, model);
   lx.engine.addLoopTask(speedIndependentContainer = new SpeedIndependentContainer(lx));
 
   configureChannels();
@@ -510,7 +512,7 @@ class TreesTransition extends LXTransition {
   private final DampedParameter leftLevel = new DampedParameter(left, 2);
   private final DampedParameter rightLevel = new DampedParameter(right, 2);
  
-  private int blendType = ADD;
+  private LXColor.Blend blendType = LXColor.Blend.ADD;
   
   private final color[] scaleBuffer = new color[lx.total];
   
@@ -526,10 +528,10 @@ class TreesTransition extends LXTransition {
     blendMode.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         switch (blendMode.getValuei()) {
-        case 0: blendType = ADD; break;
-        case 1: blendType = MULTIPLY; break;
-        case 2: blendType = LIGHTEST; break;
-        case 3: blendType = SUBTRACT; break;
+        case 0: blendType = LXColor.Blend.ADD; break;
+        case 1: blendType = LXColor.Blend.MULTIPLY; break;
+        case 2: blendType = LXColor.Blend.LIGHTEST; break;
+        case 3: blendType = LXColor.Blend.SUBTRACT; break;
         }
       }
     });
@@ -539,21 +541,23 @@ class TreesTransition extends LXTransition {
     for (Tree tree : model.trees) {
       float level = ((tree.index == 0) ? leftLevel : rightLevel).getValuef();
       float amount = (float) (progress*level);
+      
       if (amount == 0) {
         for (LXPoint p : tree.points) {
           colors[p.index] = c1[p.index];
         }
       } else if (amount == 1) {
         for (LXPoint p : tree.points) {
-          int color2 = blendType == SUBTRACT ? LX.hsb(0, 0, LX.b(c2[p.index])) : c2[p.index]; 
-          colors[p.index] = this.lx.applet.blendColor(c1[p.index], color2, this.blendType);
+          int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[p.index])) : c2[p.index]; 
+          colors[p.index] = LXColor.blend(c1[p.index], color2, this.blendType);
         }
       } else {
         for (LXPoint p : tree.points) {
-          int color2 = blendType == SUBTRACT ? LX.hsb(0, 0, LX.b(c2[p.index])) : c2[p.index];
-          this.colors[p.index] = this.lx.applet.lerpColor(c1[p.index],
-            this.lx.applet.blendColor(c1[p.index], color2, this.blendType),
-            amount, PConstants.RGB);
+          int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[p.index])) : c2[p.index];
+          colors[p.index] = LXColor.lerp(
+            c1[p.index],
+            LXColor.blend(c1[p.index], color2, this.blendType),
+            amount);
         }
       }
     }

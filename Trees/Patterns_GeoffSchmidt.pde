@@ -20,7 +20,7 @@ public class PixelState {
     double age = (life - (now - when)) / life;
     if (age < 0)
       age = 0;
-    return lx.hsb(h * 360, s * 100, age * 100);
+    return LXColor.hsb(h * 360, s * 100, age * 100);
   }
 }
 
@@ -113,7 +113,7 @@ class Wedges extends TSPattern {
     double quant = 360.0/sections;
 
     for (Cube cube : model.cubes) {
-      colors[cube.index] = lx.hsb(
+      colors[cube.index] = LXColor.hsb(
         Math.floor((rotation - cube.transformedTheta) / quant) * quant + vHue * 360.0,
         (1 - vSat) * 100,
         100);
@@ -147,7 +147,7 @@ public class ColorBar {
   }
   
   public color getColor(double h) {
-    return lx.hsb(h, s, b);
+    return LXColor.hsb(h, s, b);
   }
 }
 

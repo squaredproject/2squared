@@ -70,9 +70,9 @@ class MarkLottor extends TSPattern {
     // dim everything already on cube
       for (Cube cube : model.cubes) {
         colors[cube.index] = lx.hsb(
-          lx.h(colors[cube.index]),
-          lx.s(colors[cube.index]),
-          lx.b(colors[cube.index]) * (1.0-(p4v*p4v)));  
+          LXColor.h(colors[cube.index]),
+          LXColor.s(colors[cube.index]),
+          LXColor.b(colors[cube.index]) * (1.0-(p4v*p4v)));  
       }
       /*
     // dim everything already on cube

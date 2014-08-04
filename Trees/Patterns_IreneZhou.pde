@@ -132,7 +132,7 @@ class Fireflies extends TSPattern implements Triggerable{
         if (abs(fly.yPos - cube.transformedY) <= radius && abs(fly.theta - cube.transformedTheta) <= radius) {
           float distSq = pow((LXUtils.wrapdistf(fly.theta, cube.transformedTheta, 360)), 2) + pow(fly.yPos - cube.transformedY, 2);
           float brt = max(0, 100 - sqrt(distSq * 4) - blinkers[fly.blinkIndex].getValuef());
-          if (brt > lx.b(colors[cube.index])) {
+          if (brt > LXColor.b(colors[cube.index])) {
             colors[cube.index] = lx.hsb(
               (lx.getBaseHuef() + hue.getValuef()) % 360,
               100 - brt,
