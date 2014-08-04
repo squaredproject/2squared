@@ -1,5 +1,6 @@
 import heronarts.lx.ui.component.*;
 import heronarts.lx.*;
+import heronarts.lx.audio.*;
 import heronarts.lx.effect.*;
 import heronarts.lx.midi.*;
 import heronarts.lx.model.*;
@@ -240,7 +241,6 @@ MidiEngine midiEngine;
 TSDrumpad mpk25Drumpad;
 TSDrumpad apc40Drumpad;
 TSKeyboard keyboard;
-Minim minim;
 NFCEngine nfcEngine;
 SpeedIndependentContainer speedIndependentContainer;
 
@@ -251,8 +251,6 @@ void setup() {
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
   model = new Model();
-  
-  minim = new Minim(this);
   
   lx = new LX(this, model);
   lx.engine.addLoopTask(speedIndependentContainer = new SpeedIndependentContainer(lx));

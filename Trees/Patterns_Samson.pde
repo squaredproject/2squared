@@ -9,14 +9,12 @@ class EQPattern extends TSPattern {
     final BasicParameter topFreq;
 
     
-    AudioInput in;
     GraphicEQ geq;
 
     EQPattern(LX lx) {
         super(lx);
         
-        in = minim.getLineIn(Minim.STEREO, int(1024));
-        geq = new GraphicEQ(in);
+        geq = new GraphicEQ(lx.audioInput());
         geq.start();
 
         addParameter(hue = new BasicParameter("Hue", 135, 0, 360));
