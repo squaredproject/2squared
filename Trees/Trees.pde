@@ -154,6 +154,9 @@ void registerEffectTriggerables() {
   SpinEffect spinEffect = new SpinEffect(lx);
   SpeedEffect speedEffect = new SpeedEffect(lx);
   ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
+  FadeTextureEffect fadeTextureEffect = new FadeTextureEffect(lx);
+  AcidTripTextureEffect acidTripTextureEffect = new AcidTripTextureEffect(lx);
+  CandyTextureEffect candyTextureEffect = new CandyTextureEffect(lx);
 
   lx.addEffect(blurEffect);
   lx.addEffect(colorEffect);
@@ -163,6 +166,9 @@ void registerEffectTriggerables() {
   lx.addEffect(spinEffect);
   lx.addEffect(speedEffect);
   lx.addEffect(colorStrobeTextureEffect);
+  lx.addEffect(fadeTextureEffect);
+  lx.addEffect(acidTripTextureEffect);
+  lx.addEffect(candyTextureEffect);
 
   registerEffectControlParameter(speedEffect.speed, "", 1, 0.4);
   registerEffectControlParameter(speedEffect.speed, "", 1, 5);
@@ -175,6 +181,9 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(ghostEffect.amount, "", 0.16);
   registerEffectControlParameter(scrambleEffect.amount, "");
   registerEffectControlParameter(colorStrobeTextureEffect.amount, "");
+  registerEffectControlParameter(fadeTextureEffect.amount, "");
+  registerEffectControlParameter(acidTripTextureEffect.amount, "");
+  registerEffectControlParameter(candyTextureEffect.amount, "");
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
@@ -184,7 +193,7 @@ void registerEffectTriggerables() {
     blurEffect.amount,
     speedEffect.speed,
     spinEffect.spin,
-    colorStrobeTextureEffect.amount
+    acidTripTextureEffect.amount
   };
 }
 

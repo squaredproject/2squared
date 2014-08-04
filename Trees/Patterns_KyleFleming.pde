@@ -884,7 +884,7 @@ class RotationEffect extends ModelTransform {
 
 class SpinEffect extends ModelTransform {
   
-  final BasicParameter spin = new BasicParameter("SPIN");//, 0, 0, 1, BasicParameter.Scaling.QUAD_OUT);
+  final BasicParameter spin = new BasicParameter("SPIN");
   final FunctionalParameter rotationPeriodMs = new FunctionalParameter() {
     public double getValue() {
       return 5000 - 4800 * spin.getValue();
@@ -940,3 +940,78 @@ class ColorStrobeTextureEffect extends LXEffect {
   }
 }
 
+class FadeTextureEffect extends LXEffect {
+
+  final BasicParameter amount = new BasicParameter("FADE");
+
+  final SawLFO colr = new SawLFO(0, 360, 10000);
+
+  FadeTextureEffect(LX lx) {
+    super(lx);
+
+    addModulator(colr.start());
+  }
+
+  void run(double deltaMs) {
+    if (amount.getValue() > 0) {
+      float newHue = colr.getValuef();
+      int newColor = lx.hsb(newHue, 100, 100);
+      for (int i = 0; i < colors.length; i++) {
+        int oldColor = colors[i];
+        int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
+        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+      }
+    }
+  }
+}
+
+class AcidTripTextureEffect extends LXEffect {
+
+  final BasicParameter amount = new BasicParameter("ACID");
+  
+  final SawLFO trails = new SawLFO(364, 0, 7000);
+
+  AcidTripTextureEffect(LX lx) {
+    super(lx);
+    
+    addModulator(trails.start());
+  }
+
+  void run(double deltaMs) {
+    if (amount.getValue() > 0) {
+      for (int i = 0; i < colors.length; i++) {
+        int oldColor = colors[i];
+        Cube cube = model.cubes.get(i);
+        float newHue = abs(model.cy - cube.transformedY) + abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360;
+        int newColor = lx.hsb(newHue, 100, 100);
+        int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
+        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+      }
+    }
+  }
+}
+
+class CandyTextureEffect extends LXEffect {
+
+  final BasicParameter amount = new BasicParameter("CAND");
+  
+  final SawLFO colorOffset = new SawLFO(0, 360, 2000);
+
+  CandyTextureEffect(LX lx) {
+    super(lx);
+    
+    addModulator(colorOffset.start());
+  }
+
+  void run(double deltaMs) {
+    if (amount.getValue() > 0) {
+      for (int i = 0; i < colors.length; i++) {
+        int oldColor = colors[i];
+        float newHue = i * 127 + 9342 + colorOffset.getValuef() % 360;
+        int newColor = lx.hsb(newHue, 100, 100);
+        int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
+        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+      }
+    }
+  }
+}
