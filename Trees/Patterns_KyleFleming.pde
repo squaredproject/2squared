@@ -255,6 +255,10 @@ float moveThetaToSamePlane(float thetaA, float thetaB) {
   }
 }
 
+float thetaDistance(float thetaA, float thetaB) {
+  return LXUtils.wrapdistf(thetaA, thetaB, 360);
+}
+
 class Explosion extends MultiObject {
   
   final static int EXPLOSION_STATE_IMPLOSION_EXPAND = 1 << 0;
@@ -969,7 +973,7 @@ class AcidTripTextureEffect extends LXEffect {
 
   final BasicParameter amount = new BasicParameter("ACID");
   
-  final SawLFO trails = new SawLFO(364, 0, 7000);
+  final SawLFO trails = new SawLFO(360, 0, 7000);
 
   AcidTripTextureEffect(LX lx) {
     super(lx);
@@ -994,24 +998,134 @@ class AcidTripTextureEffect extends LXEffect {
 class CandyTextureEffect extends LXEffect {
 
   final BasicParameter amount = new BasicParameter("CAND");
-  
-  final SawLFO colorOffset = new SawLFO(0, 360, 2000);
+
+  double time = 0;
 
   CandyTextureEffect(LX lx) {
     super(lx);
-    
-    addModulator(colorOffset.start());
   }
 
   void run(double deltaMs) {
     if (amount.getValue() > 0) {
+      time += deltaMs;
       for (int i = 0; i < colors.length; i++) {
         int oldColor = colors[i];
-        float newHue = i * 127 + 9342 + colorOffset.getValuef() % 360;
+        float newHue = i * 127 + 9342 + (float)time % 360;
         int newColor = lx.hsb(newHue, 100, 100);
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
         colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
       }
+    }
+  }
+}
+
+class CandyCloudTextureEffect extends LXEffect {
+
+  final BasicParameter amount = new BasicParameter("CLOU");
+
+  double time = 0;
+
+  CandyCloudTextureEffect(LX lx) {
+    super(lx);
+  }
+
+  void run(double deltaMs) {
+    if (amount.getValue() > 0) {
+      time += deltaMs;
+      for (int i = 0; i < colors.length; i++) {
+        int oldColor = colors[i];
+        Cube cube = model.cubes.get(i);
+
+        float adjustedTheta = cube.transformedTheta / 360;
+        float adjustedY = (cube.transformedY - model.yMin) / (model.yMax - model.yMin);
+        float adjustedTime = (float)time / 5000;
+
+        // Use 2 textures so we don't have a seam. Interpolate between them between -45 & 45 and 135 & 225
+        float hue1 = noise(adjustedTheta, adjustedY, adjustedTime);
+        float hue2 = noise((adjustedTheta + 0.5) % 1, adjustedY + 100, adjustedTime);
+        float newHue = lerp(hue1, hue2, max(min(abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5, 1), 0)) * 1080 % 360;
+        int newColor = lx.hsb(newHue, 100, 100);
+
+        int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
+        colors[i] = lx.hsb(lx.h(blendedColor), lx.s(blendedColor), lx.b(oldColor));
+      }
+    }
+  }
+}
+
+class CandyCloud extends TSPattern {
+
+  double time = 0;
+
+  CandyCloud(LX lx) {
+    super(lx);
+  }
+
+  void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
+    time += deltaMs;
+    for (Cube cube : model.cubes) {
+      float adjustedTheta = cube.transformedTheta / 360;
+      float adjustedY = (cube.transformedY - model.yMin) / (model.yMax - model.yMin);
+      float adjustedTime = (float)time / 5000;
+
+      // Use 2 textures so we don't have a seam. Interpolate between them between -45 & 45 and 135 & 225
+      float hue1 = noise(adjustedTheta, adjustedY, adjustedTime);
+      float hue2 = noise((adjustedTheta + 0.5) % 1, adjustedY + 100, adjustedTime);
+      float hue = lerp(hue1, hue2, max(min(abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5, 1), 0)) * 1080 % 360;
+
+      float brightness = min(max(noise(4 * adjustedTheta, 4 * adjustedY + 200, adjustedTime) * 8 - 2, 0), 1) * 100;
+      
+      colors[cube.index] = lx.hsb(hue, 100, brightness);
+    }
+  }
+}
+
+class GalaxyCloud extends TSPattern {
+
+  double time = 0;
+
+  GalaxyCloud(LX lx) {
+    super(lx);
+  }
+
+  void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
+    // Blue to purple
+    float hueMin = 240;
+    float hueMax = 280;
+    float hueMinExtra = 80;
+    float hueMaxExtra = 55;
+
+    float hueSpread = hueMax - hueMin;
+    float hueMid = hueSpread / 2 + hueMin;
+    float initialSpreadSize = hueMinExtra + hueMaxExtra;
+    float initialSpreadMin = hueMid - hueMinExtra;
+
+    time += deltaMs;
+    for (Cube cube : model.cubes) {
+      float adjustedTheta = cube.transformedTheta / 360;
+      float adjustedY = (cube.transformedY - model.yMin) / (model.yMax - model.yMin);
+      float adjustedTime = (float)time / 5000;
+
+      // Use 2 textures so we don't have a seam. Interpolate between them between -45 & 45 and 135 & 225
+      float hue1 = noise(4 * adjustedTheta, 4 * adjustedY, adjustedTime);
+      float hue2 = noise(4 * ((adjustedTheta + 0.5) % 1), 4 * adjustedY + 100, adjustedTime);
+      float hue = lerp(hue1, hue2, min(max(abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5, 0), 1));
+
+      float adjustedHue = hue * initialSpreadSize + initialSpreadMin;
+      hue = min(max(adjustedHue, hueMin), hueMax);
+
+      // make it black if the hue would go below hueMin or above hueMax
+      // normalizedFadeOut: 0 = edge of the initial spread, 1 = edge of the hue spread, >1 = in the hue spread
+      float normalizedFadeOut = (adjustedHue - hueMid + hueMinExtra) / (hueMinExtra - hueSpread / 2);
+      // scaledFadeOut <0 = black sooner, 0-1 = fade out gradient, >1 = regular color
+      float scaledFadeOut = normalizedFadeOut * 5 - 4.5;
+      float brightness = min(max(scaledFadeOut, 0), 1) * 100;
+
+      colors[cube.index] = lx.hsb(hue, 100, brightness);
     }
   }
 }

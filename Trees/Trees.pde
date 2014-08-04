@@ -65,11 +65,6 @@ LXPattern[] getPatternListForChannels() {
   ArrayList<LXPattern> patterns = new ArrayList<LXPattern>();
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
-
-  // If you don't want to add it to NFC or the drumpad, don't specify the 2nd and 3rd parameters
-  // The 2nd parameter is the NFC tag serial number
-  // Specify a blank string to only add it to the apc40 drumpad
-  // The 3rd parameter is which row of the apc40 drumpad to add it to. defaults to row 1
   patterns.add(new Twister(lx));
   patterns.add(new MarkLottor(lx));
   patterns.add(new DoubleHelix(lx));
@@ -111,6 +106,8 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new LowEQ(lx));
   patterns.add(new MidEQ(lx));
   patterns.add(new HighEQ(lx));
+  patterns.add(new CandyCloud(lx));
+  patterns.add(new GalaxyCloud(lx));
 
   for (LXPattern pattern : patterns) {
     LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
@@ -121,6 +118,11 @@ LXPattern[] getPatternListForChannels() {
 }
 
 void registerPatternTriggerables() {
+  // If you don't want to add it to NFC or the drumpad, don't specify the 2nd and 3rd parameters
+  // The 2nd parameter is the NFC tag serial number
+  // Specify a blank string to only add it to the apc40 drumpad
+  // The 3rd parameter is which row of the apc40 drumpad to add it to. defaults to row 1
+
   registerPattern(new Twister(lx), "");
   registerPattern(new MarkLottor(lx), "");
   registerPattern(new DoubleHelix(lx), "");
@@ -136,6 +138,8 @@ void registerPatternTriggerables() {
   registerPattern(new Bubbles(lx), "", 4);
   registerPattern(new Pulleys(lx), "", 4);
   registerPattern(new RandomColorAll(lx), "04ad5f62312c80", 4);
+  registerPattern(new CandyCloud(lx), "", 4);
+  registerPattern(new GalaxyCloud(lx), "", 4);
 
 }
 
@@ -157,6 +161,7 @@ void registerEffectTriggerables() {
   FadeTextureEffect fadeTextureEffect = new FadeTextureEffect(lx);
   AcidTripTextureEffect acidTripTextureEffect = new AcidTripTextureEffect(lx);
   CandyTextureEffect candyTextureEffect = new CandyTextureEffect(lx);
+  CandyCloudTextureEffect candyCloudTextureEffect = new CandyCloudTextureEffect(lx);
 
   lx.addEffect(blurEffect);
   lx.addEffect(colorEffect);
@@ -169,6 +174,7 @@ void registerEffectTriggerables() {
   lx.addEffect(fadeTextureEffect);
   lx.addEffect(acidTripTextureEffect);
   lx.addEffect(candyTextureEffect);
+  lx.addEffect(candyCloudTextureEffect);
 
   registerEffectControlParameter(speedEffect.speed, "", 1, 0.4);
   registerEffectControlParameter(speedEffect.speed, "", 1, 5);
@@ -184,6 +190,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(fadeTextureEffect.amount, "");
   registerEffectControlParameter(acidTripTextureEffect.amount, "");
   registerEffectControlParameter(candyTextureEffect.amount, "");
+  registerEffectControlParameter(candyCloudTextureEffect.amount, "");
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
@@ -193,7 +200,7 @@ void registerEffectTriggerables() {
     blurEffect.amount,
     speedEffect.speed,
     spinEffect.spin,
-    acidTripTextureEffect.amount
+    candyCloudTextureEffect.amount
   };
 }
 

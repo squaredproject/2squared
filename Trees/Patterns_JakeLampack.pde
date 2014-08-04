@@ -1,10 +1,10 @@
 class AcidTrip extends TSPattern {
   
-  final SawLFO trails = new SawLFO(364, 0, 7000);
+  final SawLFO trails = new SawLFO(360, 0, 7000);
   
   AcidTrip(LX lx) {
     super(lx);
-    
+
     addModulator(trails.start());
   }
     
