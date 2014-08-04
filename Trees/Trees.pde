@@ -151,6 +151,7 @@ void registerEffectTriggerables() {
   GhostEffect ghostEffect = new GhostEffect(lx);
   ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
   RotationEffect rotationEffect = new RotationEffect(lx);
+  SpinEffect spinEffect = new SpinEffect(lx);
   SpeedEffect speedEffect = new SpeedEffect(lx);
   ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
 
@@ -159,6 +160,7 @@ void registerEffectTriggerables() {
   lx.addEffect(ghostEffect);
   lx.addEffect(scrambleEffect);
   lx.addEffect(rotationEffect);
+  lx.addEffect(spinEffect);
   lx.addEffect(speedEffect);
   lx.addEffect(colorStrobeTextureEffect);
 
@@ -169,6 +171,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(colorEffect.desaturation, "04346762312c80");
   registerEffectControlParameter(colorEffect.sharp, "");
   registerEffectControlParameter(blurEffect.amount, "", 0.65);
+  registerEffectControlParameter(spinEffect.spin, "", 0.65);
   registerEffectControlParameter(ghostEffect.amount, "", 0.16);
   registerEffectControlParameter(scrambleEffect.amount, "");
   registerEffectControlParameter(colorStrobeTextureEffect.amount, "");
@@ -180,7 +183,7 @@ void registerEffectTriggerables() {
     colorEffect.desaturation,
     blurEffect.amount,
     speedEffect.speed,
-    rotationEffect.rotation,
+    spinEffect.spin,
     colorStrobeTextureEffect.amount
   };
 }
@@ -247,6 +250,7 @@ void setup() {
   configureTriggerables();
 
   lx.addEffect(mappingTool = new MappingTool(lx));
+  lx.addEffect(new ModelTransformEffect(lx));
 
   configureBMPTool();
 

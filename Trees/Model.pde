@@ -112,7 +112,7 @@ public static class Model extends LXModel {
    */
   public final List<Cube> cubes;
 
-  private ModelTransform modelTransform;
+  private final ArrayList<ModelTransform> modelTransforms = new ArrayList<ModelTransform>();
     
   Model() {
     super(new Fixture());
@@ -156,9 +156,20 @@ public static class Model extends LXModel {
     }
   }
 
-  public void setModelTransform(ModelTransform modelTransform) {
-    this.modelTransform = modelTransform;
-    modelTransform.transform(this);
+  public void addModelTransform(ModelTransform modelTransform) {
+    modelTransforms.add(modelTransform);
+  }
+
+  public void runTransforms() {
+    for (Cube cube : cubes) {
+      cube.resetTransform();
+    }
+    for (ModelTransform modelTransform : modelTransforms) {
+      modelTransform.transform(this);
+    }
+    for (Cube cube : cubes) {
+      cube.didTransform();
+    }
   }
 }
 
@@ -543,19 +554,36 @@ public static class Cube extends LXModel {
     
     transform.pop();
   }
+
+  void resetTransform() {
+    transformedTheta = theta;
+    transformedY = y;
+  }
+
+  void didTransform() {
+    transformedCylinderPoint = new PVector(transformedTheta, transformedY);
+  }
 }
 
-interface ModelTransform {
-  void transform(Model model);
+abstract class ModelTransform extends LXEffect {
+  ModelTransform(LX lx) {
+    super(lx);
+
+    model.addModelTransform(this);
+  }
+
+  void run(double deltaMs) {}
+
+  abstract void transform(Model model);
 }
 
-class IdentityModelTransform implements ModelTransform {
-  void transform(Model model) {
-    for (Cube cube : model.cubes) {
-      cube.transformedTheta = cube.theta;
-      cube.transformedY = cube.y;
-      cube.transformedCylinderPoint = new PVector(cube.transformedTheta, cube.transformedY);
-    }
+class ModelTransformEffect extends LXEffect {
+  ModelTransformEffect(LX lx) {
+    super(lx);
+  }
+
+  void run(double deltaMs) {
+    model.runTransforms();
   }
 }
 

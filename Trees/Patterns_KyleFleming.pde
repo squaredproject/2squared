@@ -864,35 +864,56 @@ class SpeedEffect extends LXEffect {
   void run(double deltaMs) {}
 }
 
-class RotationEffect extends LXEffect {
+class RotationEffect extends ModelTransform {
   
   final BasicParameter rotation = new BasicParameter("ROT", 0, 0, 360);
 
   RotationEffect(LX lx) {
     super(lx);
+  }
 
-    model.setModelTransform(new RotationModelTransform(rotation.getValuef()));
-    rotation.addListener(new LXParameterListener() {
+  void transform(Model model) {
+    if (rotation.getValue() > 0) {
+      float rotationTheta = rotation.getValuef();
+      for (Cube cube : model.cubes) {
+        cube.transformedTheta = (cube.transformedTheta + 360 - rotationTheta) % 360;
+      }
+    }
+  }
+}
+
+class SpinEffect extends ModelTransform {
+  
+  final BasicParameter spin = new BasicParameter("SPIN");//, 0, 0, 1, BasicParameter.Scaling.QUAD_OUT);
+  final FunctionalParameter rotationPeriodMs = new FunctionalParameter() {
+    public double getValue() {
+      return 5000 - 4800 * spin.getValue();
+    }
+  };
+  final SawLFO rotation = new SawLFO(0, 360, rotationPeriodMs);
+
+  SpinEffect(LX lx) {
+    super(lx);
+
+    addModulator(rotation);
+
+    spin.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        model.setModelTransform(new RotationModelTransform(rotation.getValuef()));
+        if (spin.getValue() > 0) {
+          rotation.start();
+          rotation.setLooping(true);
+        } else {
+          rotation.setLooping(false);
+        }
       }
     });
   }
 
-  void run(double deltaMs) {}
-
-  private class RotationModelTransform implements ModelTransform {
-    final float rotationTheta;
-
-    RotationModelTransform(float rotationTheta) {
-      this.rotationTheta = rotationTheta;
-    }
-
-    void transform(Model model) {
+  void transform(Model model) {
+    if (rotation.getValue() > 0 && rotation.getValue() < 360) {
+      float rotationTheta = rotation.getValuef();
       for (Cube cube : model.cubes) {
-        cube.transformedTheta = (cube.theta + 360 - rotationTheta) % 360;
-        cube.transformedY = cube.y;
-        cube.transformedCylinderPoint = new PVector(cube.transformedTheta, cube.transformedY);
+        cube.transformedTheta = (cube.transformedTheta + 360 - rotationTheta) % 360;
       }
     }
   }
