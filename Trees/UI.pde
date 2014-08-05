@@ -327,8 +327,14 @@ class UIChannelFaders extends UIContext {
       .addToContainer(this);
       
       sliders[channel.getIndex()] = new UISlider(UISlider.Direction.VERTICAL, xPos, 1*BUTTON_HEIGHT + 2*PADDING, FADER_WIDTH, this.height - 3*BUTTON_HEIGHT - 5*PADDING) {
-        public void onFocus() {
+        protected void onMouseClicked(float mx, float my) {
           lx.engine.focusedChannel.setValue(channel.getIndex());
+        }
+        protected void onKeyPressed(KeyEvent keyEvent, char keyChar, int keyCode) {
+          super.onKeyPressed(keyEvent, keyChar, keyCode);
+          if ((keyChar == ' ') || (keyCode == java.awt.event.KeyEvent.VK_ENTER)) {
+            lx.engine.focusedChannel.setValue(channel.getIndex());
+          }
         }
       };
       sliders[channel.getIndex()]
