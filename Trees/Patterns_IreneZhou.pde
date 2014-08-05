@@ -1,5 +1,3 @@
-import ddf.minim.*;
-
 class Fireflies extends TSPattern implements Triggerable{
   final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 7.5); 

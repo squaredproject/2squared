@@ -1,6 +1,3 @@
-import ddf.minim.*;
-import heronarts.lx.*;
-
 class EQPattern extends TSPattern {
 
     final BasicParameter scale;

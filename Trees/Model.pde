@@ -1,9 +1,3 @@
-import heronarts.lx.model.*;
-import heronarts.lx.transform.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public static class Geometry {
 
   final static float CORNER_RADIUS = 62 * FEET;
