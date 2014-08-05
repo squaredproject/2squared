@@ -1024,6 +1024,8 @@ class CandyCloudTextureEffect extends LXEffect {
   final BasicParameter amount = new BasicParameter("CLOU");
 
   double time = 0;
+  final double scale = 2400;
+  final double speed = 1.0 / 5000;
 
   CandyCloudTextureEffect(LX lx) {
     super(lx);
@@ -1036,14 +1038,12 @@ class CandyCloudTextureEffect extends LXEffect {
         int oldColor = colors[i];
         Cube cube = model.cubes.get(i);
 
-        float adjustedTheta = cube.transformedTheta / 360;
-        float adjustedY = (cube.transformedY - model.yMin) / (model.yMax - model.yMin);
-        float adjustedTime = (float)time / 5000;
+        double adjustedX = cube.x / scale;
+        double adjustedY = cube.y / scale;
+        double adjustedZ = cube.z / scale;
+        double adjustedTime = time * speed;
 
-        // Use 2 textures so we don't have a seam. Interpolate between them between -45 & 45 and 135 & 225
-        float hue1 = noise(adjustedTheta, adjustedY, adjustedTime);
-        float hue2 = noise((adjustedTheta + 0.5) % 1, adjustedY + 100, adjustedTime);
-        float newHue = lerp(hue1, hue2, max(min(abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5, 1), 0)) * 1080 % 360;
+        float newHue = ((float)SimplexNoise.noise(adjustedX, adjustedY, adjustedZ, adjustedTime) + 1) / 2 * 1080 % 360;
         int newColor = lx.hsb(newHue, 100, 100);
 
         int blendedColor = lerpColor(oldColor, newColor, amount.getValuef());
@@ -1055,10 +1055,17 @@ class CandyCloudTextureEffect extends LXEffect {
 
 class CandyCloud extends TSPattern {
 
+  final BasicParameter darkness = new BasicParameter("DARK", 8, 0, 12);
+
+  final BasicParameter scale = new BasicParameter("SCAL", 2400, 600, 10000);
+  final BasicParameter speed = new BasicParameter("SPD", 1, 1, 2);
+
   double time = 0;
 
   CandyCloud(LX lx) {
     super(lx);
+
+    addParameter(darkness);
   }
 
   void run(double deltaMs) {
@@ -1066,16 +1073,14 @@ class CandyCloud extends TSPattern {
 
     time += deltaMs;
     for (Cube cube : model.cubes) {
-      float adjustedTheta = cube.transformedTheta / 360;
-      float adjustedY = (cube.transformedY - model.yMin) / (model.yMax - model.yMin);
-      float adjustedTime = (float)time / 5000;
+      double adjustedX = cube.x / scale.getValue();
+      double adjustedY = cube.y / scale.getValue();
+      double adjustedZ = cube.z / scale.getValue();
+      double adjustedTime = time * speed.getValue() / 5000;
 
-      // Use 2 textures so we don't have a seam. Interpolate between them between -45 & 45 and 135 & 225
-      float hue1 = noise(adjustedTheta, adjustedY, adjustedTime);
-      float hue2 = noise((adjustedTheta + 0.5) % 1, adjustedY + 100, adjustedTime);
-      float hue = lerp(hue1, hue2, max(min(abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5, 1), 0)) * 1080 % 360;
+      float hue = ((float)SimplexNoise.noise(adjustedX, adjustedY, adjustedZ, adjustedTime) + 1) / 2 * 1080 % 360;
 
-      float brightness = min(max(noise(4 * adjustedTheta, 4 * adjustedY + 200, adjustedTime) * 8 - 2, 0), 1) * 100;
+      float brightness = min(max((float)SimplexNoise.noise(cube.x / 250, cube.y / 250, cube.z / 250 + 10000, time / 5000) * 8 + 8 - darkness.getValuef(), 0), 1) * 100;
       
       colors[cube.index] = lx.hsb(hue, 100, brightness);
     }
@@ -1124,6 +1129,8 @@ class GalaxyCloud extends TSPattern {
       // scaledFadeOut <0 = black sooner, 0-1 = fade out gradient, >1 = regular color
       float scaledFadeOut = normalizedFadeOut * 5 - 4.5;
       float brightness = min(max(scaledFadeOut, 0), 1) * 100;
+
+      // float brightness = min(max((float)SimplexNoise.noise(4 * adjustedX, 4 * adjustedY, 4 * adjustedZ + 10000, adjustedTime) * 8 - 1, 0), 1) * 100;
 
       colors[cube.index] = lx.hsb(hue, 100, brightness);
     }
