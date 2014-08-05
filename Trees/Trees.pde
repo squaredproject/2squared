@@ -33,11 +33,8 @@ final static int FEET = 12 * INCHES;
 final static int SECONDS = 1000;
 final static int MINUTES = 60*SECONDS;
 
-final static int A = 0;
-final static int B = 1;
-
-final static float CHAIN = -12;
-final static float BOLT = 22;
+final static float CHAIN = -12*INCHES;
+final static float BOLT = 22*INCHES;
 
 final static int FRONT = 0;
 final static int RIGHT = 1;
@@ -506,24 +503,13 @@ class TreesTransition extends LXTransition {
   private final LXChannel channel;
   
   public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
-  public final BooleanParameter left = new BooleanParameter("LEFT", true);
-  public final BooleanParameter right = new BooleanParameter("RIGHT", true);
-  
-  private final DampedParameter leftLevel = new DampedParameter(left, 2);
-  private final DampedParameter rightLevel = new DampedParameter(right, 2);
  
   private LXColor.Blend blendType = LXColor.Blend.ADD;
-  
-  private final color[] scaleBuffer = new color[lx.total];
-  
+    
   TreesTransition(LX lx, LXChannel channel) {
     super(lx);
     addParameter(blendMode);
-    addParameter(left);
-    addParameter(right);
     
-    addModulator(leftLevel.start());
-    addModulator(rightLevel.start());
     this.channel = channel;
     blendMode.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
@@ -538,27 +524,19 @@ class TreesTransition extends LXTransition {
   }
   
   protected void computeBlend(int[] c1, int[] c2, double progress) {
-    for (Tree tree : model.trees) {
-      float level = ((tree.index == 0) ? leftLevel : rightLevel).getValuef();
-      float amount = (float) (progress*level);
-      
-      if (amount == 0) {
-        for (LXPoint p : tree.points) {
-          colors[p.index] = c1[p.index];
-        }
-      } else if (amount == 1) {
-        for (LXPoint p : tree.points) {
-          int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[p.index])) : c2[p.index]; 
-          colors[p.index] = LXColor.blend(c1[p.index], color2, this.blendType);
-        }
-      } else {
-        for (LXPoint p : tree.points) {
-          int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[p.index])) : c2[p.index];
-          colors[p.index] = LXColor.lerp(
-            c1[p.index],
-            LXColor.blend(c1[p.index], color2, this.blendType),
-            amount);
-        }
+    if (progress == 0) {
+      for (int i = 0; i < colors.length; ++i) {
+        colors[i] = c1[i];
+      }
+    } else if (progress == 1) {
+      for (int i = 0; i < colors.length; ++i) {
+        int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i]; 
+        colors[i] = LXColor.blend(c1[i], color2, this.blendType);
+      }
+    } else {
+      for (int i = 0; i < colors.length; ++i) {
+        int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i];
+        colors[i] = LXColor.lerp(c1[i], LXColor.blend(c1[i], color2, this.blendType), progress);
       }
     }
   }
