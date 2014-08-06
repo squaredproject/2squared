@@ -8,21 +8,28 @@ class VideoFeed {
 
   private PApplet parent;
   private Capture vid;
+  private boolean haveFeed;
 
   public VideoFeed(PApplet p) {
     
         //String[] alist = Capture.list();
         //for (String s : alist) { println("cam " + s); }
+
+	haveFeed = true;
         
-	vid = new Capture(parent=p,320,240,15); // 15 fps
+	try {
+		vid = new Capture(parent=p,320,240,15); // 15 fps
+	} catch(Throwable e) {
+		haveFeed = false;
+	}
 
   }
 
-  public int[] pixels() { return vid.pixels; }
+  public int[] pixels() { return haveFeed ? vid.pixels : null; }
   
-  public void start() { vid.start();       }
-  public void stop()  { vid.stop();        }
-  public void fetch() { if (vid.available()) { vid.read(); vid.loadPixels(); }} // update as available...
+  public void start() { if (haveFeed) vid.start(); }
+  public void stop()  { if (haveFeed) vid.stop(); }
+  public void fetch() { if (haveFeed && vid.available()) { vid.read(); vid.loadPixels(); }} // update as available...
   public int height() { return vid.height; }
   public int width()  { return vid.width;  }
 }
