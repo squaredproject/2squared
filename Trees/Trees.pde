@@ -109,6 +109,8 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new CandyCloud(lx));
   patterns.add(new GalaxyCloud(lx));
 
+  patterns.add(new CameraWrap(lx,this));
+
   for (LXPattern pattern : patterns) {
     LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
     pattern.setTransition(t);
