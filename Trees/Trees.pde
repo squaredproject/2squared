@@ -239,9 +239,7 @@ BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION];
 DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
 LXListenableNormalizedParameter[] effectKnobParameters;
 MidiEngine midiEngine;
-TSDrumpad mpk25Drumpad;
 TSDrumpad apc40Drumpad;
-TSKeyboard keyboard;
 NFCEngine nfcEngine;
 SpeedIndependentContainer speedIndependentContainer;
 
@@ -257,8 +255,6 @@ void setup() {
   lx.engine.addLoopTask(speedIndependentContainer = new SpeedIndependentContainer(lx));
 
   configureChannels();
-
-  configureKeyboard();
 
   configureNFC();
 
@@ -294,7 +290,7 @@ void setup() {
 
 void configureChannels() {
   lx.setPatterns(getPatternListForChannels());
-  for (int i = 1; i < NUM_CHANNELS - (isMPK25Connected() ? 1 : 0); ++i) {
+  for (int i = 1; i < NUM_CHANNELS; ++i) {
     lx.engine.addChannel(getPatternListForChannels());
   }
   
@@ -357,15 +353,6 @@ void registerEffectControlParameter(LXListenableNormalizedParameter parameter, S
   apc40DrumpadTriggerablesLists[0].add(triggerable);
 }
 
-/* configureKeyboard */
-
-void configureKeyboard() {
-  if (isMPK25Connected()) {
-    keyboard = new TSKeyboard();
-    keyboard.configure(lx);
-  }
-}
-
 /* configureBMPTool */
 
 void configureBMPTool() {
@@ -426,13 +413,6 @@ void configureMIDI() {
 
   // MIDI control
   midiEngine = new MidiEngine(effectKnobParameters);
-  if (midiEngine.mpk25 != null) {
-    // Drumpad
-    mpk25Drumpad = new TSDrumpad();
-    midiEngine.mpk25.setDrumpad(mpk25Drumpad);
-
-    midiEngine.mpk25.setKeyboard(keyboard);
-  }
 }
 
 /* configureNFC */

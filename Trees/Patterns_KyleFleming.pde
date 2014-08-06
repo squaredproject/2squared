@@ -33,7 +33,7 @@ class BassSlam extends TSPattern {
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPattern implements Triggerable, KeyboardPlayablePattern {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPattern implements Triggerable {
   
   BasicParameter frequency;
   
@@ -42,8 +42,6 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
   final ArrayList<ObjectType> objects;
   double pauseTimerCountdown = 0;
   boolean triggered = true;
-  boolean keyboardMode = false;
-  float modWheelValue = 0;
 //  BasicParameter fadeLength
   
   MultiObjectPattern(LX lx) {
@@ -74,7 +72,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
 
-    if (triggered && !keyboardMode && objects.size() < ceil(frequency.getValuef())) {
+    if (triggered && objects.size() < ceil(frequency.getValuef())) {
       int missing = ceil(frequency.getValuef()) - objects.size();
       pauseTimerCountdown -= deltaMs;
       if (pauseTimerCountdown <= 0 || missing >= 5) {
@@ -126,22 +124,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
   public void onRelease() {
     triggered = false;
   }
-  
-  public void enableKeyboardPlayableMode() {
-    keyboardMode = true;
-  }
-  
-  public void noteOn(LXMidiNoteOn note) {
-    makeObject(note.getPitch());
-  }
-  
-  public void noteOff(LXMidiNoteOff note) {
-  }
-  
-  public void modWheelChanged(float value) {
-    modWheelValue = value;
-  }
-  
+    
   abstract ObjectType generateObject(float strength);
 }
 
@@ -226,7 +209,7 @@ class Explosions extends MultiObjectPattern<Explosion> {
   Explosion generateObject(float strength) {
     Explosion explosion = new Explosion(lx);
     explosion.origin = new PVector(random(360), (float)LXUtils.random(model.yMin + 50, model.yMax - 50));
-    explosion.hue = (int)(keyboardMode ? (360 * modWheelValue) : random(360));
+    explosion.hue = random(360);
     return explosion;
   }
 }

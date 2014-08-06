@@ -20,27 +20,16 @@ final static byte[] APC_MODE_SYSEX = {
   (byte) 0xf7, // sysex end
 };
 
-boolean isMPK25Connected() {
-    try {
-        return LXMidiSystem.matchInput(lx, "MPK25") != null;
-    } catch (java.lang.UnsatisfiedLinkError e){
-        return false;
-    }
-}
-
 class MidiEngine {
   
-  MPK25 mpk25 = null;
-  
   public MidiEngine(LXListenableNormalizedParameter[] effectKnobParameters) {
-    try{
-        setAPC40Mode();
+    try {
+      setAPC40Mode();
     } catch (java.lang.UnsatisfiedLinkError e){
-        return;
+      return;
     }
     LXMidiInput apcInput = APC40.matchInput(lx);
     LXMidiOutput apcOutput = APC40.matchOutput(lx);
-    LXMidiInput mpkInput = LXMidiSystem.matchInput(lx, "MPK25");
     
     if (apcInput != null) {
       final BasicParameter drumpadVelocity = new BasicParameter("ANON", 1);
@@ -194,9 +183,6 @@ class MidiEngine {
       setAutomation(apc40);
     }
     
-    if (mpkInput != null) {
-      mpk25 = new MPK25(mpkInput);
-    }
   }
   
   void setAutomation(APC40 apc40) {
@@ -221,110 +207,5 @@ class MidiEngine {
 interface Drumpad {
   public void padTriggered(int row, int col, int velocity);
   public void padReleased(int row, int col);
-}
-
-interface Keyboard {
-  public void noteOn(LXMidiNoteOn note);
-  public void noteOff(LXMidiNoteOff note);
-  public void modWheelChanged(float value);
-}
-
-class MPK25 extends LXMidiDevice {
-  
-  final static int PAD_CHANNEL = 1;
-  final static int NUM_PADS = 12;
-  final static int PAD1_PITCH = 60;
-  final static int PAD2_PITCH = 62;
-  final static int PAD3_PITCH = 64;
-  final static int PAD4_PITCH = 65;
-  final static int PAD5_PITCH = 67;
-  final static int PAD6_PITCH = 69;
-  final static int PAD7_PITCH = 71;
-  final static int PAD8_PITCH = 72;
-  final static int PAD9_PITCH = 74;
-  final static int PAD10_PITCH = 76;
-  final static int PAD11_PITCH = 77;
-  final static int PAD12_PITCH = 78;
-  
-  final int[][] PAD_PITCHES = {
-    { PAD10_PITCH, PAD11_PITCH, PAD12_PITCH },
-    { PAD7_PITCH, PAD8_PITCH, PAD9_PITCH },
-    { PAD4_PITCH, PAD5_PITCH, PAD6_PITCH },
-    { PAD1_PITCH, PAD2_PITCH, PAD3_PITCH }
-  };
-  
-  final static int KEYBOARD_CHANNEL = 0;
-  final static int KEYBOARD_PITCH_FIRST = 0;
-  final static int KEYBOARD_PITCH_LAST = 120;
-  
-  final static int MODWHEEL_CHANNEL = 0;
-  final static int MODWHEEL_CC = 1;
-  
-  private Drumpad drumpad = null;
-  private Keyboard keyboard = null;
-  
-  public MPK25(LXMidiInput input) {
-    this(input, null);
-  }
-
-  public MPK25(LXMidiInput input, LXMidiOutput output) {
-    super(input, output);
-  }
-  
-  public void setDrumpad(Drumpad drumpad) {
-    this.drumpad = drumpad;
-  }
-  
-  public void setKeyboard(Keyboard keyboard) {
-    this.keyboard = keyboard;
-  }
-  
-  private boolean isKeyboard(LXMidiNote note) {
-    return note.getChannel() == KEYBOARD_CHANNEL
-        && note.getPitch() >= KEYBOARD_PITCH_FIRST
-        && note.getPitch() <= KEYBOARD_PITCH_LAST;
-  }
-  
-  protected void noteOn(LXMidiNoteOn note) {
-    if (drumpad != null) {
-      if (note.getChannel() == PAD_CHANNEL) {
-        for (int row = 0; row < PAD_PITCHES.length; row++) {
-          int[] padPitchesRow = PAD_PITCHES[row];
-          for (int col = 0; col < padPitchesRow.length; col++) {
-            if (note.getPitch() == padPitchesRow[col]) {
-              drumpad.padTriggered(row, col, note.getVelocity());
-            }
-          }
-        }
-      }
-    }
-    if (keyboard != null && isKeyboard(note)) {
-      keyboard.noteOn(note);
-    }
-  }
-
-  protected void noteOff(LXMidiNoteOff note) {
-    if (drumpad != null) {
-      if (note.getChannel() == PAD_CHANNEL) {
-        for (int row = 0; row < PAD_PITCHES.length; row++) {
-          int[] padPitchesRow = PAD_PITCHES[row];
-          for (int col = 0; col < padPitchesRow.length; col++) {
-            if (note.getPitch() == padPitchesRow[col]) {
-              drumpad.padReleased(row, col);
-            }
-          }
-        }
-      }
-    }
-    if (keyboard != null && isKeyboard(note)) {
-      keyboard.noteOff(note);
-    }
-  }
-
-  protected void controlChange(LXMidiControlChange controlChange) {
-    if (keyboard != null && controlChange.getChannel() == MODWHEEL_CHANNEL && controlChange.getCC() == MODWHEEL_CC) {
-      keyboard.modWheelChanged(controlChange.getValue() / 127.);
-    }
-  }
 }
 
