@@ -428,7 +428,7 @@ class UIChannelFaders extends UIContext {
    
     UIPerfMeters() {
       for (int i = 0; i < NUM_CHANNELS+1; ++i) {
-        lx.addModulator((dampers[i] = new DampedParameter(perfs[i] = new BasicParameter("PERF", 0), 3)).start());
+        lx.addModulator((dampers[i] = new DampedParameter(perfs[i] = new BasicParameter("PERF", 0), 3))).start();
       }
     } 
     

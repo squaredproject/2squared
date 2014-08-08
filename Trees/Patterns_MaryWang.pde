@@ -37,7 +37,7 @@ class Twinkle extends TSPattern {
       else {
         bright[i] = new SinLFO(0, int(random(30, 80)), int(random(3100, 9300)));
       }
-      addModulator(bright[i].start());
+      addModulator(bright[i]).start();
     }
   }
 
@@ -72,7 +72,7 @@ class VerticalSweep extends TSPattern {
 
   VerticalSweep(LX lx) {
     super(lx);
-    addModulator(range.start());
+    addModulator(range).start();
     addParameter(saturationParam);
     addParameter(hue1Param);
     addParameter(hue2Param);

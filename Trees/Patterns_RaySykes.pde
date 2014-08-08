@@ -17,10 +17,10 @@ class SparkleHelix extends TSPattern {
     addParameter(sparkle);
     addParameter(sparkleSaturation);
     addParameter(counterSpiralStrength);
-    addModulator(rate.start());
-    addModulator(coil.start());    
-    addModulator(spin.start());
-    addModulator(width.start());
+    addModulator(rate).start();
+    addModulator(coil).start();    
+    addModulator(spin).start();
+    addModulator(width).start();
     sparkleTimeOuts = new int[model.cubes.size()];
   }
   
@@ -69,7 +69,7 @@ class MultiSine extends TSPattern {
     super(lx);
     for (int i = 0; i < numLayers; i++){
       addParameter(timingSettings[i]);
-      addModulator(frequencies[i].start());
+      addModulator(frequencies[i]).start();
     }
     addParameter(brightEffect);
   }
@@ -103,8 +103,8 @@ class Stripes extends TSPattern {
     super(lx);
     addParameter(minSpacing);
     addParameter(maxSpacing);
-    addModulator(slopeFactor.start());
-    addModulator(spacing.start());    
+    addModulator(slopeFactor).start();
+    addModulator(spacing).start();    
   }
   
   public void run(double deltaMs) {
@@ -131,7 +131,7 @@ class Ripple extends TSPattern {
     super(lx);
     addParameter(speed);
     addParameter(baseBrightness);
-    addModulator(rippleAge.start());    
+    addModulator(rippleAge).start();    
   }
   
   public void run(double deltaMs) {
@@ -183,8 +183,8 @@ class SparkleTakeOver extends TSPattern {
   SparkleTakeOver(LX lx) {
     super(lx);
     sparkleTimeOuts = new int[model.cubes.size()];
-    addModulator(timing.start());    
-    addModulator(coverage.start());
+    addModulator(timing).start();    
+    addModulator(coverage).start();
     addParameter(hueVariation);
   }  
   public void run(double deltaMs) {

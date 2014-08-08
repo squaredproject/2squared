@@ -42,7 +42,7 @@ class Fireflies extends TSPattern implements Triggerable{
 
     for (int i = 0; i < blinkers.length; ++i) {
       blinkers[i] = new SinLFO(0, 75, 1000  * random(1.0, 3.0));      
-      addModulator(blinkers[i].start().setValue(random(0,50)));
+      addModulator(blinkers[i]).setValue(random(0,50)).start();
     }
     
     fireflies = new Firefly[numFireflies];
@@ -176,8 +176,8 @@ class Lattice extends TSPattern {
 
   Lattice(LX lx) {
     super(lx);
-    addModulator(spin.start());
-    addModulator(yClimb.start());
+    addModulator(spin).start();
+    addModulator(yClimb).start();
     addParameter(hue);
     addParameter(yHeight);
   }
@@ -225,7 +225,7 @@ class Fire extends TSPattern  implements Triggerable{
       if (!groundStart) {
         decay.setBasis(random(0,1));
       }
-      addModulator(decay.start());
+      addModulator(decay).start();
     }
   }
 
@@ -721,7 +721,7 @@ class Springs extends TSPattern {
     super(lx);
     addModulator(gravity);
     addModulator(reset).start();
-    addModulator(spin.start());
+    addModulator(spin).start();
     addParameter(hue);
     addParameter(automated);
     trigger();
@@ -812,7 +812,7 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
       turnOff.setDuration(6000);
       addModulator(gravity);
       addModulator(delay);
-      addModulator(maxBrt.start());
+      addModulator(maxBrt).start();
       addModulator(turnOff);
     }
   }

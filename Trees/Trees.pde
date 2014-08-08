@@ -368,7 +368,7 @@ void configureAutomation() {
   for (int i = 0; i < automation.length; ++i) {
     final int ii = i;
     automation[i] = new LXAutomationRecorder(lx.engine);
-    lx.addModulator(automation[i]);
+    lx.engine.addLoopTask(automation[i]);
     automationStop[i] = new BooleanParameter("STOP", false);
     automationStop[i].addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {

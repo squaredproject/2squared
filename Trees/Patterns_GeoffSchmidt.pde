@@ -42,7 +42,7 @@ class Pixels extends TSPattern {
     addParameter(pLifetime);
     addParameter(pSat);
     addParameter(pHue);
-    addModulator(hueLFO.start());
+    addModulator(hueLFO).start();
 
     int numCubes = model.cubes.size();
     pixelStates = new PixelState[numCubes];
@@ -166,7 +166,7 @@ class Parallax extends TSPattern {
     addParameter(pSpeed);
     addParameter(pCount);
     addParameter(pBounceMag);
-    addModulator(bounceLFO.start());
+    addModulator(bounceLFO).start();
     colorBars = new ColorBar[0];
   }
   

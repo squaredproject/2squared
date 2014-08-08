@@ -296,7 +296,7 @@ class ParameterModulationController {
     this.modulatorControllers = modulatorControllers;
     
     tempoAdapter = new TempoAdapter(lx.tempo);
-    lx.addModulator(tempoAdapter.start());
+    lx.addModulator(tempoAdapter).start();
     
     for (ParameterModulatorController modulatorController : modulatorControllers) {
       modulatorController.modulationController = this;

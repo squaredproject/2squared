@@ -30,8 +30,8 @@ class MarkLottor extends TSPattern {
     addParameter(p4);
     
     // Starts the modulators
-    addModulator(verticalPosition.start());
-    addModulator(anglePosition.start());
+    addModulator(verticalPosition).start();
+    addModulator(anglePosition).start();
 
     balls = new MovObj[BALLS];
     for (n = 0; n < BALLS; n++)

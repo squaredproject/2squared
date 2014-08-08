@@ -5,7 +5,7 @@ class AcidTrip extends TSPattern {
   AcidTrip(LX lx) {
     super(lx);
 
-    addModulator(trails.start());
+    addModulator(trails).start();
   }
     
   public void run(double deltaMs) {

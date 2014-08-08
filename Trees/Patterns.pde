@@ -6,9 +6,9 @@ class DoubleHelix extends TSPattern {
   
   DoubleHelix(LX lx) {
     super(lx);
-    addModulator(rate.start());
-    addModulator(theta.start());
-    addModulator(coil.start());
+    addModulator(rate).start();
+    addModulator(theta).start();
+    addModulator(coil).start();
   }
   
   public void run(double deltaMs) {
@@ -35,12 +35,12 @@ class ColoredLeaves extends TSPattern {
     movement = new SawLFO[3];
     for (int i = 0; i < movement.length; ++i) {
       movement[i] = new SawLFO(0, 360, 60000 / (1 + i));
-      addModulator(movement[i].start());
+      addModulator(movement[i]).start();
     }
     bright = new SinLFO[5];
     for (int i = 0; i < bright.length; ++i) {
       bright[i] = new SinLFO(100, 0, 60000 / (1 + i));
-      addModulator(bright[i].start());
+      addModulator(bright[i]).start();
     }
   }
   
@@ -68,10 +68,10 @@ class SeeSaw extends TSPattern {
   
   SeeSaw(LX lx) {
     super(lx);
-    addModulator(rate.start());
-    addModulator(rx.start());
-    addModulator(rz.start());
-    addModulator(width.start());
+    addModulator(rate).start();
+    addModulator(rx).start();
+    addModulator(rz).start();
+    addModulator(width).start();
   }
   
   public void run(double deltaMs) {
@@ -102,7 +102,7 @@ class Twister extends TSPattern {
   
   Twister(LX lx) {
     super(lx);
-    addModulator(spin.start());
+    addModulator(spin).start();
   }
   
   public void run(double deltaMs) {
@@ -139,14 +139,14 @@ class SweepPattern extends TSPattern {
   
   SweepPattern(LX lx) {
     super(lx);
-    addModulator(speedMod.start());
-    addModulator(yPos.start());
-    addModulator(width.start());
+    addModulator(speedMod).start();
+    addModulator(yPos).start();
+    addModulator(width).start();
     addParameter(amplitude);
     addParameter(speed);
     addParameter(height);
-    addModulator(amp.start());
-    addModulator(offset.start());
+    addModulator(amp).start();
+    addModulator(offset).start();
   }
   
   void onParameterChanged(LXParameter parameter) {
@@ -210,7 +210,7 @@ class TestPattern extends TSPattern {
   
   TestPattern(LX lx) {
     super(lx);
-    addModulator(cubeIndex.start());
+    addModulator(cubeIndex).start();
     addParameter(period);
   }
   
@@ -292,8 +292,8 @@ class ColorEffect extends LXEffect {
     addParameter(mono);
     addParameter(rainbow);
     
-    addModulator(hueShiftd.start());
-    addModulator(rainbowd.start());
+    addModulator(hueShiftd).start();
+    addModulator(rainbowd).start();
   }
   
   protected void run(double deltaMs) {

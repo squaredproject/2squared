@@ -10,7 +10,7 @@ class Zebra extends TSPattern {
     super(lx);
     addParameter(thickness);
     addParameter(period);
-    addModulator(position.start());
+    addModulator(position).start();
   }
   
   public void run(double deltaMs) {

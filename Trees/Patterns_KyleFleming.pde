@@ -267,7 +267,7 @@ class Explosion extends MultiObject {
   void init() {
     explosionThetaOffset = random(360);
     implosionRadius = new Accelerator(0, 700, -accelOfImplosion);
-    addModulator(implosionRadius.start());
+    addModulator(implosionRadius).start();
     explosionFade = new LinearEnvelope(1, 0, 1000);
   }
   
@@ -289,18 +289,18 @@ class Explosion extends MultiObject {
         break;
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         if (implosionRadius.getValuef() < 0) {
-          removeModulator(implosionRadius.stop());
+          removeModulator(implosionRadius).stop();
           state = EXPLOSION_STATE_EXPLOSION;
           explosionRadius = new Accelerator(0, -implosionRadius.getVelocityf(), -300);
-          addModulator(explosionRadius.start());
-          addModulator(explosionFade.start());
+          addModulator(explosionRadius).start();
+          addModulator(explosionFade).start();
         }
         break;
       default:
         if (explosionFade.getValuef() <= 0) {
           running = false;
-          removeModulator(explosionRadius.stop());
-          removeModulator(explosionFade.stop());
+          removeModulator(explosionRadius).stop();
+          removeModulator(explosionFade).stop();
         }
         break;
     }
@@ -593,7 +593,7 @@ class Fade extends TSPattern {
     super(lx);
     addParameter(speed);
     addParameter(smoothness);
-    addModulator(colr.start());
+    addModulator(colr).start();
   }
   
   public void run(double deltaMs) {
@@ -616,7 +616,7 @@ class OrderTest extends TSPattern {
   
   OrderTest(LX lx) {
     super(lx);
-    addModulator(sweep.start());
+    addModulator(sweep).start();
   }
   
   public void run(double deltaMs) {
@@ -936,7 +936,7 @@ class FadeTextureEffect extends LXEffect {
   FadeTextureEffect(LX lx) {
     super(lx);
 
-    addModulator(colr.start());
+    addModulator(colr).start();
   }
 
   void run(double deltaMs) {
@@ -961,7 +961,7 @@ class AcidTripTextureEffect extends LXEffect {
   AcidTripTextureEffect(LX lx) {
     super(lx);
     
-    addModulator(trails.start());
+    addModulator(trails).start();
   }
 
   void run(double deltaMs) {
