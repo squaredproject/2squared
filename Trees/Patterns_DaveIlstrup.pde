@@ -7,18 +7,23 @@ class CameraWrap extends TSPattern {
   final BasicParameter p1 = new BasicParameter("EXP", 0.25);
   final BasicParameter p2 = new BasicParameter("WID", 0.25);
 
-  private VideoFeed vid;
+  private VideoFeed vid = null;
 
-  public CameraWrap(LX lx, PApplet applet) {
+  public CameraWrap(LX lx) {
     super(lx);
 
-    vid = new VideoFeed(applet);
-    vid.start();
     // Makes the parameters have knobs in the UI
     addParameter(p1);
     addParameter(p2);
   }
 
+  public void onActive() {
+    // Startup the webcam first time we are active
+    if (vid == null) {
+      vid = new VideoFeed(Trees.this);
+      vid.start();
+    }
+  }
 
   // This depends on the wrapping mode.
   // Return x,y of source pixel; use a

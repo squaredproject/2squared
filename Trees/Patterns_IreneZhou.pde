@@ -225,7 +225,7 @@ class Fire extends TSPattern  implements Triggerable{
       if (!groundStart) {
         decay.setBasis(random(0,1));
       }
-      lx.addModulator(decay.start());
+      addModulator(decay.start());
     }
   }
 
@@ -268,7 +268,7 @@ class Fire extends TSPattern  implements Triggerable{
     }
     for (int i = 0; i < flames.length; ++i) {
       if (flames[i].decay.finished()) {
-        lx.removeModulator(flames[i].decay);
+        removeModulator(flames[i].decay);
         flames[i] = new Flame(height, true);
       }
     }
@@ -810,10 +810,10 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
       }
       
       turnOff.setDuration(6000);
-      lx.addModulator(gravity);
-      lx.addModulator(delay);
-      lx.addModulator(maxBrt.start());
-      lx.addModulator(turnOff);
+      addModulator(gravity);
+      addModulator(delay);
+      addModulator(maxBrt.start());
+      addModulator(turnOff);
     }
   }
 
@@ -966,9 +966,9 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
       newPulleys[i] = pulleys[i+1];
     }
     pulleys = newPulleys;
-    lx.removeModulator(pulley.turnOff);
-    lx.removeModulator(pulley.gravity);
-    lx.removeModulator(pulley.maxBrt);
+    removeModulator(pulley.turnOff);
+    removeModulator(pulley.gravity);
+    removeModulator(pulley.maxBrt);
   }
 
   public void onTriggerableModeEnabled() {

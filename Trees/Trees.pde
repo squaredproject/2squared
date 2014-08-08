@@ -109,7 +109,7 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new CandyCloud(lx));
   patterns.add(new GalaxyCloud(lx));
 
-  patterns.add(new CameraWrap(lx,this));
+  patterns.add(new CameraWrap(lx));
 
   for (LXPattern pattern : patterns) {
     LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
@@ -232,6 +232,7 @@ UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
 final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
+final BasicParameter drumpadVelocity = new BasicParameter("DVEL", 1);
 BPMTool bpmTool;
 MappingTool mappingTool;
 LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
@@ -253,6 +254,7 @@ void setup() {
   
   lx = new P2LX(this, model);
   lx.engine.addLoopTask(speedIndependentContainer = new SpeedIndependentContainer(lx));
+  lx.engine.addParameter(drumpadVelocity);
 
   configureChannels();
 

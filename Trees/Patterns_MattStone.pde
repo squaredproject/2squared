@@ -85,6 +85,7 @@ class SyphonPattern extends TSPattern {
   public void onActive() {
     if (syphonCount == 0) {
       if (restoreThreaded = lx.engine.isThreaded()) {
+        println("Turning off threading for Syphon");
         lx.engine.setThreaded(false);
       }
     }
@@ -94,6 +95,7 @@ class SyphonPattern extends TSPattern {
   public void onInactive() {
     --syphonCount;
     if ((syphonCount == 0) && restoreThreaded) {
+      println("Restoring threading from Syphon");
       lx.engine.setThreaded(true);
     }
   }

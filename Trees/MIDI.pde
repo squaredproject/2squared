@@ -30,31 +30,58 @@ class MidiEngine {
     }
     LXMidiInput apcInput = APC40.matchInput(lx);
     LXMidiOutput apcOutput = APC40.matchOutput(lx);
-    
+        
     if (apcInput != null) {
-      final BasicParameter drumpadVelocity = new BasicParameter("ANON", 1);
-
-      final APC40 apc40 = new APC40(apcInput, apcOutput) {
-        protected void noteOn(LXMidiNoteOn note) {
+      
+      // Add this input to the midi engine so that events are recorded
+      lx.engine.midiEngine.addInput(apcInput);
+      lx.engine.midiEngine.addListener(new LXAbstractMidiListener() {
+        public void noteOnReceived(LXMidiNoteOn note) {
           int channel = note.getChannel();
-          switch (note.getPitch()) {
+          int pitch = note.getPitch();
+          switch (pitch) {
           case APC40.CLIP_LAUNCH:
           case APC40.CLIP_LAUNCH+1:
           case APC40.CLIP_LAUNCH+2:
           case APC40.CLIP_LAUNCH+3:
           case APC40.CLIP_LAUNCH+4:
-            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[note.getPitch() - APC40.CLIP_LAUNCH];
-            if (triggerablesRow.length > channel) {
+            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[pitch - APC40.CLIP_LAUNCH];
+            if (channel < triggerablesRow.length) {
               triggerablesRow[channel].onTriggered(drumpadVelocity.getValuef());
             }
             break;
+          }
+        }
+        
+        public void noteOffReceived(LXMidiNoteOff note) {
+          int channel = note.getChannel();
+          int pitch = note.getPitch();
+          switch (pitch) {
+          case APC40.CLIP_LAUNCH:
+          case APC40.CLIP_LAUNCH+1:
+          case APC40.CLIP_LAUNCH+2:
+          case APC40.CLIP_LAUNCH+3:
+          case APC40.CLIP_LAUNCH+4:
+            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[pitch - APC40.CLIP_LAUNCH];
+            if (channel < triggerablesRow.length) {
+              triggerablesRow[channel].onRelease();
+            }
+            break;
+          }
+        }
+      });
 
+      final APC40 apc40 = new APC40(apcInput, apcOutput) {
+        protected void noteOn(LXMidiNoteOn note) {
+          int channel = note.getChannel();
+          switch (note.getPitch()) {
+          
           case APC40.SOLO_CUE:
             if (previewChannels[channel].isOn() && channel != focusedChannel()) {
               lx.engine.focusedChannel.setValue(channel);
             }
             break;
-            
+                        
           case APC40.SEND_A:
             bpmTool.beatType.increment();
             break;
@@ -77,22 +104,6 @@ class MidiEngine {
             break;
           case APC40.BANK_LEFT:
             lx.engine.focusedChannel.decrement();
-            break;
-          }
-        }
-
-        protected void noteOff(LXMidiNoteOff note) {
-          int channel = note.getChannel();
-          switch (note.getPitch()) {
-          case APC40.CLIP_LAUNCH:
-          case APC40.CLIP_LAUNCH+1:
-          case APC40.CLIP_LAUNCH+2:
-          case APC40.CLIP_LAUNCH+3:
-          case APC40.CLIP_LAUNCH+4:
-            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[note.getPitch() - APC40.CLIP_LAUNCH];
-            if (triggerablesRow.length > channel) {
-              triggerablesRow[channel].onRelease();
-            }
             break;
           }
         }

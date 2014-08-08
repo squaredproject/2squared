@@ -209,7 +209,7 @@ class Explosions extends MultiObjectPattern<Explosion> {
   Explosion generateObject(float strength) {
     Explosion explosion = new Explosion(lx);
     explosion.origin = new PVector(random(360), (float)LXUtils.random(model.yMin + 50, model.yMax - 50));
-    explosion.hue = random(360);
+    explosion.hue = (int) random(360);
     return explosion;
   }
 }
@@ -267,7 +267,7 @@ class Explosion extends MultiObject {
   void init() {
     explosionThetaOffset = random(360);
     implosionRadius = new Accelerator(0, 700, -accelOfImplosion);
-    lx.addModulator(implosionRadius.start());
+    addModulator(implosionRadius.start());
     explosionFade = new LinearEnvelope(1, 0, 1000);
   }
   
@@ -289,18 +289,18 @@ class Explosion extends MultiObject {
         break;
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         if (implosionRadius.getValuef() < 0) {
-          lx.removeModulator(implosionRadius.stop());
+          removeModulator(implosionRadius.stop());
           state = EXPLOSION_STATE_EXPLOSION;
           explosionRadius = new Accelerator(0, -implosionRadius.getVelocityf(), -300);
-          lx.addModulator(explosionRadius.start());
-          lx.addModulator(explosionFade.start());
+          addModulator(explosionRadius.start());
+          addModulator(explosionFade.start());
         }
         break;
       default:
         if (explosionFade.getValuef() <= 0) {
           running = false;
-          lx.removeModulator(explosionRadius.stop());
-          lx.removeModulator(explosionFade.stop());
+          removeModulator(explosionRadius.stop());
+          removeModulator(explosionFade.stop());
         }
         break;
     }
