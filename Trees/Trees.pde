@@ -304,7 +304,11 @@ void configureChannels() {
 }
 
 void registerOneShot(TSPattern pattern, String nfcSerialNumber) {
-  registerVisual(pattern, nfcSerialNumber, 4, VisualType.OneShot);
+  registerOneShot(pattern, nfcSerialNumber, 4);
+}
+
+void registerOneShot(TSPattern pattern, String nfcSerialNumber, int apc40DrumpadRow) {
+  registerVisual(pattern, nfcSerialNumber, apc40DrumpadRow, VisualType.OneShot);
 }
 
 void registerPattern(TSPattern pattern, String nfcSerialNumber) {
@@ -393,6 +397,7 @@ Triggerable[][] apc40DrumpadTriggerables;
 
 void configureTriggerables() {
   apc40DrumpadTriggerablesLists = new ArrayList[] {
+    new ArrayList<Triggerable>(),
     new ArrayList<Triggerable>(),
     new ArrayList<Triggerable>(),
     new ArrayList<Triggerable>(),

@@ -39,16 +39,18 @@ class MidiEngine {
         public void noteOnReceived(LXMidiNoteOn note) {
           int channel = note.getChannel();
           int pitch = note.getPitch();
+          int drumpadRow = -1;
+          int drumpadCol = -1;
           switch (pitch) {
           case APC40.CLIP_LAUNCH:
           case APC40.CLIP_LAUNCH+1:
           case APC40.CLIP_LAUNCH+2:
           case APC40.CLIP_LAUNCH+3:
           case APC40.CLIP_LAUNCH+4:
-            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[pitch - APC40.CLIP_LAUNCH];
-            if (channel < triggerablesRow.length) {
-              triggerablesRow[channel].onTriggered(drumpadVelocity.getValuef());
-            }
+            apc40Drumpad.padTriggered(pitch - APC40.CLIP_LAUNCH, channel, drumpadVelocity.getValuef());
+            break;
+          case APC40.CLIP_STOP:
+            apc40Drumpad.padTriggered(5, channel, drumpadVelocity.getValuef());
             break;
           }
         }
@@ -62,10 +64,10 @@ class MidiEngine {
           case APC40.CLIP_LAUNCH+2:
           case APC40.CLIP_LAUNCH+3:
           case APC40.CLIP_LAUNCH+4:
-            Triggerable[] triggerablesRow = apc40Drumpad.triggerables[pitch - APC40.CLIP_LAUNCH];
-            if (channel < triggerablesRow.length) {
-              triggerablesRow[channel].onRelease();
-            }
+            apc40Drumpad.padReleased(pitch - APC40.CLIP_LAUNCH, channel);
+            break;
+          case APC40.CLIP_STOP:
+            apc40Drumpad.padReleased(5, channel);
             break;
           }
         }
@@ -118,8 +120,14 @@ class MidiEngine {
       };
 
       for (int row = 0; row < apc40Drumpad.triggerables.length; row++) {
+        int midiNumber;
+        if (row < 5) {
+          midiNumber = APC40.CLIP_LAUNCH + row;
+        } else {
+          midiNumber = APC40.CLIP_STOP;
+        }
         for (int col = 0; col < apc40Drumpad.triggerables[row].length; col++) {
-          apc40.bindNote(new BooleanParameter("ANON", false), col, APC40.CLIP_LAUNCH + row, APC40.DIRECT);
+          apc40.bindNote(new BooleanParameter("ANON", false), col, midiNumber, APC40.DIRECT);
         }
       }
       
@@ -216,7 +224,7 @@ class MidiEngine {
 }
 
 interface Drumpad {
-  public void padTriggered(int row, int col, int velocity);
+  public void padTriggered(int row, int col, float velocity);
   public void padReleased(int row, int col);
 }
 
