@@ -506,6 +506,75 @@ class Voronoi extends TSPattern {
   }
 }
 
+class Cells extends TSPattern {
+  final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5);
+  final BasicParameter width = new BasicParameter("WIDTH", 0.75, 0.5, 1.25);
+  final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
+  final int NUM_SITES = 15;
+  private Site[] sites = new Site[NUM_SITES];
+  
+  private class Site {
+    public float theta = 0;
+    public float yPos = 0;
+    public PVector velocity = new PVector(0,0);
+    
+    public Site() {
+      theta = random(0, 360);
+      yPos = random(model.yMin, model.yMax);
+      velocity = new PVector(random(-1,1), random(-1,1));
+    }
+    
+    public void move(float speed) {
+      theta = (theta + speed * velocity.x) % 360;
+      yPos += speed * velocity.y;
+      if ((yPos < model.yMin - 20) || (yPos > model.yMax + 20)) {
+        velocity.y *= -1;
+      }
+    }
+  }
+  
+  Cells(LX lx) {
+    super(lx);
+    addParameter(speed);
+    addParameter(width);
+    addParameter(hue);
+    for (int i = 0; i < sites.length; ++i) {
+      sites[i] = new Site();
+    }
+  }
+  
+  public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
+    for (Cube cube: model.cubes) {
+      float minDistSq = 1000000;
+      float nextMinDistSq = 1000000;
+      for (int i = 0; i < sites.length; ++i) {
+        if (abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
+          float distSq = pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + pow(sites[i].yPos - cube.transformedY, 2);
+          if (distSq < nextMinDistSq) {
+            if (distSq < minDistSq) {
+              nextMinDistSq = minDistSq;
+              minDistSq = distSq;
+            } else {
+              nextMinDistSq = distSq;
+            }
+          }
+        }
+      }
+      colors[cube.index] = lx.hsb(
+        (lx.getBaseHuef() + hue.getValuef()) % 360,
+        100,
+        max(0, min(100, 100 - sqrt(nextMinDistSq - 2 * minDistSq)))
+      );
+    }
+    for (Site site: sites) {
+      site.move(speed.getValuef());
+    }
+  }
+}
+
+
 class Fumes extends TSPattern {
   final BasicParameter speed = new BasicParameter("SPEED", 2, 0, 20);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
@@ -986,3 +1055,82 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
     dropPulley.stopAndReset();
   }
 }
+
+//class MirageEffect extends ModelTransform {
+//  final BasicParameter amplitude  = new BasicParameter("AMP", 0, 0, 0.5);
+//  final SinLFO ripple = new SinLFO(0, 1, 300);
+//  final SawLFO rotate = new SawLFO(0, 360, 6000);
+//
+//  MirageEffect(LX lx) {
+//    super(lx);
+//    addModulator(ripple.start());
+//  }
+//
+//  void transform(Model model) {
+//    for (Cube cube: model.cubes) {
+//      cube.transformedY = cube.transformedY * ( 1 - ripple.getValuef() * amplitude.getValuef() * sin((cube.transformedTheta + rotate) / 30 * PI ));
+//    }
+//  }
+//}
+
+
+
+// class Ripple extends TSPattern {
+//   final BasicParameter speed = new BasicParameter("Speed", 15000, 25000, 8000);
+//   final BasicParameter baseBrightness = new BasicParameter("Bright", 0, 0, 100);
+//   final SawLFO rippleAge = new SawLFO(0, 100, speed);
+//   float hueVal;
+//   float brightVal;
+//   boolean resetDone = false;
+//   float yCenter;
+//   float thetaCenter;
+//   Ripple(LX lx) {
+//     super(lx);
+//     addParameter(speed);
+//     addParameter(baseBrightness);
+//     addModulator(rippleAge.start());    
+//   }
+  
+//   public void run(double deltaMs) {
+//     if (getChannel().getFader().getNormalized() == 0) return;
+
+//     if (rippleAge.getValuef() < 5){
+//       if (!resetDone){
+//         yCenter = 150 + random(300);
+//         thetaCenter = random(360);
+//         resetDone = true;
+//       }
+//     }
+//     else {
+//       resetDone = false;
+//     }
+//     float radius = pow(rippleAge.getValuef(), 2) / 3;
+//     for (Cube cube : model.cubes) {
+//       float distVal = sqrt(pow((LXUtils.wrapdistf(thetaCenter, cube.transformedTheta, 360)) * 0.8, 2) + pow(yCenter - cube.transformedY, 2));
+//       float heightHueVariance = 0.1 * cube.transformedY;
+//       if (distVal < radius){
+//         float rippleDecayFactor = (100 - rippleAge.getValuef()) / 100;
+//         float timeDistanceCombination = distVal / 20 - rippleAge.getValuef();
+//         hueVal = (lx.getBaseHuef() + 40 * sin(TWO_PI * (12.5 + rippleAge.getValuef() )/ 200) * rippleDecayFactor * sin(timeDistanceCombination) + heightHueVariance + 360) % 360;
+//         brightVal = constrain((baseBrightness.getValuef() + rippleDecayFactor * (100 - baseBrightness.getValuef()) + 80 * rippleDecayFactor * sin(timeDistanceCombination + TWO_PI / 8)), 0, 100);
+//       }
+//       else {
+//         hueVal = (lx.getBaseHuef() + heightHueVariance) % 360;
+//         brightVal = baseBrightness.getValuef(); 
+//       }
+//       colors[cube.index] = lx.hsb(hueVal,  100, brightVal);
+//     }
+//   }
+// }
+
+// class Ripples extends TSPattern {
+//   Ripples(LX lx) {
+//     super(lx);
+//   }
+
+//   public void run(double deltaMs) {
+
+//   }
+// }
+
+

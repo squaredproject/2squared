@@ -87,6 +87,7 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new Fireflies(lx));
   patterns.add(new Fumes(lx));
   patterns.add(new Voronoi(lx));
+  patterns.add(new Cells(lx));
   patterns.add(new Bubbles(lx));
   patterns.add(new Pulleys(lx));
 
