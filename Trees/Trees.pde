@@ -131,18 +131,17 @@ void registerPatternTriggerables() {
   registerPattern(new DoubleHelix(lx), "");
   registerPattern(new Ripple(lx), "");
   registerPattern(new IceCrystals(lx), "");
-  registerPattern(new Stripes(lx), "", 3);
-  registerPattern(new AcidTrip(lx), "", 3);
-  registerPattern(new Lattice(lx), "", 3);
+  registerPattern(new Stripes(lx), "");
+  registerPattern(new AcidTrip(lx), "");
+  registerPattern(new Lattice(lx), "");
   registerPattern(new Fire(lx), "", 3);
   registerPattern(new Fireflies(lx), "", 3);
-  registerPattern(new Fumes(lx), "", 4);
-  registerPattern(new Voronoi(lx), "", 4);
-  registerPattern(new Bubbles(lx), "", 4);
-  registerPattern(new Pulleys(lx), "", 4);
-  registerPattern(new RandomColorAll(lx), "04ad5f62312c80", 4);
-  registerPattern(new CandyCloud(lx), "", 4);
-  registerPattern(new GalaxyCloud(lx), "", 4);
+  registerPattern(new Fumes(lx), "", 3);
+  registerPattern(new Voronoi(lx), "", 3);
+  registerPattern(new Bubbles(lx), "", 3);
+  registerPattern(new RandomColorAll(lx), "04ad5f62312c80", 3);
+  registerPattern(new CandyCloud(lx), "", 3);
+  registerPattern(new GalaxyCloud(lx), "", 3);
 
 }
 
@@ -150,6 +149,7 @@ void registerOneShotTriggerables() {
   registerOneShot(new Lightning(lx), "");
   registerOneShot(new Wisps(lx), "");
   registerOneShot(new Explosions(lx), "044d575a312c80");
+  registerOneShot(new Pulleys(lx), "");
 }
 
 void registerEffectTriggerables() {
@@ -187,13 +187,13 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(colorEffect.sharp, "");
   registerEffectControlParameter(blurEffect.amount, "", 0.65);
   registerEffectControlParameter(spinEffect.spin, "", 0.65);
-  registerEffectControlParameter(ghostEffect.amount, "", 0.16);
-  registerEffectControlParameter(scrambleEffect.amount, "");
-  registerEffectControlParameter(colorStrobeTextureEffect.amount, "");
-  registerEffectControlParameter(fadeTextureEffect.amount, "");
-  registerEffectControlParameter(acidTripTextureEffect.amount, "");
-  registerEffectControlParameter(candyTextureEffect.amount, "");
-  registerEffectControlParameter(candyCloudTextureEffect.amount, "");
+  registerEffectControlParameter(ghostEffect.amount, "", 0, 0.16, 1);
+  registerEffectControlParameter(scrambleEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(colorStrobeTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(fadeTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(acidTripTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(candyCloudTextureEffect.amount, "", 0, 1, 1);
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
@@ -304,7 +304,7 @@ void configureChannels() {
 }
 
 void registerOneShot(TSPattern pattern, String nfcSerialNumber) {
-  registerVisual(pattern, nfcSerialNumber, 1, VisualType.OneShot);
+  registerVisual(pattern, nfcSerialNumber, 4, VisualType.OneShot);
 }
 
 void registerPattern(TSPattern pattern, String nfcSerialNumber) {
@@ -343,17 +343,21 @@ void registerEffect(LXEffect effect, String nfcSerialNumber) {
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber) {
-  registerEffectControlParameter(parameter, nfcSerialNumber, 0, 1);
+  registerEffectControlParameter(parameter, nfcSerialNumber, 0, 1, 0);
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double onValue) {
-  registerEffectControlParameter(parameter, nfcSerialNumber, 0, onValue);
+  registerEffectControlParameter(parameter, nfcSerialNumber, 0, onValue, 0);
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue) {
+  registerEffectControlParameter(parameter, nfcSerialNumber, offValue, onValue, 0);
+}
+
+void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
   ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(parameter, offValue, onValue);
   nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
-  apc40DrumpadTriggerablesLists[0].add(triggerable);
+  apc40DrumpadTriggerablesLists[row].add(triggerable);
 }
 
 /* configureBMPTool */
