@@ -1,3 +1,8 @@
+interface Drumpad {
+  public void padTriggered(int row, int col, float velocity);
+  public void padReleased(int row, int col);
+}
+
 class TSDrumpad implements Drumpad {
   
   Triggerable[][] triggerables = null;

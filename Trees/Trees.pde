@@ -67,7 +67,7 @@ LXPattern[] getPatternListForChannels() {
   // The order here is the order it shows up in the patterns list
   patterns.add(new Twister(lx));
   patterns.add(new MarkLottor(lx));
-  patterns.add(new DoubleHelix(lx));
+  // patterns.add(new DoubleHelix(lx));
   patterns.add(new SparkleHelix(lx));
   patterns.add(new Lightning(lx));
   patterns.add(new SparkleTakeOver(lx));
@@ -100,7 +100,7 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new Twinkle(lx));
   patterns.add(new VerticalSweep(lx));
   patterns.add(new RandomColor(lx));
-  patterns.add(new RandomColorAll(lx));
+  patterns.add(new ColorStrobe(lx));
   patterns.add(new Pixels(lx));
   patterns.add(new Wedges(lx));
   patterns.add(new Parallax(lx));
@@ -128,28 +128,29 @@ void registerPatternTriggerables() {
 
   registerPattern(new Twister(lx), "");
   registerPattern(new MarkLottor(lx), "");
-  registerPattern(new DoubleHelix(lx), "");
+  // registerPattern(new DoubleHelix(lx), "");
   registerPattern(new Ripple(lx), "");
-  registerPattern(new IceCrystals(lx), "", 5);
   registerPattern(new Stripes(lx), "");
-  registerPattern(new AcidTrip(lx), "");
+  // registerPattern(new AcidTrip(lx), "");
   registerPattern(new Lattice(lx), "");
-  registerPattern(new Fire(lx), "", 5);
-  registerPattern(new Fireflies(lx), "", 5);
   registerPattern(new Fumes(lx), "", 3);
   registerPattern(new Voronoi(lx), "", 3);
-  registerPattern(new Bubbles(lx), "", 5);
-  registerPattern(new RandomColorAll(lx), "04ad5f62312c80", 3);
+  registerPattern(new ColorStrobe(lx), "04ad5f62312c80", 3);
   registerPattern(new CandyCloud(lx), "", 3);
   registerPattern(new GalaxyCloud(lx), "", 3);
-
+  
+  registerPattern(new IceCrystals(lx), "", 5);
+  registerPattern(new Fire(lx), "", 5);
 }
 
 void registerOneShotTriggerables() {
+  registerOneShot(new Pulleys(lx), "");
+
+  registerOneShot(new Fireflies(lx), "", 5);
+  registerOneShot(new Bubbles(lx), "", 5);
   registerOneShot(new Lightning(lx), "", 5);
   registerOneShot(new Wisps(lx), "", 5);
   registerOneShot(new Explosions(lx), "044d575a312c80", 5);
-  registerOneShot(new Pulleys(lx), "");
 }
 
 void registerEffectTriggerables() {
@@ -192,8 +193,8 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(colorStrobeTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(fadeTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(acidTripTextureEffect.amount, "", 0, 1, 1);
-  registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 5);
   registerEffectControlParameter(candyCloudTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 5);
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,

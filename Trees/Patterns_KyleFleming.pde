@@ -541,9 +541,9 @@ class RandomColor extends TSPattern {
   }
 }
 
-class RandomColorAll extends TSPattern {
+class ColorStrobe extends TSPattern {
   
-  RandomColorAll(LX lx) {
+  ColorStrobe(LX lx) {
     super(lx);
   }
   
@@ -836,7 +836,7 @@ class StaticEffect extends LXEffect {
 
 class SpeedEffect extends LXEffect {
 
-  final BasicParameter speed = new BasicParameter("SPEED", 1, .1, 50, BasicParameter.Scaling.QUAD_IN);
+  final BasicParameter speed = new BasicParameter("SPEED", 1, .1, 10, BasicParameter.Scaling.QUAD_IN);
 
   SpeedEffect(final LX lx) {
     super(lx);
