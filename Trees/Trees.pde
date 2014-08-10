@@ -197,9 +197,9 @@ void registerEffectTriggerables() {
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
-    colorEffect.rainbow,
     colorEffect.mono,
     colorEffect.desaturation,
+    colorEffect.sharp,
     blurEffect.amount,
     speedEffect.speed,
     spinEffect.spin,
