@@ -192,7 +192,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(colorStrobeTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(fadeTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(acidTripTextureEffect.amount, "", 0, 1, 1);
-  registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 5);
   registerEffectControlParameter(candyCloudTextureEffect.amount, "", 0, 1, 1);
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
