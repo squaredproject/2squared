@@ -197,9 +197,15 @@ class Explosions extends MultiObjectPattern<Explosion> {
   ArrayList<Explosion> explosions;
   
   Explosions(LX lx) {
+    this(lx, 0.5);
+  }
+  
+  Explosions(LX lx, double speed) {
     super(lx, false);
     
     explosions = new ArrayList<Explosion>();
+
+    frequency.setValue(speed);
   }
   
   BasicParameter getFrequencyParameter() {

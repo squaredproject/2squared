@@ -128,29 +128,33 @@ void registerPatternTriggerables() {
 
   registerPattern(new Twister(lx), "");
   registerPattern(new MarkLottor(lx), "");
-  // registerPattern(new DoubleHelix(lx), "");
   registerPattern(new Ripple(lx), "");
   registerPattern(new Stripes(lx), "");
-  // registerPattern(new AcidTrip(lx), "");
   registerPattern(new Lattice(lx), "");
-  registerPattern(new Fumes(lx), "", 3);
-  registerPattern(new Voronoi(lx), "", 3);
-  registerPattern(new ColorStrobe(lx), "04ad5f62312c80", 3);
-  registerPattern(new CandyCloud(lx), "", 3);
-  registerPattern(new GalaxyCloud(lx), "", 3);
+  registerPattern(new Fumes(lx), "");
+  registerPattern(new Voronoi(lx), "");
+  registerPattern(new CandyCloud(lx), "");
+  registerPattern(new GalaxyCloud(lx), "");
+
+  registerPattern(new ColorStrobe(lx), "", 4);
+  registerPattern(new Explosions(lx, 20), "", 4);
   
   registerPattern(new IceCrystals(lx), "", 5);
   registerPattern(new Fire(lx), "", 5);
+  
+  // registerPattern(new DoubleHelix(lx), "");
+  // registerPattern(new AcidTrip(lx), "");
 }
 
 void registerOneShotTriggerables() {
   registerOneShot(new Pulleys(lx), "");
+  registerOneShot(new Explosions(lx, 20), "");
 
   registerOneShot(new Fireflies(lx), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);
   registerOneShot(new Lightning(lx), "", 5);
   registerOneShot(new Wisps(lx), "", 5);
-  registerOneShot(new Explosions(lx), "044d575a312c80", 5);
+  registerOneShot(new Explosions(lx), "", 5);
 }
 
 void registerEffectTriggerables() {
