@@ -63,6 +63,8 @@ final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 
 LXPattern[] getPatternListForChannels() {
   ArrayList<LXPattern> patterns = new ArrayList<LXPattern>();
+  // patterns.add(new OrderTest(lx));
+  
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
   patterns.add(new Twister(lx));
@@ -486,6 +488,21 @@ void configureExternalOutput() {
     lx.addOutput(output);
   } catch (Exception x) {
     println(x);
+  }
+  int[] clusterOrdering = new int[] { 0, 1, 2, 3, 4, 5, 8, 7, 9, 10, 11, 12, 13, 15, 14, 6 };
+  int numCubesInCluster = clusterOrdering.length;
+  int numClusters = 48;
+  int[] pixelOrder = new int[numClusters * numCubesInCluster];
+  for (int cluster = 0; cluster < numClusters; cluster++) {
+    for (int cube = 0; cube < numCubesInCluster; cube++) {
+      pixelOrder[cluster * numCubesInCluster + cube] = cluster * numCubesInCluster + clusterOrdering[cube];
+    }
+  }
+  try {
+    FadecandyOutput fadecandyOutput = new FadecandyOutput(lx, "127.0.0.1", 7890, pixelOrder);
+    lx.addOutput(fadecandyOutput);
+  } catch (Exception e) {
+    println(e);
   }
 }
 
