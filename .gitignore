@@ -1,3 +1,5 @@
 sketch.properties
 build-tmp/
 *.sublime-workspace
+
+Trees.sublime-project
