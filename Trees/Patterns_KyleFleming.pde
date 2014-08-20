@@ -72,15 +72,13 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
 
-    if (triggered && objects.size() < ceil(frequency.getValuef())) {
-      int missing = ceil(frequency.getValuef()) - objects.size();
+    if (triggered) {
       pauseTimerCountdown -= deltaMs;
-      if (pauseTimerCountdown <= 0 || missing >= 5) {
-        pauseTimerCountdown = (frequency.getValuef() < 1 ? 500 * (1 / frequency.getValuef() - 1) : 0)
-                              + (missing == 1 ? random(200) : random(50));
-        for (int i = ceil(missing / 3.); i > 0; i--) {
-          makeObject(0);
-        }
+
+      if (pauseTimerCountdown <= 0) {
+        float delay = 1000 / frequency.getValuef();
+        pauseTimerCountdown = random(delay / 2) + delay * 3 / 4;
+        makeObject(0);
       }
     }
     
@@ -182,10 +180,6 @@ abstract class MultiObject extends LXLayer {
     } else {
       return 0;
     }
-  }
-  
-  float getRunningTimeEstimate() {
-    return runningTimerEnd;
   }
   
   public void init() { }
@@ -402,7 +396,7 @@ class Rain extends MultiObjectPattern<RainDrop> {
   }
   
   BasicParameter getFrequencyParameter() {
-    return new BasicParameter("FREQ", 40, .1, 75, BasicParameter.Scaling.QUAD_IN);
+    return new BasicParameter("FREQ", 40, 1, 75);
   }
    
   RainDrop generateObject(float strength) {
