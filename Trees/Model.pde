@@ -571,12 +571,8 @@ abstract class ModelTransform extends LXEffect {
   abstract void transform(Model model);
 }
 
-class ModelTransformEffect extends LXEffect {
-  ModelTransformEffect(LX lx) {
-    super(lx);
-  }
-
-  void run(double deltaMs) {
+class ModelTransformTask implements LXLoopTask {
+  public void loop(double deltaMs) {
     model.runTransforms();
   }
 }

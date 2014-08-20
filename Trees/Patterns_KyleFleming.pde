@@ -1,6 +1,34 @@
 int WHITE = java.awt.Color.WHITE.getRGB();
 int BLACK = java.awt.Color.BLACK.getRGB();
 
+boolean insideOfBoundingBox(PVector origin, PVector point, float xTolerance, float yTolerance) {
+  return abs(origin.x - point.x) <= xTolerance && abs(origin.y - point.y) <= yTolerance;
+}
+ 
+float wrapDist2d(PVector a, PVector b) {
+  return sqrt(pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + pow(a.y - b.y, 2));
+}
+ 
+PVector movePointToSamePlane(PVector reference, PVector point) {
+  return new PVector(moveThetaToSamePlane(reference.x, point.x), point.y);
+}
+ 
+// Assumes thetaA as a reference point
+// Moves thetaB to within 180 degrees, letting thetaB go beyond [0, 360)
+float moveThetaToSamePlane(float thetaA, float thetaB) {
+  if (thetaA - thetaB > 180) {
+    return thetaB + 360;
+  } else if (thetaB - thetaA > 180) {
+    return thetaB - 360;
+  } else {
+    return thetaB;
+  }
+}
+
+float thetaDistance(float thetaA, float thetaB) {
+  return LXUtils.wrapdistf(thetaA, thetaB, 360);
+}
+
 class BassSlam extends TSPattern {
   
   final private double flashTimePercent = 0.1;
@@ -212,34 +240,6 @@ class Explosions extends MultiObjectPattern<Explosion> {
     explosion.hue = (int) random(360);
     return explosion;
   }
-}
-
-boolean insideOfBoundingBox(PVector origin, PVector point, float xTolerance, float yTolerance) {
-  return abs(origin.x - point.x) <= xTolerance && abs(origin.y - point.y) <= yTolerance;
-}
- 
-float wrapDist2d(PVector a, PVector b) {
-  return sqrt(pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + pow(a.y - b.y, 2));
-}
- 
-PVector movePointToSamePlane(PVector reference, PVector point) {
-  return new PVector(moveThetaToSamePlane(reference.x, point.x), point.y);
-}
- 
-// Assumes thetaA as a reference point
-// Moves thetaB to within 180 degrees, letting thetaB go beyond [0, 360)
-float moveThetaToSamePlane(float thetaA, float thetaB) {
-  if (thetaA - thetaB > 180) {
-    return thetaB + 360;
-  } else if (thetaB - thetaA > 180) {
-    return thetaB - 360;
-  } else {
-    return thetaB;
-  }
-}
-
-float thetaDistance(float thetaA, float thetaB) {
-  return LXUtils.wrapdistf(thetaA, thetaB, 360);
 }
 
 class Explosion extends MultiObject {

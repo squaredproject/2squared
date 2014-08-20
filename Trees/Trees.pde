@@ -271,7 +271,7 @@ void setup() {
   configureTriggerables();
 
   lx.addEffect(mappingTool = new MappingTool(lx));
-  lx.addEffect(new ModelTransformEffect(lx));
+  lx.engine.addLoopTask(new ModelTransformTask());
 
   configureBMPTool();
 
