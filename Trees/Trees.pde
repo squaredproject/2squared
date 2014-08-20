@@ -68,6 +68,7 @@ LXPattern[] getPatternListForChannels() {
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
   patterns.add(new Twister(lx));
+  patterns.add(new CandyCloud(lx));
   patterns.add(new MarkLottor(lx));
   // patterns.add(new DoubleHelix(lx));
   patterns.add(new SparkleHelix(lx));
@@ -109,7 +110,6 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new LowEQ(lx));
   patterns.add(new MidEQ(lx));
   patterns.add(new HighEQ(lx));
-  patterns.add(new CandyCloud(lx));
   patterns.add(new GalaxyCloud(lx));
 
   patterns.add(new CameraWrap(lx));
@@ -138,8 +138,9 @@ void registerPatternTriggerables() {
   registerPattern(new CandyCloud(lx), "");
   registerPattern(new GalaxyCloud(lx), "");
 
-  registerPattern(new ColorStrobe(lx), "", 4);
-  registerPattern(new Explosions(lx, 20), "", 4);
+  registerPattern(new ColorStrobe(lx), "", 3);
+  registerPattern(new Explosions(lx, 20), "", 3);
+  registerPattern(new Strobe(lx), "", 3);
   
   registerPattern(new IceCrystals(lx), "", 5);
   registerPattern(new Fire(lx), "", 5);
@@ -150,7 +151,7 @@ void registerPatternTriggerables() {
 
 void registerOneShotTriggerables() {
   registerOneShot(new Pulleys(lx), "");
-  registerOneShot(new Explosions(lx, 20), "");
+  registerOneShot(new StrobeOneshot(lx), "");
 
   registerOneShot(new Fireflies(lx), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);

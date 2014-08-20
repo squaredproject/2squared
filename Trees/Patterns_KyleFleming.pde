@@ -495,6 +495,34 @@ class Strobe extends TSPattern implements Triggerable {
   }
 }
 
+class StrobeOneshot extends TSPattern implements Triggerable {
+
+  int timer = 0;
+  boolean on = false;
+  
+  StrobeOneshot(LX lx) {
+    super(lx);
+  }
+  
+  public void run(double deltaMs) {
+    if (on) {
+      timer += deltaMs;
+      if (timer >= 80) {
+        on = false;
+      }
+      
+      setColors(on ? WHITE : BLACK);
+    }
+  }
+  
+  public void onTriggered(float strength) {
+    on = true;
+    timer = 0;
+  }
+  
+  public void onRelease() {}
+}
+
 class Brightness extends TSPattern implements Triggerable {
   
   Brightness(LX lx) {
@@ -541,14 +569,34 @@ class RandomColor extends TSPattern {
   }
 }
 
-class ColorStrobe extends TSPattern {
+class ColorStrobe extends TSPattern implements Triggerable {
+
+  boolean triggered = true;
   
   ColorStrobe(LX lx) {
     super(lx);
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    if (!triggered) return;
+
     setColors(lx.hsb(random(360), 100, 100));
+  }
+  
+  public void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
+
+    triggered = false;
+  }
+  
+  public void onTriggered(float strength) {
+    triggered = true;
+  }
+  
+  public void onRelease() {
+    triggered = false;
+    setColors(BLACK);
   }
 }
 
