@@ -76,6 +76,9 @@ public class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
   }
 }
 
+// This is a place to add loop tasks that ignore the engine speed modifier
+// This is helpful when you're adding something that isn't directly modifying
+// the visuals. For example, a timer or modulator affecting UI controls.
 class SpeedIndependentContainer implements LXLoopTask {
 
   private final List<LXLoopTask> loopTasks = new ArrayList<LXLoopTask>();

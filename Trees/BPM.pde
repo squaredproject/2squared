@@ -180,7 +180,7 @@ class UIMasterBpm extends UIWindow {
     int windowHeight = 102;
     this.bpmTool = bpmTool;
 
-    new UIKnob(xPos, yPos)
+    new _UIKnob(xPos, yPos)
     .setParameter(bpmTool.modulationController.tempoAdapter.bpm)
     .addToContainer(this);
     

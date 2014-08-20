@@ -467,7 +467,7 @@ public class UIMultiDeck extends UIWindow {
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
   final LXChannel.Listener[] lxListeners;
-  final UIKnob[] knobs;
+  final _UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
     super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 156 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -488,9 +488,9 @@ public class UIMultiDeck extends UIWindow {
     }
     
     yp += patternLists[0].getHeight() + 10;
-    knobs = new UIKnob[NUM_KNOBS];
+    knobs = new _UIKnob[NUM_KNOBS];
     for (int ki = 0; ki < knobs.length; ++ki) {
-      knobs[ki] = new UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp
+      knobs[ki] = new _UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp
         + (ki / KNOBS_PER_ROW) * 48);
       knobs[ki].addToContainer(this);
     }
@@ -644,7 +644,7 @@ class UIEffects extends UIWindow {
     
     int yp = TITLE_LABEL_HEIGHT;
     for (int ki = 0; ki < 8; ++ki) {
-      new UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp + (ki / KNOBS_PER_ROW) * 48)
+      new _UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp + (ki / KNOBS_PER_ROW) * 48)
       .setParameter(effectKnobParameters[ki])
       .addToContainer(this);
     }
@@ -652,5 +652,143 @@ class UIEffects extends UIWindow {
     
   } 
   
+}
+
+// This is is the same as UIKnob, except that it flashes the value of the parameter
+// for 1 second whenever the parameter changes. Useful when controlling via midi
+public class _UIKnob extends UIParameterControl implements UIFocus, LXLoopTask {
+
+  public final static int DEFAULT_SIZE = 28;
+
+  private int knobSize = DEFAULT_SIZE;
+
+  private final float knobIndent = .4f;
+
+  private final int knobLabelHeight = 14;
+
+  private boolean showValue = false;
+
+  boolean showValueTimerRunning = false;
+  double showValueTimer;
+
+  public _UIKnob() {
+    this(0, 0);
+  }
+
+  public _UIKnob(float x, float y) {
+    this(x, y, 0, 0);
+    setSize(this.knobSize, this.knobSize + this.knobLabelHeight);
+  }
+
+  public _UIKnob(float x, float y, float w, float h) {
+    super(x, y, w, h);
+
+    speedIndependentContainer.addLoopTask(this);
+  }
+
+  public void loop(double deltaMs) {
+    if (showValueTimerRunning) {
+      showValueTimer -= deltaMs;
+      if (showValueTimer <= 0) {
+        showValueTimerRunning = false;
+        showValueTimer = 0;
+        showValue = false;
+
+        redraw();
+      }
+    }
+  }
+
+  @Override
+  protected void onDraw(UI ui, PGraphics pg) {
+    float knobValue = (float) getNormalized();
+
+    pg.ellipseMode(PConstants.CENTER);
+
+    pg.noStroke();
+    pg.fill(ui.getBackgroundColor());
+    pg.rect(0, 0, this.knobSize, this.knobSize);
+
+    // Full outer dark ring
+    int arcCenter = this.knobSize / 2;
+    float arcStart = PConstants.HALF_PI + this.knobIndent;
+    float arcRange = (PConstants.TWO_PI - 2 * this.knobIndent);
+
+    pg.fill(0xff222222);
+    pg.stroke(0xff494949);
+    pg.arc(arcCenter, arcCenter, this.knobSize, this.knobSize, arcStart,
+        arcStart + arcRange);
+
+    // Light ring indicating value
+    pg.fill(ui.getHighlightColor());
+    pg.arc(arcCenter, arcCenter, this.knobSize, this.knobSize, arcStart,
+        arcStart + knobValue * arcRange);
+
+    // Center circle of knob
+    pg.noStroke();
+    pg.fill(0xff333333);
+    pg.ellipse(arcCenter, arcCenter, arcCenter, arcCenter);
+
+    String knobLabel;
+    if (this.showValue) {
+      knobLabel = (this.parameter != null) ? ("" + this.parameter.getValue())
+          : null;
+    } else {
+      knobLabel = (this.parameter != null) ? this.parameter.getLabel() : null;
+    }
+    if (knobLabel == null) {
+      knobLabel = "-";
+    } else if (knobLabel.length() > 4) {
+      knobLabel = knobLabel.substring(0, 4);
+    }
+    pg.noStroke();
+    pg.fill(ui.BLACK);
+    pg.rect(0, this.knobSize + 2, this.knobSize, this.knobLabelHeight - 2);
+    pg.fill(ui.getTextColor());
+    pg.textAlign(PConstants.CENTER);
+    pg.textFont(ui.getTitleFont());
+    pg.text(knobLabel, arcCenter, this.knobSize + this.knobLabelHeight - 2);
+  }
+
+  private long lastMousePress = 0;
+
+  private double dragValue;
+
+  @Override
+  public void onMousePressed(float mx, float my) {
+    this.dragValue = getNormalized();
+    long now = System.currentTimeMillis();
+    if (now - lastMousePress < DOUBLE_CLICK_THRESHOLD) {
+      if (this.parameter != null) {
+        this.parameter.reset();
+      }
+      this.lastMousePress = 0;
+    } else {
+      this.lastMousePress = now;
+    }
+    this.showValue = true;
+    redraw();
+  }
+
+  @Override
+  public void onMouseReleased(float mx, float my) {
+    this.showValue = false;
+    redraw();
+  }
+
+  @Override
+  public void onMouseDragged(float mx, float my, float dx, float dy) {
+    this.dragValue = LXUtils.constrain(this.dragValue - dy / 100., 0, 1);
+    setNormalized(this.dragValue);
+  }
+
+  @Override
+  public void onParameterChanged(LXParameter parameter) {
+    showValue = true;
+    showValueTimer = 1000;
+    showValueTimerRunning = true;
+
+    super.onParameterChanged(parameter);
+  }
 }
 
