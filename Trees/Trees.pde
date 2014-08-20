@@ -279,6 +279,7 @@ void setup() {
   configureAutomation();
 
   configureExternalOutput();
+  // configureFadeCandyOutput();
 
   configureUI();
 
@@ -490,6 +491,11 @@ void configureExternalOutput() {
   } catch (Exception x) {
     println(x);
   }
+}
+
+/* configureFadeCandyOutput */
+
+void configureFadeCandyOutput() {
   int[] clusterOrdering = new int[] { 0, 1, 2, 3, 4, 5, 8, 7, 9, 10, 11, 12, 13, 15, 14, 6 };
   int numCubesInCluster = clusterOrdering.length;
   int numClusters = 48;
