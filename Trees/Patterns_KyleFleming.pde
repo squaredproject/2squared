@@ -409,18 +409,33 @@ class Wisps extends MultiObjectPattern<Wisp> {
   //  Speed variability
   //  frequency variability
   //  Fade time
-  
+
   Wisps(LX lx) {
-    super(lx);
-    
+    this(lx, .5, 210, 10, 90, 20, 3.5, 10);
+  }
+
+  Wisps(LX lx, double initial_frequency, double initial_color,
+        double initial_colorVariability, double initial_direction,
+        double initial_directionVariability, double initial_thickness,
+        double initial_speed) {
+    super(lx, initial_frequency);
+
     addParameter(baseColor);
     addParameter(colorVariability);
     addParameter(direction);
     addParameter(directionVariability);
     addParameter(thickness);
     addParameter(speed);
-  }
-    
+
+    baseColor.setValue(initial_color);
+    colorVariability.setValue(initial_colorVariability);
+    direction.setValue(initial_direction);
+    directionVariability.setValue(initial_directionVariability);
+    thickness.setValue(initial_thickness);
+    speed.setValue(initial_speed);
+
+  };
+
   Wisp generateObject(float strength) {
     Wisp wisp = new Wisp(lx);
     wisp.runningTimerEnd = 5000 / speed.getValuef();
@@ -428,7 +443,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
       + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
     float pathDist = (float)LXUtils.random(200, 400);
     float startTheta = random(360);
-    float startY = (float)LXUtils.random(max(model.yMin, model.yMin - pathDist * sin(PI * pathDirection / 180)), 
+    float startY = (float)LXUtils.random(max(model.yMin, model.yMin - pathDist * sin(PI * pathDirection / 180)),
       min(model.yMax, model.yMax - pathDist * sin(PI * pathDirection / 180)));
     wisp.startPoint = new PVector(startTheta, startY);
     wisp.endPoint = PVector.fromAngle(pathDirection * PI / 180);

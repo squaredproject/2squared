@@ -157,7 +157,12 @@ void registerOneShotTriggerables() {
   registerOneShot(new Fireflies(lx), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);
   registerOneShot(new Lightning(lx), "", 5);
-  registerOneShot(new Wisps(lx), "", 5);
+  registerOneShot(new Wisps(lx), "", 5); // default wisp
+  registerOneShot(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), "", 5); // downward yellow wisp
+  registerOneShot(new Wisps(lx, 1, 210, 100, 90, 130, 3.5, 10), "", 5); // multidirection colorful wisps
+  registerOneShot(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), "", 5); // colorful wisp storm
+  registerOneShot(new Wisps(lx, 3, 210, 10, 270, 0, 3.5, 10), "", 5); // rain storm of wisps
+  registerOneShot(new Wisps(lx, 35, 210, 180, 180, 15, 2, 15), "", 5); // twister of wisps
   registerOneShot(new Explosions(lx), "", 5);
 }
 
