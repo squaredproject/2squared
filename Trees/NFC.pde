@@ -16,7 +16,7 @@ public class NFCEngine {
       if (visual != null) {
         VisualType readerRestriction = readerToPatternTypeRestrictionMap.get(reader);
         if (readerRestriction == visual.VisualType) {
-          visual.triggerable.onTriggered(1);
+          addNFCEvent(new NFCTriggeredMessage(visual.triggerable));
         }
       }
       println(reader, "added card", cardId);
@@ -27,9 +27,54 @@ public class NFCEngine {
       if (visual != null) {
         VisualType readerRestriction = readerToPatternTypeRestrictionMap.get(reader);
         if (readerRestriction == visual.VisualType) {
-          visual.triggerable.onRelease();
+          addNFCEvent(new NFCReleaseMessage(visual.triggerable));
         }
       }
+    }
+  }
+
+  private class NFCLoopTaskDispatch implements LXLoopTask {
+    private final List<NFCMessage> localThreadEventQueue = new ArrayList<NFCMessage>();
+
+    public void loop(double deltaMs) {
+      localThreadEventQueue.clear();
+      synchronized (nfcThreadEventQueue) {
+        localThreadEventQueue.addAll(nfcThreadEventQueue);
+        nfcThreadEventQueue.clear();
+      }
+      for (NFCMessage message : localThreadEventQueue) {
+        message.dispatch();
+      }
+    }
+  }
+
+  private abstract class NFCMessage {
+    Triggerable triggerable;
+
+    NFCMessage(Triggerable triggerable) {
+      this.triggerable = triggerable;
+    }
+
+    abstract void dispatch();
+  }
+
+  private class NFCReleaseMessage extends NFCMessage {
+    NFCReleaseMessage(Triggerable triggerable) {
+      super(triggerable);
+    }
+
+    void dispatch() {
+      triggerable.onRelease();
+    }
+  }
+
+  private class NFCTriggeredMessage extends NFCMessage {
+    NFCTriggeredMessage(Triggerable triggerable) {
+      super(triggerable);
+    }
+    
+    void dispatch() {
+      triggerable.onTriggered(1);
     }
   }
 
@@ -51,12 +96,15 @@ public class NFCEngine {
   private final Map<String, VisualType> readerToPatternTypeRestrictionMap = new HashMap<String, VisualType>();
   private List<VisualType> readerPatternTypeRestrictionArray;
   private int readerPatternTypeRestrictionIndex = 0;
+  private final List<NFCMessage> nfcThreadEventQueue = Collections.synchronizedList(new ArrayList<NFCMessage>());
+  private final NFCLoopTaskDispatch nfcLoopTaskDispatch = new NFCLoopTaskDispatch();
   
   public NFCEngine(LX lx) {
     this.lx = lx;
     try {
       libNFC = new LibNFC();
       libNFCMainThread = new LibNFCMainThread(libNFC, cardReader);
+      lx.engine.addLoopTask(nfcLoopTaskDispatch);
     } catch(Exception e) {
       println("nfc engine initialization error: " + e.toString());
       libNFC = null;
@@ -82,5 +130,11 @@ public class NFCEngine {
 
   public void registerReaderPatternTypeRestrictions(List<VisualType> readerPatternTypeRestrictionArray) {
     this.readerPatternTypeRestrictionArray = readerPatternTypeRestrictionArray;
+  }
+
+  private void addNFCEvent(NFCMessage message) {
+    synchronized (nfcThreadEventQueue) {
+      nfcThreadEventQueue.add(message);
+    }
   }
 }
