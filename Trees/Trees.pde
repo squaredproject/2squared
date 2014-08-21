@@ -390,6 +390,15 @@ void configureBMPTool() {
 /* configureAutomation */
 
 void configureAutomation() {
+  lx.engine.addMessageListener(new LXEngine.MessageListener() {
+    public void onMessage(LXEngine engine, String message) {
+      if (message.length() > 7 && message.substring(0, 7).equals("master/")) {
+        double value = Double.parseDouble(message.substring(7));
+        output.brightness.setValue(value);
+      }
+    }
+  });
+
   // Automation recorders
   for (int i = 0; i < automation.length; ++i) {
     final int ii = i;
