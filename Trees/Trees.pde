@@ -146,7 +146,7 @@ void registerPatternTriggerables() {
   registerPattern(new Fire(lx), "", 5);
   
   // registerPattern(new DoubleHelix(lx), "");
-  // registerPattern(new AcidTrip(lx), "");
+  registerPattern(new AcidTrip(lx), "");
 
   registerPattern(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), ""); // downward yellow wisp
   registerPattern(new Wisps(lx, 1, 210, 100, 90, 130, 3.5, 10), ""); // multidirection colorful wisps
