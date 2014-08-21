@@ -97,6 +97,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
   BasicParameter frequency;
   
   final boolean shouldAutofade;
+  float fadeTime = 1000;
   
   final ArrayList<ObjectType> objects;
   double pauseTimerCountdown = 0;
@@ -143,7 +144,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
     
     if (shouldAutofade) {
       for (Cube cube : model.cubes) {
-        blendColor(cube.index, lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / 1000))), LXColor.Blend.MULTIPLY);
+        blendColor(cube.index, lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / fadeTime))), LXColor.Blend.MULTIPLY);
       }
     } else {
       clearColors();
@@ -187,16 +188,19 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
 
 abstract class MultiObject extends LXLayer {
   
+  boolean firstRun = true;
   float runningTimer = 0;
   float runningTimerEnd = 1000;
   boolean running = true;
   float progress;
   int hue = BLACK;
   float thickness;
+  boolean shouldFade = true;
   
+  PVector lastPoint;
   PVector currentPoint;
-  float fadeIn;
-  float fadeOut;
+  float fadeIn = 1;
+  float fadeOut = 1;
   
   MultiObject(LX lx) {
     super(lx);
@@ -204,7 +208,12 @@ abstract class MultiObject extends LXLayer {
   
   public void run(double deltaMs) {
     if (running) {
-      advance(deltaMs);
+      if (firstRun) {
+        advance(0);
+        firstRun = false;
+      } else {
+        advance(deltaMs);
+      }
       if (running) {
         for (Cube cube : model.cubes) {
           colors[cube.index] = blendColor(colors[cube.index], getColorForCube(cube), LIGHTEST);
@@ -220,8 +229,13 @@ abstract class MultiObject extends LXLayer {
         running = false;
       } else {
         progress = runningTimer / runningTimerEnd;
-        fadeIn = min(1, 3 * (1 - progress));
-        fadeOut = min(1, 3 * progress);
+        if (shouldFade) {
+          fadeIn = min(1, 3 * (1 - progress));
+          fadeOut = min(1, 3 * progress);
+        }
+        if (currentPoint == null) {
+        }
+        lastPoint = currentPoint;
         onProgressChanged(progress);
       }
     }
@@ -233,15 +247,38 @@ abstract class MultiObject extends LXLayer {
   
   public float getBrightnessForCube(Cube cube) {
     PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.transformedCylinderPoint);
-    if (insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness)) {
-      float dist = PVector.dist(cubePointPrime, currentPoint);
-      return 100 * max(0, (1 - dist / thickness)) * fadeIn * fadeOut;
-    } else {
-      return 0;
+    float dist = MAX_FLOAT;
+
+    PVector localLastPoint = lastPoint;
+    if (localLastPoint != null) {
+      while (PVector.dist(localLastPoint, currentPoint) > 10) {
+        PVector increment = PVector.sub(currentPoint, localLastPoint);
+        increment.setMag(10);
+        PVector point = PVector.add(localLastPoint, increment);
+
+        if (isInsideBoundingBox(cube, cubePointPrime, point)) {
+          dist = min(dist, getDistanceFromGeometry(cube, cubePointPrime, point));
+        }
+        localLastPoint = point;
+      }
     }
+
+    if (isInsideBoundingBox(cube, cubePointPrime, currentPoint)) {
+      dist = min(dist, getDistanceFromGeometry(cube, cubePointPrime, currentPoint));
+    }
+    return 100 * min(max(1 - dist / thickness, 0), 1) * fadeIn * fadeOut;
+  }
+
+  public boolean isInsideBoundingBox(Cube cube, PVector cubePointPrime, PVector currentPoint) {
+    return insideOfBoundingBox(currentPoint, cubePointPrime, thickness, thickness);
+  }
+
+  public float getDistanceFromGeometry(Cube cube, PVector cubePointPrime, PVector currentPoint) {
+    return PVector.dist(cubePointPrime, currentPoint);
   }
   
   public void init() { }
+  
   public void onProgressChanged(float progress) { }
 }
 
@@ -386,7 +423,6 @@ class Wisps extends MultiObjectPattern<Wisp> {
     
   Wisp generateObject(float strength) {
     Wisp wisp = new Wisp(lx);
-    wisp.runningTimer = 0;
     wisp.runningTimerEnd = 5000 / speed.getValuef();
     float pathDirection = (float)(direction.getValuef()
       + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
@@ -424,6 +460,7 @@ class Rain extends MultiObjectPattern<RainDrop> {
   
   Rain(LX lx) {
     super(lx);
+    fadeTime = 500;
   }
   
   BasicParameter getFrequencyParameter() {
@@ -432,14 +469,13 @@ class Rain extends MultiObjectPattern<RainDrop> {
    
   RainDrop generateObject(float strength) {
     RainDrop rainDrop = new RainDrop(lx);
+
     rainDrop.runningTimerEnd = 180 + random(20);
-    rainDrop.decayTime = rainDrop.runningTimerEnd;
     rainDrop.theta = random(360);
     rainDrop.startY = model.yMax + 20;
     rainDrop.endY = model.yMin - 20;
-    rainDrop.pathDist = abs(rainDrop.endY - rainDrop.startY);
     rainDrop.hue = 200 + (int)random(20);
-    rainDrop.thickness = 1.5 + random(.6);
+    rainDrop.thickness = 10 * (1.5 + random(.6));
     
     return rainDrop;
   }
@@ -447,34 +483,17 @@ class Rain extends MultiObjectPattern<RainDrop> {
 
 class RainDrop extends MultiObject {
   
-  float decayTime;
-  
   float theta;
   float startY;
   float endY;
-  float pathDist;
   
   RainDrop(LX lx) {
     super(lx);
+    shouldFade = false;
   }
   
-  protected void advance(double deltaMs) {
-    if (running) {
-      runningTimer += deltaMs;
-      if (runningTimer >= runningTimerEnd + decayTime) {
-        running = false;
-      } else {
-        float percentDone = min(runningTimer, runningTimerEnd) / runningTimerEnd;
-        currentPoint = new PVector(theta, (float)LXUtils.lerp(startY, endY, percentDone));
-      }
-    }
-  }
-  
-  public float getBrightnessForCube(Cube cube) {
-    PVector cubePointPrime = movePointToSamePlane(currentPoint, cube.transformedCylinderPoint);
-    float distFromSource = PVector.dist(cubePointPrime, currentPoint);
-    float tailFadeFactor = distFromSource / pathDist;
-    return max(0, (100 - 10 * distFromSource / thickness));
+  public void onProgressChanged(float progress) {
+    currentPoint = new PVector(theta, (float)LXUtils.lerp(startY, endY, progress));
   }
 }
 
