@@ -15,7 +15,7 @@ public class NFCEngine {
       NFCEngineVisual visual = cardToTriggerableMap.get(cardId);
       if (visual != null) {
         VisualType readerRestriction = readerToPatternTypeRestrictionMap.get(reader);
-        if (readerRestriction == visual.VisualType) {
+        if (disableVisualTypeRestrictions || readerRestriction == visual.VisualType) {
           addNFCEvent(new NFCTriggeredMessage(visual.triggerable));
         }
       }
@@ -26,7 +26,7 @@ public class NFCEngine {
       NFCEngineVisual visual = cardToTriggerableMap.get(cardId);
       if (visual != null) {
         VisualType readerRestriction = readerToPatternTypeRestrictionMap.get(reader);
-        if (readerRestriction == visual.VisualType) {
+        if (disableVisualTypeRestrictions || readerRestriction == visual.VisualType) {
           addNFCEvent(new NFCReleaseMessage(visual.triggerable));
         }
       }
@@ -87,6 +87,8 @@ public class NFCEngine {
       this.VisualType = VisualType;
     }
   }
+
+  boolean disableVisualTypeRestrictions;
 
   private final LX lx;
   private LibNFC libNFC;

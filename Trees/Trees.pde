@@ -269,6 +269,9 @@ void setup() {
 
   configureNFC();
 
+  // uncomment this to allow any nfc reader to read any cube
+  // nfcEngine.disableVisualTypeRestrictions = false;
+
   configureTriggerables();
 
   lx.addEffect(mappingTool = new MappingTool(lx));
