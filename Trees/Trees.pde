@@ -316,6 +316,7 @@ void configureChannels() {
   for (LXChannel channel : lx.engine.getChannels()) {
     channel.goIndex(channel.getIndex());
     channel.setFaderTransition(new TreesTransition(lx, channel));
+    channel.getFader().setNormalized(0);
   }
 }
 
