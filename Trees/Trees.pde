@@ -147,6 +147,12 @@ void registerPatternTriggerables() {
   
   // registerPattern(new DoubleHelix(lx), "");
   // registerPattern(new AcidTrip(lx), "");
+
+  registerPattern(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), ""); // downward yellow wisp
+  registerPattern(new Wisps(lx, 1, 210, 100, 90, 130, 3.5, 10), ""); // multidirection colorful wisps
+  registerPattern(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), ""); // colorful wisp storm
+  registerPattern(new Wisps(lx, 3, 210, 10, 270, 0, 3.5, 10), ""); // rain storm of wisps
+  registerPattern(new Wisps(lx, 35, 210, 180, 180, 15, 2, 15), ""); // twister of wisps
 }
 
 void registerOneShotTriggerables() {
@@ -157,12 +163,7 @@ void registerOneShotTriggerables() {
   registerOneShot(new Fireflies(lx), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);
   registerOneShot(new Lightning(lx), "", 5);
-  registerOneShot(new Wisps(lx), "", 5); // default wisp
-  registerOneShot(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), "", 5); // downward yellow wisp
-  registerOneShot(new Wisps(lx, 1, 210, 100, 90, 130, 3.5, 10), "", 5); // multidirection colorful wisps
-  registerOneShot(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), "", 5); // colorful wisp storm
-  registerOneShot(new Wisps(lx, 3, 210, 10, 270, 0, 3.5, 10), "", 5); // rain storm of wisps
-  registerOneShot(new Wisps(lx, 35, 210, 180, 180, 15, 2, 15), "", 5); // twister of wisps
+  registerOneShot(new Wisps(lx), "", 5);
   registerOneShot(new Explosions(lx), "", 5);
 }
 
