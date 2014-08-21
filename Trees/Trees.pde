@@ -390,6 +390,12 @@ void configureBMPTool() {
 /* configureAutomation */
 
 void configureAutomation() {
+  // Example automation message to change master fader
+  // {
+  //   "message": "master/0.5",
+  //   "event": "MESSAGE",
+  //   "millis": 0
+  // },
   lx.engine.addMessageListener(new LXEngine.MessageListener() {
     public void onMessage(LXEngine engine, String message) {
       if (message.length() > 7 && message.substring(0, 7).equals("master/")) {
