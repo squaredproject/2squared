@@ -108,6 +108,11 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
     this(lx, true);
   }
   
+  MultiObjectPattern(LX lx, double initial_frequency) {
+    this(lx, true);
+    frequency.setValue(initial_frequency);
+  }
+
   MultiObjectPattern(LX lx, boolean shouldAutofade) {
     super(lx);
     
