@@ -239,6 +239,7 @@ class Lightning extends TSPattern implements Triggerable {
   final BasicParameter maxBoltWidth = new BasicParameter("Width", 60, 20, 150);
   final BasicParameter lightningChance = new BasicParameter("Chance", 5, 1, 10);
   final BasicParameter forkingChance = new BasicParameter("Fork", 3, 1, 10);
+  final BooleanParameter firesOnBeat = new BooleanParameter("Beat");
   int[] randomCheckTimeOuts = {0, 0};
   boolean triggered = true;
   Lightning(LX lx) {
@@ -250,6 +251,7 @@ class Lightning extends TSPattern implements Triggerable {
     addParameter(maxBoltWidth);
     addParameter(lightningChance);
     addParameter(forkingChance);
+    addParameter(firesOnBeat);
   }
   
   public void run(double deltaMs) {
@@ -258,10 +260,19 @@ class Lightning extends TSPattern implements Triggerable {
     int treeIndex = 0;
     
     for (Tree tree : model.trees){
-      if (triggered && bolts[treeIndex].isDead() && randomCheckTimeOuts[treeIndex] < millis()){
-        randomCheckTimeOuts[treeIndex] = millis() + 100;
-        if (random(15) < lightningChance.getValuef()){
-          bolts[treeIndex] = makeBolt();
+      if (triggered && bolts[treeIndex].isDead()) {
+        if (firesOnBeat.isOn()) {
+          if (lx.tempo.beat()) {
+            randomCheckTimeOuts[treeIndex] = millis() + 100;
+            bolts[treeIndex] = makeBolt();
+          }
+        } else {
+          if (randomCheckTimeOuts[treeIndex] < millis()){
+            randomCheckTimeOuts[treeIndex] = millis() + 100;
+            if (random(15) < lightningChance.getValuef()){
+              bolts[treeIndex] = makeBolt();
+            }
+          }
         }
       }
       for (Cube cube : tree.cubes) {
