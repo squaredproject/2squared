@@ -165,6 +165,7 @@ void registerEffectTriggerables() {
   ColorEffect colorEffect = new ColorEffect(lx);
   GhostEffect ghostEffect = new GhostEffect(lx);
   ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
+  StaticEffect staticEffect = new StaticEffect(lx);
   RotationEffect rotationEffect = new RotationEffect(lx);
   SpinEffect spinEffect = new SpinEffect(lx);
   SpeedEffect speedEffect = new SpeedEffect(lx);
@@ -178,6 +179,7 @@ void registerEffectTriggerables() {
   lx.addEffect(colorEffect);
   lx.addEffect(ghostEffect);
   lx.addEffect(scrambleEffect);
+  lx.addEffect(staticEffect);
   lx.addEffect(rotationEffect);
   lx.addEffect(spinEffect);
   lx.addEffect(speedEffect);
@@ -201,6 +203,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(fadeTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(acidTripTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(candyCloudTextureEffect.amount, "", 0, 1, 1);
+  registerEffectControlParameter(staticEffect.amount, "", 0, .5, 1);
   registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 5);
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {

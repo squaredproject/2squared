@@ -863,20 +863,22 @@ class StaticEffect extends LXEffect {
   }
   
   protected void run(double deltaMs) {
-    if (isCreatingStatic) {
-      double chance = random(1);
-      if (chance > amount.getValue()) {
-        isCreatingStatic = false;
+    if (amount.getValue() > 0) {
+      if (isCreatingStatic) {
+        double chance = random(1);
+        if (chance > amount.getValue()) {
+          isCreatingStatic = false;
+        }
+      } else {
+        double chance = random(1);
+        if (chance < amount.getValue()) {
+          isCreatingStatic = true;
+        }
       }
-    } else {
-      double chance = random(1);
-      if (chance < amount.getValue()) {
-        isCreatingStatic = true;
-      }
-    }
-    if (isCreatingStatic) {
-      for (int i = 0; i < colors.length; i++) {
-        colors[i] = color(random(255));
+      if (isCreatingStatic) {
+        for (int i = 0; i < colors.length; i++) {
+          colors[i] = color(random(255));
+        }
       }
     }
   }
