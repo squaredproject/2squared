@@ -190,13 +190,8 @@ public class UILoopRecorder extends UIWindow {
   private final String[] labels = new String[] { "-", "-", "-", "-" };
   
   UILoopRecorder(UI ui) {
-    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 152, 140, 148);
+    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 126, 140, 148);
     float yPos = TITLE_LABEL_HEIGHT;
-    new UIToggleSet(4, yPos, this.width-8, 20)
-    .setOptions(new String[] { "A", "B", "C", "D" })
-    .setParameter(automationSlot)
-    .addToContainer(this);
-    yPos += 26;
     
     final UIButton playButton = new UIButton(6, yPos, 40, 20);
     playButton
