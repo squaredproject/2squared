@@ -29,10 +29,13 @@ float thetaDistance(float thetaA, float thetaB) {
   return LXUtils.wrapdistf(thetaA, thetaB, 360);
 }
 
-class BassSlam extends TSPattern {
+class BassSlam extends TSPattern implements Triggerable {
   
   final private double flashTimePercent = 0.1;
   final private int patternHue = 200;
+
+  double timer = 2;
+  boolean triggerMode;
   
   BassSlam(LX lx) {
     super(lx);
@@ -41,10 +44,21 @@ class BassSlam extends TSPattern {
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
 
-    if (lx.tempo.ramp() < flashTimePercent) {
+    if (triggerMode) {
+      if (timer > 1) {
+        return;
+      }
+      timer += deltaMs / 800;
+      if (timer > 1) {
+        setColors(BLACK);
+        return;
+      }
+    }
+
+    if (progress() < flashTimePercent) {
       setColors(lx.hsb(patternHue, 100, 100));
     } else {
-      float time = (float)((lx.tempo.ramp() - flashTimePercent) / (1 - flashTimePercent) * 1.3755);
+      float time = (float)((progress() - flashTimePercent) / (1 - flashTimePercent) * 1.3755);
       float y;
       // y = 0 when time = 1.3755
       if (time < 1) {
@@ -58,6 +72,23 @@ class BassSlam extends TSPattern {
         setColor(cube.index, lx.hsb(patternHue, 100, LXUtils.constrainf(100 - 2 * abs(y - cube.transformedY), 0, 100)));
       }
     }
+  }
+
+  double progress() {
+    return triggerMode ? ((timer + flashTimePercent) % 1) : lx.tempo.ramp();
+  }
+
+  void onTriggerableModeEnabled() {
+    super.onTriggerableModeEnabled();
+
+    triggerMode = true;
+  }
+  
+  public void onTriggered(float strength) {
+    timer = 0;
+  }
+  
+  public void onRelease() {
   }
 }
 

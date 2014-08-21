@@ -152,6 +152,7 @@ void registerPatternTriggerables() {
 void registerOneShotTriggerables() {
   registerOneShot(new Pulleys(lx), "");
   registerOneShot(new StrobeOneshot(lx), "");
+  registerOneShot(new BassSlam(lx), "");
 
   registerOneShot(new Fireflies(lx), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);
