@@ -34,11 +34,19 @@ class Fireflies extends TSPattern implements Triggerable{
   }
   
   Fireflies(LX lx) {
+    this(lx, 20, 1, 0);
+  }
+
+  Fireflies(LX lx, int initial_flyCount, float initial_speed, float initial_hue) {
     super(lx);
     addParameter(flyCount);
     addParameter(speed);
     addParameter(hue);
     addModulator(decay);
+
+    flyCount.setValue(initial_flyCount);
+    speed.setValue(initial_speed);
+    hue.setValue(initial_hue);
 
     for (int i = 0; i < blinkers.length; ++i) {
       blinkers[i] = new SinLFO(0, 75, 1000  * random(1.0, 3.0));      

@@ -162,6 +162,8 @@ void registerOneShotTriggerables() {
   registerOneShot(new BassSlam(lx), "");
 
   registerOneShot(new Fireflies(lx), "", 5);
+  registerOneShot(new Fireflies(lx, 70, 6, 180), "", 5);
+  registerOneShot(new Fireflies(lx, 40, 7.5, 90), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);
   registerOneShot(new Lightning(lx), "", 5);
   registerOneShot(new Wisps(lx), "", 5);
