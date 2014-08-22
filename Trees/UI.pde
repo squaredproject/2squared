@@ -190,7 +190,7 @@ public class UILoopRecorder extends UIWindow {
   private final String[] labels = new String[] { "-", "-", "-", "-" };
   
   UILoopRecorder(UI ui) {
-    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 126, 140, 148);
+    super(ui, "LOOP RECORDER", Trees.this.width-144, Trees.this.height - 126, 140, 122);
     float yPos = TITLE_LABEL_HEIGHT;
     
     final UIButton playButton = new UIButton(6, yPos, 40, 20);
@@ -515,9 +515,13 @@ class UIChannelFaders extends UIContext {
 public class UIMultiDeck extends UIWindow {
 
   private final static int KNOBS_PER_ROW = 4;
+
+  static final int NUM_PATTERNS_VISIBLE = 10;
+  static final int PATTERN_ROW_HEIGHT = 20;
+  static final int PATTERN_LIST_HEIGHT = NUM_PATTERNS_VISIBLE * PATTERN_ROW_HEIGHT;
   
   public final static int DEFAULT_WIDTH = 140;
-  public final static int DEFAULT_HEIGHT = 258;
+  public final static int DEFAULT_HEIGHT = 158 + PATTERN_LIST_HEIGHT;
 
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
@@ -525,7 +529,7 @@ public class UIMultiDeck extends UIWindow {
   final _UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
-    super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 156 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 128 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
     patternLists = new UIItemList[NUM_CHANNELS];
@@ -537,7 +541,7 @@ public class UIMultiDeck extends UIWindow {
       for (LXPattern p : channel.getPatterns()) {
         items.add(new PatternScrollItem(channel, p));
       }
-      patternLists[channel.getIndex()] = new UIItemList(1, yp, this.width - 2, 100).setItems(items);
+      patternLists[channel.getIndex()] = new UIItemList(1, yp, this.width - 2, PATTERN_LIST_HEIGHT).setItems(items);
       patternLists[channel.getIndex()].setVisible(channel.getIndex() == focusedChannel());
       patternLists[channel.getIndex()].addToContainer(this);      
     }

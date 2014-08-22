@@ -265,7 +265,7 @@ NFCEngine nfcEngine;
 SpeedIndependentContainer speedIndependentContainer;
 
 void setup() {
-  size(1024, 680, OPENGL);
+  size(1148, 720, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
   clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
