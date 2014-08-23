@@ -42,8 +42,6 @@ class Twinkle extends TSPattern {
   }
 
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       if (sparkleTimeOuts[cube.index] < millis()) {
         // randomly change modulators        
@@ -80,8 +78,6 @@ class VerticalSweep extends TSPattern {
   }
 
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     float[] colorPalette = { 
       hue1Param.getValuef(), hue2Param.getValuef(), hue3Param.getValuef()
       };

@@ -46,8 +46,6 @@ class CameraWrap extends TSPattern {
   // This is your run loop called every frame.
   // It's basically just like Processing's draw()  
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     vid.fetch(); // this only updates pixels when a new image is available.
     pixels = vid.pixels();
 

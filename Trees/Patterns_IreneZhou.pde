@@ -1,4 +1,4 @@
-class Fireflies extends TSPattern implements Triggerable{
+class Fireflies extends TSTriggerablePattern {
   final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 7.5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
@@ -7,7 +7,6 @@ class Fireflies extends TSPattern implements Triggerable{
   private Firefly[] fireflies;
   private Firefly[] queue;
   private SinLFO[] blinkers = new SinLFO[10];
-  private boolean triggerable = false;
   private LinearEnvelope decay = new LinearEnvelope(0,0,3000);
   
   
@@ -39,6 +38,9 @@ class Fireflies extends TSPattern implements Triggerable{
 
   Fireflies(LX lx, int initial_flyCount, float initial_speed, float initial_hue) {
     super(lx);
+
+    patternMode = PATTERN_MODE_CUSTOM;
+
     addParameter(flyCount);
     addParameter(speed);
     addParameter(hue);
@@ -93,8 +95,6 @@ class Fireflies extends TSPattern implements Triggerable{
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         0,
@@ -103,7 +103,7 @@ class Fireflies extends TSPattern implements Triggerable{
       );
     }
 
-    if (triggerable) {
+    if (triggerableModeEnabled) {
       numFireflies = (int) decay.getValuef();
     } else {
       numFireflies = flyCount.getValuei();  
@@ -154,18 +154,17 @@ class Fireflies extends TSPattern implements Triggerable{
     }
   }
 
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-    triggerable = true;
-  }
-
   public void onTriggered(float strength) {
+    super.onTriggered(strength);
+
     numFireflies += 25;
     decay.setRange(numFireflies, 10);
     decay.reset().start();
   }
 
   public void onRelease() {
+    super.onRelease();
+
     decay.setRange(numFireflies, 0);
     decay.reset().start();
   }
@@ -191,8 +190,6 @@ class Lattice extends TSPattern {
   }
 
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     float spinf = spin.getValuef();
     float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
@@ -210,14 +207,13 @@ class Lattice extends TSPattern {
   }
 }
 
-class Fire extends TSPattern  implements Triggerable{
+class Fire extends TSTriggerablePattern {
   final BasicParameter maxHeight = new BasicParameter("HEIGHT", 0.8, 0.3, 1);
   final BasicParameter flameSize = new BasicParameter("SIZE", 30, 10, 75);  
   final BasicParameter flameCount = new BasicParameter ("FLAMES", 75, 0, 75);
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private LinearEnvelope fireHeight = new LinearEnvelope(0,0,500);
 
-  private boolean triggerable = false;
   private float height = 0;
   private int numFlames = 75;
   private Flame[] flames;
@@ -239,6 +235,9 @@ class Fire extends TSPattern  implements Triggerable{
 
   Fire(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_CUSTOM;
+
     addParameter(maxHeight);
     addParameter(flameSize);
     addParameter(flameCount);
@@ -262,9 +261,7 @@ class Fire extends TSPattern  implements Triggerable{
   }
 
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
-    if (!triggerable) {
+    if (!triggerableModeEnabled) {
       height = maxHeight.getValuef();
       numFlames = (int) flameCount.getValuef();
     } else {
@@ -300,29 +297,27 @@ class Fire extends TSPattern  implements Triggerable{
     }
   }
 
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-    triggerable = true;
-  }
-
   public void onTriggered(float strength) {
+    super.onTriggered(strength);
+
     fireHeight.setRange(1,0.6);
     fireHeight.reset().start();
   };
 
   public void onRelease() {
+    super.onRelease();
+
     fireHeight.setRange(height, 0);
     fireHeight.reset().start();
   }
 }
 
-class Bubbles extends TSPattern implements Triggerable {
+class Bubbles extends TSTriggerablePattern {
   final DiscreteParameter ballCount = new DiscreteParameter("NUM", 10, 1, 150);
   final BasicParameter maxRadius = new BasicParameter("RAD", 50, 5, 100);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 5); 
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private LinearEnvelope decay = new LinearEnvelope(0,0,2000);
-  private boolean triggerable = false;
   private int numBubbles = 0;
   private Bubble[] bubbles;
   
@@ -348,6 +343,9 @@ class Bubbles extends TSPattern implements Triggerable {
   
   Bubbles(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_CUSTOM;
+
     addParameter(ballCount);
     addParameter(maxRadius);
     addParameter(speed);
@@ -377,8 +375,6 @@ class Bubbles extends TSPattern implements Triggerable {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         0,
@@ -386,7 +382,7 @@ class Bubbles extends TSPattern implements Triggerable {
         0
       );
     }
-    if (!triggerable) {
+    if (!triggerableModeEnabled) {
       numBubbles = ballCount.getValuei();  
     } else {
       numBubbles = (int) decay.getValuef();
@@ -428,18 +424,17 @@ class Bubbles extends TSPattern implements Triggerable {
     }
   }
 
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-    triggerable = true;
-  }
-
   public void onTriggered(float strength) {
+    super.onTriggered(strength);
+
     numBubbles += 25;
     decay.setRange(numBubbles, 10);
     decay.reset().start();
   }
 
   public void onRelease() {
+    super.onRelease();
+
     decay.setRange(numBubbles, 0);
     decay.reset().start();
   }
@@ -484,8 +479,6 @@ class Voronoi extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
@@ -552,8 +545,6 @@ class Cells extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
@@ -624,8 +615,6 @@ class Fumes extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-    
     float minSat = sat.getValuef();
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
@@ -656,7 +645,7 @@ class Fumes extends TSPattern {
   }
 }
 
-class Pulley extends TSPattern implements Triggerable { //ported from SugarCubes
+class Pulley extends TSTriggerablePattern { //ported from SugarCubes
   final int NUM_DIVISIONS = 2;
   private final Accelerator[] gravity = new Accelerator[NUM_DIVISIONS];
   private final float[] baseSpeed = new float[NUM_DIVISIONS];
@@ -675,6 +664,9 @@ class Pulley extends TSPattern implements Triggerable { //ported from SugarCubes
 
   Pulley(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_CUSTOM;
+
     for (int i = 0; i < NUM_DIVISIONS; ++i) {
       addModulator(gravity[i] = new Accelerator(0, 0, 0));
       addModulator(delays[i] = new Click(0));
@@ -718,8 +710,6 @@ class Pulley extends TSPattern implements Triggerable { //ported from SugarCubes
   }
 
   public void run(double deltaMS) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     if (turnOff.click()) {
       triggered = false;
       setColors(lx.hsb(0,0,0));
@@ -824,8 +814,6 @@ class Springs extends TSPattern {
   }
 
   public void run(double deltaMS) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     if (!isRising) {
       gravity.start();
       if (gravity.getValuef() < 0) {
@@ -851,7 +839,7 @@ class Springs extends TSPattern {
   }
 }
 
-class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
+class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   private BasicParameter sz = new BasicParameter("SIZE", 0.5);
   private BasicParameter beatAmount = new BasicParameter("BEAT", 0);
   private BooleanParameter automated = new BooleanParameter("AUTO", true);
@@ -896,6 +884,9 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
 
   Pulleys(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_CUSTOM;
+
     addParameter(sz);
     addParameter(beatAmount);
     addParameter(speed);
@@ -939,8 +930,6 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
   }
 
   public void run(double deltaMS) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     if (autoMode) {
       numPulleys = pulleyCount.getValuei();
       
@@ -1100,8 +1089,6 @@ class Pulleys extends TSPattern implements Triggerable{ //ported from SugarCubes
 //   }
   
 //   public void run(double deltaMs) {
-//     if (getChannel().getFader().getNormalized() == 0) return;
-
 //     if (rippleAge.getValuef() < 5){
 //       if (!resetDone){
 //         yCenter = 150 + random(300);

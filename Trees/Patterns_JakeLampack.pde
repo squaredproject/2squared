@@ -9,8 +9,6 @@ class AcidTrip extends TSPattern {
   }
     
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-   
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         abs(model.cy - cube.transformedY) + abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360,

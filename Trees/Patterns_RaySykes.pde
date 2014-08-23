@@ -25,8 +25,6 @@ class SparkleHelix extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       float compensatedWidth = (0.7 + .02 / coil.getValuef()) * width.getValuef();
       float spiralVal = max(0, 100 - (100*TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((TWO_PI / 360) * cube.transformedTheta, 8*TWO_PI + spin.getValuef() + coil.getValuef()*(cube.transformedY-model.cy), TWO_PI));
@@ -75,8 +73,6 @@ class MultiSine extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       float[] combinedDistanceSines = {0, 0};
       for (int i = 0; i < numLayers; i++){
@@ -108,8 +104,6 @@ class Stripes extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {  
       float hueVal = (lx.getBaseHuef() + .1*cube.transformedY) % 360;
       float brightVal = 50 + 50 * sin(spacing.getValuef() * (sin((TWO_PI / 360) * 4 * cube.transformedTheta) + slopeFactor.getValuef() * cube.transformedY)); 
@@ -135,8 +129,6 @@ class Ripple extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     if (rippleAge.getValuef() < 5){
       if (!resetDone){
         yCenter = 150 + random(300);
@@ -188,8 +180,6 @@ class SparkleTakeOver extends TSPattern {
     addParameter(hueVariation);
   }  
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-    
     if (coverage.getValuef() < 5){
       if (!resetDone){
         lastComplimentaryToggle = complimentaryToggle;
@@ -232,7 +222,7 @@ class SparkleTakeOver extends TSPattern {
   }
 }
 
-class Lightning extends TSPattern implements Triggerable {
+class Lightning extends TSTriggerablePattern {
   private LightningLine[] bolts = new LightningLine[2];
   final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
@@ -241,9 +231,12 @@ class Lightning extends TSPattern implements Triggerable {
   final BasicParameter forkingChance = new BasicParameter("Fork", 3, 1, 10);
   final BooleanParameter firesOnBeat = new BooleanParameter("Beat");
   int[] randomCheckTimeOuts = {0, 0};
-  boolean triggered = true;
+
   Lightning(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_FIRED;
+
     bolts[0] = makeBolt();
     bolts[1] = makeBolt();
     addParameter(boltAngle);
@@ -255,24 +248,26 @@ class Lightning extends TSPattern implements Triggerable {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     int treeIndex = 0;
     
     for (Tree tree : model.trees){
-      if (triggered && bolts[treeIndex].isDead()) {
-        if (firesOnBeat.isOn()) {
-          if (lx.tempo.beat()) {
-            randomCheckTimeOuts[treeIndex] = millis() + 100;
-            bolts[treeIndex] = makeBolt();
-          }
-        } else {
-          if (randomCheckTimeOuts[treeIndex] < millis()){
-            randomCheckTimeOuts[treeIndex] = millis() + 100;
-            if (random(15) < lightningChance.getValuef()){
+      if (bolts[treeIndex].isDead()) {
+        if (triggered) {
+          if (firesOnBeat.isOn()) {
+            if (lx.tempo.beat()) {
+              randomCheckTimeOuts[treeIndex] = millis() + 100;
               bolts[treeIndex] = makeBolt();
             }
+          } else {
+            if (randomCheckTimeOuts[treeIndex] < millis()){
+              randomCheckTimeOuts[treeIndex] = millis() + 100;
+              if (random(15) < lightningChance.getValuef()){
+                bolts[treeIndex] = makeBolt();
+              }
+            }
           }
+        } else {
+          getChannel().enabled.setValue(false);
         }
       }
       for (Cube cube : tree.cubes) {
@@ -303,13 +298,9 @@ class Lightning extends TSPattern implements Triggerable {
     return new LightningLine (millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3, forkingChance.getValuef());
   }
   
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-    triggered = false;
-  }
-  
   public void onTriggered(float strength) {
-    triggered = true;
+    super.onTriggered(strength);
+
     propagationSpeed.setNormalized(strength);
     
     int treeIndex = 0;
@@ -321,10 +312,6 @@ class Lightning extends TSPattern implements Triggerable {
       }
       treeIndex ++;
     }
-  }
-  
-  public void onRelease() {
-    triggered = false;
   }
 }
 

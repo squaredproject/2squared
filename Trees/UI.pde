@@ -291,7 +291,7 @@ class UIChannelFaders extends UIContext {
   final static int FADER_WIDTH = 40;
   final static int WIDTH = 2 * SPACER + PADDING + MASTER + (PADDING+FADER_WIDTH)*(NUM_CHANNELS+2);
   final static int HEIGHT = 140;
-  final static int PERF_PADDING = 2 * PADDING;
+  final static int PERF_PADDING = PADDING + 1;
   
   UIChannelFaders(final UI ui) {
     super(ui, Trees.this.width/2-WIDTH/2, Trees.this.height-HEIGHT-PADDING, WIDTH, HEIGHT);
@@ -345,8 +345,8 @@ class UIChannelFaders extends UIContext {
       .setBackgroundColor(#292929)
       .setBorderColor(#666666)
       .addToContainer(this);
-      
-      channel.addListener(new LXChannel.AbstractListener() {
+
+      LXChannel.AbstractListener changeTextListener = new LXChannel.AbstractListener() {
 
         void patternWillChange(LXChannel channel, LXPattern pattern, LXPattern nextPattern) {
           labels[channel.getIndex()].setLabel(shortPatternName(nextPattern));
@@ -359,12 +359,15 @@ class UIChannelFaders extends UIContext {
           labels[channel.getIndex()].setColor(#999999);
           labels[channel.getIndex()].setBackgroundColor(#292929);
         }
-      });
+      };
       
+      channel.addListener(changeTextListener);
+
+      changeTextListener.patternDidChange(channel, channel.getNextPattern());
     }
     
     float xPos = this.width - 2 * (FADER_WIDTH + PADDING) - SPACER;
-    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-4*PADDING-2*BUTTON_HEIGHT)
+    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-1*BUTTON_HEIGHT)
     .setParameter(output.brightness)
     .addToContainer(this);
     
@@ -400,7 +403,7 @@ class UIChannelFaders extends UIContext {
     .setLabel("CPU")
     .addToContainer(this);
     
-    new UILabel(this.width - 2 * (PADDING + FADER_WIDTH) - SPACER, this.height-2*PADDING-2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - 2 * (PADDING + FADER_WIDTH) - SPACER, this.height-PADDING-BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setAlignment(CENTER, CENTER)
     .setLabel("MASTER")
@@ -410,34 +413,39 @@ class UIChannelFaders extends UIContext {
     .setPosition(SPACER+PADDING, PADDING)
     .addToContainer(this);
     
-    new UILabel(this.width - SPACER, PADDING, PADDING, BUTTON_HEIGHT - 1)
+    new UILabel(this.width - SPACER, 2 + PADDING, PADDING, BUTTON_HEIGHT - 1)
     .setColor(#666666)
     .setLabel("CHAN")
     .addToContainer(this);
     
-    new UILabel(this.width - SPACER, PADDING + (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - SPACER, 2 + PADDING + (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setLabel("COPY")
     .addToContainer(this);
     
-    new UILabel(this.width - SPACER, PADDING + 2 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - SPACER, 2 + PADDING + 2 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setLabel("FX")
     .addToContainer(this);
     
-    new UILabel(this.width - SPACER, PADDING + 3 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - SPACER, 2 + PADDING + 3 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setLabel("INPUT")
     .addToContainer(this);
     
-    new UILabel(this.width - SPACER, PADDING + 4 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - SPACER, 2 + PADDING + 4 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setLabel("MIDI")
     .addToContainer(this);
     
-    new UILabel(this.width - SPACER, PADDING + 5 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
+    new UILabel(this.width - SPACER, 2 + PADDING + 5 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
     .setColor(#666666)
     .setLabel("OUT")
+    .addToContainer(this);
+    
+    new UILabel(this.width - SPACER, 2 + PADDING + 6 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
+    .setColor(#666666)
+    .setLabel("TOTAL")
     .addToContainer(this);
     
   }
@@ -466,28 +474,29 @@ class UIChannelFaders extends UIContext {
         float fps60 = 1000 / 60. / 3.;
         perfs[channel.getIndex()].setValue(constrain((goMillis-1) / fps60, 0, 1));
       }
-      float engMillis = lx.engine.timer.runNanos / 1000000.;
-      perfs[NUM_CHANNELS].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
 
-      engMillis = lx.engine.timer.channelNanos / 1000000.;
-      perfs[NUM_CHANNELS+1].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      float engMillis = lx.engine.timer.channelNanos / 1000000.;
+      perfs[NUM_CHANNELS].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.copyNanos / 1000000.;
-      perfs[NUM_CHANNELS+2].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[NUM_CHANNELS+1].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.fxNanos / 1000000.;
-      perfs[NUM_CHANNELS+3].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[NUM_CHANNELS+2].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.inputNanos / 1000000.;
-      perfs[NUM_CHANNELS+4].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[NUM_CHANNELS+3].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.midiNanos / 1000000.;
-      perfs[NUM_CHANNELS+5].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[NUM_CHANNELS+4].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.outputNanos / 1000000.;
+      perfs[NUM_CHANNELS+5].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+
+      engMillis = lx.engine.timer.runNanos / 1000000.;
       perfs[NUM_CHANNELS+6].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
       
-      for (int i = 0; i < NUM_CHANNELS + 1; ++i) {
+      for (int i = 0; i < NUM_CHANNELS; ++i) {
         float val = dampers[i].getValuef();
         pg.stroke(#666666);
         pg.fill(#292929);
@@ -497,14 +506,14 @@ class UIChannelFaders extends UIContext {
         pg.rect(i*(PADDING + FADER_WIDTH)+1, HEIGHT - 2 * PADDING - BUTTON_HEIGHT + 1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
       }
 
-      for (int i = NUM_CHANNELS + 1; i < NUM_CHANNELS + 7; ++i) {
+      for (int i = NUM_CHANNELS; i < NUM_CHANNELS + 7; ++i) {
         float val = dampers[i].getValuef();
         pg.stroke(#666666);
         pg.fill(#292929);
-        pg.rect((NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH), (i - (NUM_CHANNELS + 1))*(PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH-1, BUTTON_HEIGHT-1); 
+        pg.rect((NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH), (i - (NUM_CHANNELS))*(PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH-1, BUTTON_HEIGHT-1); 
         pg.fill(lx.hsb(120*(1-val), 50, 80));
         pg.noStroke();
-        pg.rect((NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH) + 1, (i - (NUM_CHANNELS + 1))*(PERF_PADDING + BUTTON_HEIGHT-1)+1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
+        pg.rect((NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH) + 1, (i - (NUM_CHANNELS))*(PERF_PADDING + BUTTON_HEIGHT-1)+1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
       }
 
       redraw();

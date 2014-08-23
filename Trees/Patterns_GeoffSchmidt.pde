@@ -51,8 +51,6 @@ class Pixels extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     now += deltaMs;
     
     float vSpeed = pSpeed.getValuef();
@@ -99,8 +97,6 @@ class Wedges extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     float vSpeed = pSpeed.getValuef();
     float vCount = pCount.getValuef();
     float vSat = pSat.getValuef();
@@ -171,8 +167,6 @@ class Parallax extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-    
     int targetCount = (int)(pCount.getValuef() * 20) + 1;
     
     if (targetCount != colorBars.length) {

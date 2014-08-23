@@ -29,28 +29,22 @@ float thetaDistance(float thetaA, float thetaB) {
   return LXUtils.wrapdistf(thetaA, thetaB, 360);
 }
 
-class BassSlam extends TSPattern implements Triggerable {
+class BassSlam extends TSTriggerablePattern {
   
   final private double flashTimePercent = 0.1;
   final private int patternHue = 200;
-
-  double timer = 2;
-  boolean triggerMode;
   
   BassSlam(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_FIRED;
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
-    if (triggerMode) {
-      if (timer > 1) {
-        return;
-      }
-      timer += deltaMs / 800;
-      if (timer > 1) {
-        setColors(BLACK);
+    if (triggerableModeEnabled) {
+      firedTimer += deltaMs / 800;
+      if (firedTimer > 1) {
+        getChannel().enabled.setValue(false);
         return;
       }
     }
@@ -75,24 +69,11 @@ class BassSlam extends TSPattern implements Triggerable {
   }
 
   double progress() {
-    return triggerMode ? ((timer + flashTimePercent) % 1) : lx.tempo.ramp();
-  }
-
-  void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-
-    triggerMode = true;
-  }
-  
-  public void onTriggered(float strength) {
-    timer = 0;
-  }
-  
-  public void onRelease() {
+    return triggerableModeEnabled ? ((firedTimer + flashTimePercent) % 1) : lx.tempo.ramp();
   }
 }
 
-abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPattern implements Triggerable {
+abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTriggerablePattern {
   
   BasicParameter frequency;
   
@@ -101,7 +82,6 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
   
   final ArrayList<ObjectType> objects;
   double pauseTimerCountdown = 0;
-  boolean triggered = true;
 //  BasicParameter fadeLength
   
   MultiObjectPattern(LX lx) {
@@ -115,6 +95,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
 
   MultiObjectPattern(LX lx, boolean shouldAutofade) {
     super(lx);
+
+    patternMode = PATTERN_MODE_CUSTOM;
     
     frequency = getFrequencyParameter();
     addParameter(frequency);
@@ -135,8 +117,6 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
 //  }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     if (triggered) {
       pauseTimerCountdown -= deltaMs;
 
@@ -174,18 +154,10 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSPat
     objects.add(object);
   }
   
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-    triggered = false;
-  }
-  
   public void onTriggered(float strength) {
-    triggered = true;
+    super.onTriggered(strength);
+
     makeObject(strength);
-  }
-  
-  public void onRelease() {
-    triggered = false;
   }
     
   abstract ObjectType generateObject(float strength);
@@ -517,14 +489,13 @@ class RainDrop extends MultiObject {
   }
 }
 
-class Strobe extends TSPattern implements Triggerable {
+class Strobe extends TSTriggerablePattern {
   
   final BasicParameter speed = new BasicParameter("SPEE", 200, 3000, 30, BasicParameter.Scaling.QUAD_OUT);
   final BasicParameter balance = new BasicParameter("BAL", .5, .01, .99);
 
   int timer = 0;
   boolean on = false;
-  boolean triggered = true;
   
   Strobe(LX lx) {
     super(lx);
@@ -534,8 +505,6 @@ class Strobe extends TSPattern implements Triggerable {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     if (triggered) {
       timer += deltaMs;
       if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
@@ -547,53 +516,40 @@ class Strobe extends TSPattern implements Triggerable {
     }
   }
   
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-    triggered = false;
-  }
-  
   public void onTriggered(float strength) {
-    triggered = true;
+    super.onTriggered(strength);
+
     on = true;
   }
   
   public void onRelease() {
-    triggered = false;
+    super.onRelease();
+
     timer = 0;
     on = false;
     setColors(BLACK);
   }
 }
 
-class StrobeOneshot extends TSPattern implements Triggerable {
-
-  int timer = 0;
-  boolean on = false;
+class StrobeOneshot extends TSTriggerablePattern {
   
   StrobeOneshot(LX lx) {
     super(lx);
+
+    patternMode = PATTERN_MODE_FIRED;
+
+    setColors(WHITE);
   }
   
   public void run(double deltaMs) {
-    if (on) {
-      timer += deltaMs;
-      if (timer >= 80) {
-        on = false;
-      }
-      
-      setColors(on ? WHITE : BLACK);
+    firedTimer += deltaMs;
+    if (firedTimer >= 80) {
+      getChannel().enabled.setValue(false);
     }
   }
-  
-  public void onTriggered(float strength) {
-    on = true;
-    timer = 0;
-  }
-  
-  public void onRelease() {}
 }
 
-class Brightness extends TSPattern implements Triggerable {
+class Brightness extends TSTriggerablePattern {
   
   Brightness(LX lx) {
     super(lx);
@@ -623,8 +579,6 @@ class RandomColor extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     frameCount++;
     if (frameCount >= speed.getValuef()) {
       for (Cube cube : model.cubes) {
@@ -639,34 +593,14 @@ class RandomColor extends TSPattern {
   }
 }
 
-class ColorStrobe extends TSPattern implements Triggerable {
-
-  boolean triggered = true;
+class ColorStrobe extends TSTriggerablePattern {
   
   ColorStrobe(LX lx) {
     super(lx);
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-    if (!triggered) return;
-
     setColors(lx.hsb(random(360), 100, 100));
-  }
-  
-  public void onTriggerableModeEnabled() {
-    super.onTriggerableModeEnabled();
-
-    triggered = false;
-  }
-  
-  public void onTriggered(float strength) {
-    triggered = true;
-  }
-  
-  public void onRelease() {
-    triggered = false;
-    setColors(BLACK);
   }
 }
 
@@ -680,8 +614,6 @@ class RandomColorGlitch extends TSPattern {
   final int cubeColor = (int)random(360);
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       if (cube.index == brokenCubeIndex) {
         colors[cube.index] = lx.hsb(
@@ -715,8 +647,6 @@ class Fade extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         (int)((int)colr.getValuef() * smoothness.getValuef() / 100) * 100 / smoothness.getValuef(), 
@@ -738,8 +668,6 @@ class OrderTest extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         240,
@@ -757,8 +685,6 @@ class Palette extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         cube.index % 360,
@@ -779,8 +705,6 @@ class SolidColor extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     setColors(lx.hsb(hue.getValuef(), 100, 100));
   }
 }
@@ -800,8 +724,6 @@ class ClusterLineTest extends TSPattern {
   }
   
   public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-    
     PVector origin = new PVector(theta.getValuef(), y.getValuef());
     for (Cube cube : model.cubes) {
       PVector cubePointPrime = movePointToSamePlane(origin, cube.transformedCylinderPoint);
@@ -1172,8 +1094,6 @@ class CandyCloud extends TSPattern {
   }
 
   void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     time += deltaMs;
     for (Cube cube : model.cubes) {
       double adjustedX = cube.x / scale.getValue();
@@ -1199,8 +1119,6 @@ class GalaxyCloud extends TSPattern {
   }
 
   void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
     // Blue to purple
     float hueMin = 240;
     float hueMax = 280;

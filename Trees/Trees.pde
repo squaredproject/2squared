@@ -142,6 +142,12 @@ void registerPatternTriggerables() {
   registerPattern(new ColorStrobe(lx), "", 3);
   registerPattern(new Explosions(lx, 20), "", 3);
   registerPattern(new Strobe(lx), "", 3);
+  registerPattern(new SparkleTakeOver(lx), "", 3);
+  registerPattern(new MultiSine(lx), "", 3);
+  registerPattern(new SeeSaw(lx), "", 3);
+  registerPattern(new Cells(lx), "", 3);
+  registerPattern(new Fade(lx), "", 3);
+  registerPattern(new Pixels(lx), "", 3);
   
   registerPattern(new IceCrystals(lx), "", 5);
   registerPattern(new Fire(lx), "", 5);
@@ -160,10 +166,10 @@ void registerOneShotTriggerables() {
   registerOneShot(new Pulleys(lx), "");
   registerOneShot(new StrobeOneshot(lx), "");
   registerOneShot(new BassSlam(lx), "");
+  registerOneShot(new Fireflies(lx, 70, 6, 180), "");
+  registerOneShot(new Fireflies(lx, 40, 7.5, 90), "");
 
   registerOneShot(new Fireflies(lx), "", 5);
-  registerOneShot(new Fireflies(lx, 70, 6, 180), "", 5);
-  registerOneShot(new Fireflies(lx, 40, 7.5, 90), "", 5);
   registerOneShot(new Bubbles(lx), "", 5);
   registerOneShot(new Lightning(lx), "", 5);
   registerOneShot(new Wisps(lx), "", 5);
@@ -213,7 +219,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(fadeTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(acidTripTextureEffect.amount, "", 0, 1, 1);
   registerEffectControlParameter(candyCloudTextureEffect.amount, "", 0, 1, 1);
-  registerEffectControlParameter(staticEffect.amount, "", 0, .5, 1);
+  registerEffectControlParameter(staticEffect.amount, "", 0, .3, 1);
   registerEffectControlParameter(candyTextureEffect.amount, "", 0, 1, 5);
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
@@ -316,6 +322,17 @@ void setup() {
 
 /* configureChannels */
 
+void setupChannel(final LXChannel channel) {
+  channel.setFaderTransition(new TreesTransition(lx, channel));
+
+  channel.enabled.setValue(channel.getFader().getValue() != 0);
+  channel.getFader().addListener(new LXParameterListener() {
+    public void onParameterChanged(LXParameter parameter) {
+      channel.enabled.setValue(channel.getFader().getValue() != 0);
+    }
+  });
+}
+
 void configureChannels() {
   lx.setPatterns(getPatternListForChannels());
   for (int i = 1; i < NUM_CHANNELS; ++i) {
@@ -324,7 +341,7 @@ void configureChannels() {
   
   for (LXChannel channel : lx.engine.getChannels()) {
     channel.goIndex(channel.getIndex());
-    channel.setFaderTransition(new TreesTransition(lx, channel));
+    setupChannel(channel);
   }
 }
 
@@ -355,7 +372,7 @@ void registerVisual(TSPattern pattern, String nfcSerialNumber, int apc40DrumpadR
 
 Triggerable configurePatternAsTriggerable(TSPattern pattern) {
   LXChannel channel = lx.engine.addChannel(new TSPattern[] { pattern });
-  channel.setFaderTransition(new TreesTransition(lx, channel));
+  setupChannel(channel);
 
   pattern.onTriggerableModeEnabled();
   return pattern.getTriggerable();
@@ -593,6 +610,22 @@ class TreesTransition extends LXTransition {
         colors[i] = LXColor.lerp(c1[i], LXColor.blend(c1[i], color2, this.blendType), progress);
       }
     }
+  }
+}
+
+class BooleanProxyParameter extends BooleanParameter {
+
+  final List<BooleanParameter> parameters = new ArrayList<BooleanParameter>();
+
+  BooleanProxyParameter() {
+    super("Proxy", true);
+  }
+
+  protected double updateValue(double value) {
+    for (BooleanParameter parameter : parameters) {
+      parameter.setValue(value);
+    }
+    return value;
   }
 }
 
