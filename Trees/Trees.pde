@@ -133,35 +133,36 @@ void registerPatternTriggerables() {
   // defaults to the 3rd row
   // the row parameter is zero indexed
 
-  registerPattern(new Twister(lx), "");
+  registerPattern(new Twister(lx), "3707000050a8fb");
   registerPattern(new MarkLottor(lx), "");
-  registerPattern(new Ripple(lx), "");
+  registerPattern(new Ripple(lx), "3707000050a908");
   registerPattern(new Stripes(lx), "");
-  registerPattern(new Lattice(lx), "");
-  registerPattern(new Fumes(lx), "");
-  registerPattern(new Voronoi(lx), "");
+  registerPattern(new Lattice(lx), "3707000050a8b9");
+  registerPattern(new Fumes(lx), "3707000050a9b1");
+  registerPattern(new Voronoi(lx), "3707000050a952");
   registerPattern(new CandyCloud(lx), "3707000050aab4");
-  registerPattern(new GalaxyCloud(lx), "");
+  registerPattern(new GalaxyCloud(lx), "3707000050a91d");
 
   registerPattern(new ColorStrobe(lx), "", 3);
-  registerPattern(new Explosions(lx, 20), "", 3);
+  registerPattern(new Explosions(lx, 20), "3707000050a8bf", 3);
   registerPattern(new Strobe(lx), "", 3);
-  registerPattern(new SparkleTakeOver(lx), "", 3);
+  registerPattern(new SparkleTakeOver(lx), "3707000050ab68", 3);
   registerPattern(new MultiSine(lx), "", 3);
-  registerPattern(new SeeSaw(lx), "", 3);
-  registerPattern(new Cells(lx), "", 3);
+  registerPattern(new SeeSaw(lx), "3707000050ab76", 3);
+  registerPattern(new Cells(lx), "3707000050abca", 3);
   registerPattern(new Fade(lx), "", 3);
-  registerPattern(new Pixels(lx), "", 3);
+  registerPattern(new Pixels(lx), "3707000050ab38", 3);
   
-  registerPattern(new IceCrystals(lx), "", 5);
-  registerPattern(new Fire(lx), "", 5);
+  registerPattern(new IceCrystals(lx), "3707000050a89b", 5);
+  registerPattern(new Fire(lx), "-", 5); // Make red
   
   // registerPattern(new DoubleHelix(lx), "");
   registerPattern(new AcidTrip(lx), "");
+  registerPattern(new Rain(lx), "3707000050a937");
 
-  registerPattern(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), ""); // downward yellow wisp
+  registerPattern(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), "3707000050a905"); // downward yellow wisp
   registerPattern(new Wisps(lx, 1, 210, 100, 90, 130, 3.5, 10), ""); // multidirection colorful wisps
-  registerPattern(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), ""); // colorful wisp storm
+  registerPattern(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), "3707000050ab1a"); // colorful wisp storm
   registerPattern(new Wisps(lx, 3, 210, 10, 270, 0, 3.5, 10), ""); // rain storm of wisps
   registerPattern(new Wisps(lx, 35, 210, 180, 180, 15, 2, 15), ""); // twister of wisps
 }
@@ -240,7 +241,6 @@ void registerEffectTriggerables() {
 
 VisualType[] readerPatternTypeRestrictions() {
   return new VisualType[] {
-    VisualType.Pattern,
     VisualType.Effect,
     VisualType.Effect,
     VisualType.Effect,
@@ -249,7 +249,8 @@ VisualType[] readerPatternTypeRestrictions() {
     VisualType.OneShot,
     VisualType.Pattern,
     VisualType.Pattern,
-    VisualType.Pattern
+    VisualType.Pattern,
+    VisualType.Pattern,
   };
 }
 
@@ -538,7 +539,7 @@ void configureExternalOutput() {
     for (Cluster cluster : model.clusters) {
       output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
     }
-    output.enabled.setValue(false);
+    output.enabled.setValue(true);
     lx.addOutput(output);
   } catch (Exception x) {
     println(x);
