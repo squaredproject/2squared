@@ -183,7 +183,7 @@
     "face": 3,
     "level": 13,
     "treeIndex": 0,
-    "mountPoint": 3.2413792610168457,
+    "mountPoint": 13.206896781921387,
     "offset": 0,
     "skew": -4.137930870056152,
     "ipAddress": "10.0.0.220"
@@ -298,9 +298,9 @@
   },
   {
     "face": 3,
-    "level": 6,
+    "level": 5,
     "treeIndex": 0,
-    "mountPoint": -12,
+    "mountPoint": 22,
     "offset": 0.6206896305084229,
     "skew": -0.5999999642372131,
     "ipAddress": "10.0.0.233"
