@@ -67,7 +67,7 @@ LXPattern[] getPatternListForChannels() {
   
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
-  patterns.add(new SolidColor(lx));
+//  patterns.add(new SolidColor(lx));
   patterns.add(new ClusterLineTest(lx));
   patterns.add(new Twister(lx));
   patterns.add(new CandyCloud(lx));
@@ -140,7 +140,7 @@ void registerPatternTriggerables() {
   registerPattern(new Lattice(lx), "");
   registerPattern(new Fumes(lx), "");
   registerPattern(new Voronoi(lx), "");
-  registerPattern(new CandyCloud(lx), "");
+  registerPattern(new CandyCloud(lx), "3707000050aab4");
   registerPattern(new GalaxyCloud(lx), "");
 
   registerPattern(new ColorStrobe(lx), "", 3);
@@ -538,7 +538,7 @@ void configureExternalOutput() {
     for (Cluster cluster : model.clusters) {
       output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
     }
-    output.enabled.setValue(true);
+    output.enabled.setValue(false);
     lx.addOutput(output);
   } catch (Exception x) {
     println(x);
