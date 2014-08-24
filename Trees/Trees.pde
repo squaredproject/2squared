@@ -539,7 +539,7 @@ void configureExternalOutput() {
     for (Cluster cluster : model.clusters) {
       output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
     }
-    output.enabled.setValue(true);
+    output.enabled.setValue(false);
     lx.addOutput(output);
   } catch (Exception x) {
     println(x);
