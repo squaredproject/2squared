@@ -698,14 +698,18 @@ class Palette extends TSPattern {
 class SolidColor extends TSPattern {
   // 235 = blue, 135 = green, 0 = red
   final BasicParameter hue = new BasicParameter("HUE", 135, 0, 360);
+  final BasicParameter brightness = new BasicParameter("BRT", 100, 0, 900);
   
   SolidColor(LX lx) {
     super(lx);
     addParameter(hue);
+    addParameter(brightness);
   }
   
   public void run(double deltaMs) {
-    setColors(lx.hsb(hue.getValuef(), 100, 100));
+    if (getChannel().getFader().getNormalized() == 0) return;
+
+    setColors(lx.hsb(hue.getValuef(), 100, (float)brightness.getValue()));
   }
 }
 
