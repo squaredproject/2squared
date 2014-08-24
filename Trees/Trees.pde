@@ -67,6 +67,8 @@ LXPattern[] getPatternListForChannels() {
   
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
+  patterns.add(new SolidColor(lx));
+  patterns.add(new ClusterLineTest(lx));
   patterns.add(new Twister(lx));
   patterns.add(new CandyCloud(lx));
   patterns.add(new MarkLottor(lx));
@@ -534,7 +536,7 @@ void configureExternalOutput() {
     for (Cluster cluster : model.clusters) {
       output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
     }
-    output.enabled.setValue(false);
+    output.enabled.setValue(true);
     lx.addOutput(output);
   } catch (Exception x) {
     println(x);
