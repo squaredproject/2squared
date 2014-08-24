@@ -68,7 +68,7 @@ LXPattern[] getPatternListForChannels() {
   // Add patterns here.
   // The order here is the order it shows up in the patterns list
 //  patterns.add(new SolidColor(lx));
-  patterns.add(new ClusterLineTest(lx));
+  // patterns.add(new ClusterLineTest(lx));
   patterns.add(new Twister(lx));
   patterns.add(new CandyCloud(lx));
   patterns.add(new MarkLottor(lx));
@@ -241,15 +241,15 @@ void registerEffectTriggerables() {
 
 VisualType[] readerPatternTypeRestrictions() {
   return new VisualType[] {
-    VisualType.Effect,
-    VisualType.Effect,
-    VisualType.Effect,
-    VisualType.OneShot,
-    VisualType.OneShot,
-    VisualType.OneShot,
     VisualType.Pattern,
     VisualType.Pattern,
     VisualType.Pattern,
+    VisualType.OneShot,
+    VisualType.OneShot,
+    VisualType.OneShot,
+    VisualType.Effect,
+    VisualType.Effect,
+    VisualType.Effect,
     VisualType.Pattern,
   };
 }
