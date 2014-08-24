@@ -1,7 +1,7 @@
 // copied from Patterns_Alchemy
-class Spinny extends TSPattern {
-  int thick = 600;
-  float hue = 0.500; //hue go from 0.585 to 0.7 to stay blue
+class Verty extends TSPattern {
+  int thick = 650;
+  float hue = 0.00; //hue go from 0.585 to 0.7 to stay blue
   double scroll;
   int delay = millis();
   int second = second();
@@ -13,15 +13,15 @@ class Spinny extends TSPattern {
   double timer = 0;
 
   SawLFO position =new SawLFO(0, 800, period.getValue()*2); //start, end, period ms, frequency
-  Spinny(LX lx) {
+  Verty(LX lx) {
     super(lx);
     addParameter(thickness);
-    //addParameter(period);
+    addParameter(period);
     addModulator(position).start();
   }
   void sec() {
-    if (second >= 4) {
-      hue = hue + 0.001;
+    if (second >= 1) {
+     hue = hue + 0.0001;
       second = 0;
     }
   }
@@ -35,10 +35,10 @@ class Spinny extends TSPattern {
     for (Cube cube : model.cubes) {       
       float saturation;
       float brightness = 1;
-
-      if (position.getValue() >= 0) {     
+    
+     if (position.getValue() >= 0) {     
         //cube.transformedY = 0; //flips the pattern vertically
-        //cube.transformedTheta = 0;
+        cube.transformedTheta = 0;
       }
 
       if (((cube.transformedY + position.getValue() + cube.transformedTheta) % 200) > thickness.getValue()) {

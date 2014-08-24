@@ -113,6 +113,8 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new MidEQ(lx));
   patterns.add(new HighEQ(lx));
   patterns.add(new GalaxyCloud(lx));
+  patterns.add(new Verty(lx));
+  patterns.add(new Spinny(lx));
 
   patterns.add(new CameraWrap(lx));
 
