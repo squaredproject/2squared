@@ -72,6 +72,7 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new Twister(lx));
   patterns.add(new CandyCloud(lx));
   patterns.add(new MarkLottor(lx));
+  patterns.add(new SolidColor(lx));
   // patterns.add(new DoubleHelix(lx));
   patterns.add(new SparkleHelix(lx));
   patterns.add(new Lightning(lx));
@@ -83,7 +84,6 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new IceCrystals(lx));
   patterns.add(new ColoredLeaves(lx));
   patterns.add(new Stripes(lx));
-  patterns.add(new SolidColor(lx));
   try { patterns.add(new SyphonPattern(lx, this)); } catch (Throwable e) {}
   patterns.add(new AcidTrip(lx));
   patterns.add(new Springs(lx));
@@ -294,7 +294,7 @@ void setup() {
   configureNFC();
 
   // uncomment this to allow any nfc reader to read any cube
-  // nfcEngine.disableVisualTypeRestrictions = false;
+  nfcEngine.disableVisualTypeRestrictions = true;
 
   configureTriggerables();
 
