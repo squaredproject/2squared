@@ -41,6 +41,8 @@ class BassSlam extends TSTriggerablePattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (triggerableModeEnabled) {
       firedTimer += deltaMs / 800;
       if (firedTimer > 1) {
@@ -117,6 +119,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTri
 //  }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (triggered) {
       pauseTimerCountdown -= deltaMs;
 
@@ -505,6 +509,8 @@ class Strobe extends TSTriggerablePattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (triggered) {
       timer += deltaMs;
       if (timer >= speed.getValuef() * (on ? balance.getValuef() : 1 - balance.getValuef())) {
@@ -579,6 +585,8 @@ class RandomColor extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     frameCount++;
     if (frameCount >= speed.getValuef()) {
       for (Cube cube : model.cubes) {
@@ -600,6 +608,7 @@ class ColorStrobe extends TSTriggerablePattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
     setColors(lx.hsb(random(360), 100, 100));
   }
 }
@@ -614,6 +623,8 @@ class RandomColorGlitch extends TSPattern {
   final int cubeColor = (int)random(360);
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       if (cube.index == brokenCubeIndex) {
         colors[cube.index] = lx.hsb(
@@ -647,6 +658,8 @@ class Fade extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         (int)((int)colr.getValuef() * smoothness.getValuef() / 100) * 100 / smoothness.getValuef(), 
@@ -668,6 +681,8 @@ class OrderTest extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         240,
@@ -685,6 +700,8 @@ class Palette extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         cube.index % 360,
@@ -728,6 +745,8 @@ class ClusterLineTest extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     PVector origin = new PVector(theta.getValuef(), y.getValuef());
     for (Cube cube : model.cubes) {
       PVector cubePointPrime = movePointToSamePlane(origin, cube.transformedCylinderPoint);
@@ -1098,6 +1117,8 @@ class CandyCloud extends TSPattern {
   }
 
   void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     time += deltaMs;
     for (Cube cube : model.cubes) {
       double adjustedX = cube.x / scale.getValue();
@@ -1123,6 +1144,8 @@ class GalaxyCloud extends TSPattern {
   }
 
   void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     // Blue to purple
     float hueMin = 240;
     float hueMax = 280;

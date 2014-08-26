@@ -95,6 +95,8 @@ class Fireflies extends TSTriggerablePattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         0,
@@ -190,6 +192,8 @@ class Lattice extends TSPattern {
   }
 
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     float spinf = spin.getValuef();
     float coilf = 2*coil(spin.getBasisf());
     for (Cube cube : model.cubes) {
@@ -262,6 +266,8 @@ class Fire extends TSTriggerablePattern {
 
   public void run(double deltaMs) {
     if (!triggerableModeEnabled) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
       height = maxHeight.getValuef();
       numFlames = (int) flameCount.getValuef();
     } else {
@@ -375,6 +381,8 @@ class Bubbles extends TSTriggerablePattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
         0,
@@ -479,6 +487,8 @@ class Voronoi extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
@@ -545,6 +555,8 @@ class Cells extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
@@ -615,6 +627,8 @@ class Fumes extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     float minSat = sat.getValuef();
     for (Cube cube: model.cubes) {
       float minDistSq = 1000000;
@@ -710,6 +724,8 @@ class Pulley extends TSTriggerablePattern { //ported from SugarCubes
   }
 
   public void run(double deltaMS) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (turnOff.click()) {
       triggered = false;
       setColors(lx.hsb(0,0,0));
@@ -814,6 +830,8 @@ class Springs extends TSPattern {
   }
 
   public void run(double deltaMS) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (!isRising) {
       gravity.start();
       if (gravity.getValuef() < 0) {
@@ -930,6 +948,8 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   }
 
   public void run(double deltaMS) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (autoMode) {
       numPulleys = pulleyCount.getValuei();
       
@@ -1089,6 +1109,8 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
 //   }
   
 //   public void run(double deltaMs) {
+//     if (getChannel().getFader().getNormalized() == 0) return;
+
 //     if (rippleAge.getValuef() < 5){
 //       if (!resetDone){
 //         yCenter = 150 + random(300);

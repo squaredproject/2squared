@@ -14,6 +14,8 @@ class Zebra extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     timer = timer + deltaMs;
     for (Cube cube : model.cubes){
     float hue = .4;

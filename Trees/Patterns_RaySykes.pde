@@ -25,6 +25,8 @@ class SparkleHelix extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       float compensatedWidth = (0.7 + .02 / coil.getValuef()) * width.getValuef();
       float spiralVal = max(0, 100 - (100*TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((TWO_PI / 360) * cube.transformedTheta, 8*TWO_PI + spin.getValuef() + coil.getValuef()*(cube.transformedY-model.cy), TWO_PI));
@@ -73,6 +75,8 @@ class MultiSine extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {
       float[] combinedDistanceSines = {0, 0};
       for (int i = 0; i < numLayers; i++){
@@ -104,6 +108,8 @@ class Stripes extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     for (Cube cube : model.cubes) {  
       float hueVal = (lx.getBaseHuef() + .1*cube.transformedY) % 360;
       float brightVal = 50 + 50 * sin(spacing.getValuef() * (sin((TWO_PI / 360) * 4 * cube.transformedTheta) + slopeFactor.getValuef() * cube.transformedY)); 
@@ -129,6 +135,8 @@ class Ripple extends TSPattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     if (rippleAge.getValuef() < 5){
       if (!resetDone){
         yCenter = 150 + random(300);
@@ -180,6 +188,8 @@ class SparkleTakeOver extends TSPattern {
     addParameter(hueVariation);
   }  
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+    
     if (coverage.getValuef() < 5){
       if (!resetDone){
         lastComplimentaryToggle = complimentaryToggle;
@@ -248,6 +258,8 @@ class Lightning extends TSTriggerablePattern {
   }
   
   public void run(double deltaMs) {
+    if (getChannel().getFader().getNormalized() == 0) return;
+
     int treeIndex = 0;
     
     for (Tree tree : model.trees){
