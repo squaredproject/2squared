@@ -16,6 +16,9 @@ public class NFCEngine {
       if (visual != null) {
         VisualType readerRestriction = readerToPatternTypeRestrictionMap.get(reader);
         if (disableVisualTypeRestrictions || readerRestriction == visual.VisualType) {
+          if (visual.toggle != null) {
+            visual.toggle.setValue(true);
+          }
           addNFCEvent(new NFCTriggeredMessage(visual.triggerable));
         }
       }
@@ -27,6 +30,9 @@ public class NFCEngine {
       if (visual != null) {
         VisualType readerRestriction = readerToPatternTypeRestrictionMap.get(reader);
         if (disableVisualTypeRestrictions || readerRestriction == visual.VisualType) {
+          if (visual.toggle != null) {
+            visual.toggle.setValue(false);
+          }
           addNFCEvent(new NFCReleaseMessage(visual.triggerable));
         }
       }
@@ -81,10 +87,12 @@ public class NFCEngine {
   private class NFCEngineVisual {
     Triggerable triggerable;
     VisualType VisualType;
+    BooleanParameter toggle;
 
-    NFCEngineVisual(Triggerable triggerable, VisualType VisualType) {
+    NFCEngineVisual(Triggerable triggerable, VisualType VisualType, BooleanParameter toggle) {
       this.triggerable = triggerable;
       this.VisualType = VisualType;
+      this.toggle = toggle;
     }
   }
 
@@ -126,8 +134,8 @@ public class NFCEngine {
     }
   }
   
-  public void registerTriggerable(String serialNumber, Triggerable triggerable, VisualType VisualType) {
-    cardToTriggerableMap.put(serialNumber, new NFCEngineVisual(triggerable, VisualType));
+  public void registerTriggerable(String serialNumber, Triggerable triggerable, VisualType VisualType, BooleanParameter toggle) {
+    cardToTriggerableMap.put(serialNumber, new NFCEngineVisual(triggerable, VisualType, toggle));
   }
 
   public void registerReaderPatternTypeRestrictions(List<VisualType> readerPatternTypeRestrictionArray) {

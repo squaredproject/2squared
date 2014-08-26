@@ -137,18 +137,18 @@ class MidiEngine {
         }
       };
 
-      for (int row = 0; row < apc40Drumpad.triggerables.length; row++) {
+      for (int row = 0; row < apc40Drumpad.triggerables.length && row < 6; row++) {
         int midiNumber;
         if (row < 5) {
           midiNumber = APC40.CLIP_LAUNCH + row;
         } else {
           midiNumber = APC40.CLIP_STOP;
         }
-        for (int col = 0; col < apc40Drumpad.triggerables[row].length; col++) {
+        for (int col = 0; col < apc40Drumpad.triggerables[row].length && col < 9; col++) {
           if (col < 8) {
-            apc40.bindNote(new BooleanParameter("ANON", false), col, midiNumber, APC40.DIRECT);
+            apc40.bindNote(nfcToggles[row][col], col, midiNumber, APC40.DIRECT);
           } else if (row < 5) {
-            apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.SCENE_LAUNCH + row, APC40.DIRECT);
+            apc40.bindNote(nfcToggles[row][col], 0, APC40.SCENE_LAUNCH + row, APC40.DIRECT);
             // stop all clips button doesn't light up. Doesn't have an LED in it
             // apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.STOP_ALL_CLIPS, APC40.DIRECT);
           }

@@ -276,6 +276,7 @@ MidiEngine midiEngine;
 TSDrumpad apc40Drumpad;
 NFCEngine nfcEngine;
 SpeedIndependentContainer speedIndependentContainer;
+BooleanParameter[][] nfcToggles = new BooleanParameter[6][9];
 
 void setup() {
   size(1148, 720, OPENGL);
@@ -306,7 +307,7 @@ void setup() {
   configureAutomation();
 
   configureExternalOutput();
-  // configureFadeCandyOutput();
+  configureFadeCandyOutput();
 
   configureUI();
 
@@ -327,15 +328,17 @@ void setup() {
 
 /* configureChannels */
 
-void setupChannel(final LXChannel channel) {
+void setupChannel(final LXChannel channel, boolean noOpWhenNotRunning) {
   channel.setFaderTransition(new TreesTransition(lx, channel));
 
-  channel.enabled.setValue(channel.getFader().getValue() != 0);
-  channel.getFader().addListener(new LXParameterListener() {
-    public void onParameterChanged(LXParameter parameter) {
-      channel.enabled.setValue(channel.getFader().getValue() != 0);
-    }
-  });
+  if (noOpWhenNotRunning) {
+    channel.enabled.setValue(channel.getFader().getValue() != 0);
+    channel.getFader().addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        channel.enabled.setValue(channel.getFader().getValue() != 0);
+      }
+    });
+  }
 }
 
 void configureChannels() {
@@ -346,7 +349,7 @@ void configureChannels() {
   
   for (LXChannel channel : lx.engine.getChannels()) {
     channel.goIndex(channel.getIndex());
-    setupChannel(channel);
+    setupChannel(channel, false);
   }
 }
 
@@ -371,13 +374,14 @@ void registerVisual(TSPattern pattern, String nfcSerialNumber, int apc40DrumpadR
   pattern.setTransition(t);
 
   Triggerable triggerable = configurePatternAsTriggerable(pattern);
-  nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, visualType);
+  BooleanParameter toggle = apc40DrumpadTriggerablesLists[apc40DrumpadRow].size() < 9 ? nfcToggles[apc40DrumpadRow][apc40DrumpadTriggerablesLists[apc40DrumpadRow].size()] : null;
+  nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, visualType, toggle);
   apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
 }
 
 Triggerable configurePatternAsTriggerable(TSPattern pattern) {
   LXChannel channel = lx.engine.addChannel(new TSPattern[] { pattern });
-  setupChannel(channel);
+  setupChannel(channel, true);
 
   pattern.onTriggerableModeEnabled();
   return pattern.getTriggerable();
@@ -388,7 +392,8 @@ Triggerable configurePatternAsTriggerable(TSPattern pattern) {
 void registerEffect(LXEffect effect, String nfcSerialNumber) {
   if (effect instanceof Triggerable) {
     Triggerable triggerable = (Triggerable)effect;
-    nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
+    BooleanParameter toggle = apc40DrumpadTriggerablesLists[0].size() < 9 ? nfcToggles[0][apc40DrumpadTriggerablesLists[0].size()] : null;
+    nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect, toggle);
     apc40DrumpadTriggerablesLists[0].add(triggerable);
   }
 }
@@ -407,7 +412,8 @@ void registerEffectControlParameter(LXListenableNormalizedParameter parameter, S
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
   ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(parameter, offValue, onValue);
-  nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect);
+    BooleanParameter toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
+  nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect, toggle);
   apc40DrumpadTriggerablesLists[row].add(triggerable);
 }
 
@@ -494,6 +500,12 @@ void configureMIDI() {
 void configureNFC() {
   nfcEngine = new NFCEngine(lx);
   nfcEngine.start();
+  
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 9; j++) {
+      nfcToggles[i][j] = new BooleanParameter("toggle");
+    }
+  }
 
   nfcEngine.registerReaderPatternTypeRestrictions(Arrays.asList(readerPatternTypeRestrictions()));
 }
