@@ -225,7 +225,7 @@ void registerEffectTriggerables() {
   registerEffectControlParameter(acidTripTextureEffect.amount, "3707000050a953", 0, 1, 1);
   registerEffectControlParameter(candyCloudTextureEffect.amount, "3707000050a92d", 0, 1, 1);
   registerEffectControlParameter(staticEffect.amount, "3707000050a8b3", 0, .3, 1);
-  registerEffectControlParameter(candyTextureEffect.amount, "3707000050a8e9", 0, 1, 5);
+  registerEffectControlParameter(candyTextureEffect.amount, "3707000050aafc", 0, 1, 5);
 
   effectKnobParameters = new LXListenableNormalizedParameter[] {
     colorEffect.hueShift,
