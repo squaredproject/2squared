@@ -1,3 +1,21 @@
+class TurnOffDeadPixelsEffect extends LXEffect {
+  int[] deadPixelIndices = new int[] { 4 };
+  int[] deadPixelClusters = new int[] { 5 };
+  
+  TurnOffDeadPixelsEffect(LX lx) {
+    super(lx);
+  }
+  
+  void run(double deltaMs) {
+    for (int i = 0; i < deadPixelIndices.length; i++) {
+      Cluster cluster = model.clusters.get(deadPixelClusters[i]);
+      Cube cube = cluster.cubes.get(deadPixelIndices[i]);
+      colors[cube.index] = BLACK;
+    }
+  }
+}
+
+
 int WHITE = java.awt.Color.WHITE.getRGB();
 int BLACK = java.awt.Color.BLACK.getRGB();
 

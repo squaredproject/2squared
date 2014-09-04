@@ -301,6 +301,7 @@ void setup() {
 
   lx.addEffect(mappingTool = new MappingTool(lx));
   lx.engine.addLoopTask(new ModelTransformTask());
+  lx.addEffect(new TurnOffDeadPixelsEffect(lx));
 
   configureBMPTool();
 
