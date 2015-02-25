@@ -262,6 +262,13 @@ public class UILoopRecorder extends UIWindow {
       }
     });
     listener.onParameterChanged(null);
+
+    File file = new File(dataPath("Burning Man Playlist.json"));
+    if (file != null) {
+      automation[automationSlot.getValuei()].looping.setValue(true);
+      loadSet(file);
+      automation[automationSlot.getValuei()].start();
+    }
   }
 
   public void saveSet(File file) {
