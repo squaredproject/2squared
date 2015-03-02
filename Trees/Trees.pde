@@ -515,13 +515,13 @@ void configureNFC() {
 
 void configureUI() {
   // UI initialization
-  lx.ui.addLayer(new UICameraLayer(lx.ui) {
-      protected void beforeDraw() {
+  lx.ui.addLayer(new UI3dContext(lx.ui) {
+      protected void beforeDraw(UI ui, PGraphics pg) {
         hint(ENABLE_DEPTH_TEST);
         pushMatrix();
         translate(0, 12*FEET, 0);
       }
-      protected void afterDraw() {
+      protected void afterDraw(UI ui, PGraphics pg) {
         popMatrix();
         hint(DISABLE_DEPTH_TEST);
       }  

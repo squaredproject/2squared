@@ -269,7 +269,7 @@ class TestCluster extends TSPattern {
   }
 }
 
-class ColorEffect extends LXEffect {
+class ColorEffect extends Effect {
   
   final BasicParameter desaturation = new BasicParameter("WHT", 0);
   final BasicParameter hueShift = new BasicParameter("HUE", 0, 360);

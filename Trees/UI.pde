@@ -1,4 +1,4 @@
-class UITrees extends UICameraComponent {
+class UITrees extends UI3dComponent {
   
   color[] previewBuffer;
   color[] black;
@@ -11,7 +11,7 @@ class UITrees extends UICameraComponent {
     }
   }
   
-  protected void onDraw(UI ui) {
+  protected void onDraw(UI ui, PGraphics pg) {
     lights();
     pointLight(0, 0, 80, model.cx, geometry.HEIGHT/2, -10*FEET);
 
@@ -289,7 +289,7 @@ public class UILoopRecorder extends UIWindow {
 
 }
 
-class UIChannelFaders extends UIContext {
+class UIChannelFaders extends UI2dContext {
   
   final static int SPACER = 30;
   final static int MASTER = 0;
@@ -330,7 +330,8 @@ class UIChannelFaders extends UIContext {
       .addToContainer(this);
       
       sliders[channel.getIndex()] = new UISlider(UISlider.Direction.VERTICAL, xPos, 1*BUTTON_HEIGHT + 2*PADDING, FADER_WIDTH, this.height - 3*BUTTON_HEIGHT - 5*PADDING) {
-        protected void onMouseClicked(float mx, float my) {
+        protected void onMousePressed(MouseEvent mouseEvent, float mx, float my) {
+          super.onMousePressed(mouseEvent, mx, my);
           lx.engine.focusedChannel.setValue(channel.getIndex());
         }
         protected void onKeyPressed(KeyEvent keyEvent, char keyChar, int keyCode) {
@@ -338,6 +339,13 @@ class UIChannelFaders extends UIContext {
           if ((keyChar == ' ') || (keyCode == java.awt.event.KeyEvent.VK_ENTER)) {
             lx.engine.focusedChannel.setValue(channel.getIndex());
           }
+        }
+        @Override
+        protected void onDraw(UI ui, PGraphics pg) {
+          int primaryColor = ui.theme.getPrimaryColor();
+          ui.theme.setPrimaryColor(0xff222222);
+          super.onDraw(ui, pg);
+          ui.theme.setPrimaryColor(primaryColor);
         }
       };
       sliders[channel.getIndex()]
@@ -348,7 +356,7 @@ class UIChannelFaders extends UIContext {
       labels[channel.getIndex()]
       .setLabel(shortPatternName(channel.getActivePattern()))
       .setAlignment(CENTER, CENTER)
-      .setColor(#999999)
+      .setFontColor(#999999)
       .setBackgroundColor(#292929)
       .setBorderColor(#666666)
       .addToContainer(this);
@@ -357,13 +365,13 @@ class UIChannelFaders extends UIContext {
 
         void patternWillChange(LXChannel channel, LXPattern pattern, LXPattern nextPattern) {
           labels[channel.getIndex()].setLabel(shortPatternName(nextPattern));
-          labels[channel.getIndex()].setColor(#292929);
+          labels[channel.getIndex()].setFontColor(#292929);
           labels[channel.getIndex()].setBackgroundColor(#666699);
         }
         
         void patternDidChange(LXChannel channel, LXPattern pattern) {
           labels[channel.getIndex()].setLabel(shortPatternName(pattern));
-          labels[channel.getIndex()].setColor(#999999);
+          labels[channel.getIndex()].setFontColor(#999999);
           labels[channel.getIndex()].setBackgroundColor(#292929);
         }
       };
@@ -374,7 +382,15 @@ class UIChannelFaders extends UIContext {
     }
     
     float xPos = this.width - 2 * (FADER_WIDTH + PADDING) - SPACER;
-    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-1*BUTTON_HEIGHT)
+    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-1*BUTTON_HEIGHT) {
+      @Override
+      protected void onDraw(UI ui, PGraphics pg) {
+        int primaryColor = ui.theme.getPrimaryColor();
+        ui.theme.setPrimaryColor(0xff222222);
+        super.onDraw(ui, pg);
+        ui.theme.setPrimaryColor(primaryColor);
+      }
+    }
     .setParameter(output.brightness)
     .addToContainer(this);
     
@@ -382,7 +398,7 @@ class UIChannelFaders extends UIContext {
     lx.engine.focusedChannel.addListener(listener = new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         for (int i = 0; i < sliders.length; ++i) {
-          sliders[i].setBackgroundColor((i == focusedChannel()) ? ui.getHighlightColor() : #333333);
+          sliders[i].setBackgroundColor((i == focusedChannel()) ? ui.theme.getFocusColor() : #333333);
         }
       }
     });
@@ -391,29 +407,29 @@ class UIChannelFaders extends UIContext {
     float labelX = PADDING;
     
     new UILabel(labelX, PADDING+2, 0, 0)
-    .setColor(#666666)
     .setLabel("CUE")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(labelX, 2*PADDING+1*BUTTON_HEIGHT+2, 0, 0)
-    .setColor(#666666)
     .setLabel("LEVEL")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(labelX, this.height - 2*PADDING - 2*BUTTON_HEIGHT + 3, 0, 0)
-    .setColor(#666666)
     .setLabel("PTN")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(labelX, this.height - PADDING - BUTTON_HEIGHT + 3, 0, 0)
-    .setColor(#666666)
     .setLabel("CPU")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - 2 * (PADDING + FADER_WIDTH) - SPACER, this.height-PADDING-BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
-    .setAlignment(CENTER, CENTER)
     .setLabel("MASTER")
+    .setAlignment(CENTER, CENTER)
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UIPerfMeters()
@@ -421,38 +437,38 @@ class UIChannelFaders extends UIContext {
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING, PADDING, BUTTON_HEIGHT - 1)
-    .setColor(#666666)
     .setLabel("CHAN")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING + (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
     .setLabel("COPY")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING + 2 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
     .setLabel("FX")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING + 3 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
     .setLabel("INPUT")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING + 4 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
     .setLabel("MIDI")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING + 5 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
     .setLabel("OUT")
+    .setFontColor(#666666)
     .addToContainer(this);
     
     new UILabel(this.width - SPACER, 2 + PADDING + 6 * (PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH, BUTTON_HEIGHT)
-    .setColor(#666666)
     .setLabel("TOTAL")
+    .setFontColor(#666666)
     .addToContainer(this);
     
   }
@@ -462,7 +478,7 @@ class UIChannelFaders extends UIContext {
     return simpleName.substring(0, min(7, simpleName.length()));
   }
   
-  class UIPerfMeters extends UIObject {
+  class UIPerfMeters extends UI2dComponent {
     
     DampedParameter dampers[] = new DampedParameter[NUM_CHANNELS+7];
     BasicParameter perfs[] = new BasicParameter[NUM_CHANNELS+7];
@@ -542,7 +558,7 @@ public class UIMultiDeck extends UIWindow {
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
   final LXChannel.Listener[] lxListeners;
-  final _UIKnob[] knobs;
+  final UIKnob[] knobs;
 
   public UIMultiDeck(UI ui) {
     super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 128 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -563,9 +579,9 @@ public class UIMultiDeck extends UIWindow {
     }
     
     yp += patternLists[0].getHeight() + 10;
-    knobs = new _UIKnob[NUM_KNOBS];
+    knobs = new UIKnob[NUM_KNOBS];
     for (int ki = 0; ki < knobs.length; ++ki) {
-      knobs[ki] = new _UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp
+      knobs[ki] = new UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp
         + (ki / KNOBS_PER_ROW) * 48);
       knobs[ki].addToContainer(this);
     }
@@ -719,7 +735,7 @@ class UIEffects extends UIWindow {
     
     int yp = TITLE_LABEL_HEIGHT;
     for (int ki = 0; ki < 8; ++ki) {
-      new _UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp + (ki / KNOBS_PER_ROW) * 48)
+      new UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp + (ki / KNOBS_PER_ROW) * 48)
       .setParameter(effectKnobParameters[ki])
       .addToContainer(this);
     }
@@ -727,143 +743,5 @@ class UIEffects extends UIWindow {
     
   } 
   
-}
-
-// This is is the same as UIKnob, except that it flashes the value of the parameter
-// for 1 second whenever the parameter changes. Useful when controlling via midi
-public class _UIKnob extends UIParameterControl implements UIFocus, LXLoopTask {
-
-  public final static int DEFAULT_SIZE = 28;
-
-  private int knobSize = DEFAULT_SIZE;
-
-  private final float knobIndent = .4f;
-
-  private final int knobLabelHeight = 14;
-
-  private boolean showValue = false;
-
-  boolean showValueTimerRunning = false;
-  double showValueTimer;
-
-  public _UIKnob() {
-    this(0, 0);
-  }
-
-  public _UIKnob(float x, float y) {
-    this(x, y, 0, 0);
-    setSize(this.knobSize, this.knobSize + this.knobLabelHeight);
-  }
-
-  public _UIKnob(float x, float y, float w, float h) {
-    super(x, y, w, h);
-
-    speedIndependentContainer.addLoopTask(this);
-  }
-
-  public void loop(double deltaMs) {
-    if (showValueTimerRunning) {
-      showValueTimer -= deltaMs;
-      if (showValueTimer <= 0) {
-        showValueTimerRunning = false;
-        showValueTimer = 0;
-        showValue = false;
-
-        redraw();
-      }
-    }
-  }
-
-  @Override
-  protected void onDraw(UI ui, PGraphics pg) {
-    float knobValue = (float) getNormalized();
-
-    pg.ellipseMode(PConstants.CENTER);
-
-    pg.noStroke();
-    pg.fill(ui.getBackgroundColor());
-    pg.rect(0, 0, this.knobSize, this.knobSize);
-
-    // Full outer dark ring
-    int arcCenter = this.knobSize / 2;
-    float arcStart = PConstants.HALF_PI + this.knobIndent;
-    float arcRange = (PConstants.TWO_PI - 2 * this.knobIndent);
-
-    pg.fill(0xff222222);
-    pg.stroke(0xff494949);
-    pg.arc(arcCenter, arcCenter, this.knobSize, this.knobSize, arcStart,
-        arcStart + arcRange);
-
-    // Light ring indicating value
-    pg.fill(ui.getHighlightColor());
-    pg.arc(arcCenter, arcCenter, this.knobSize, this.knobSize, arcStart,
-        arcStart + knobValue * arcRange);
-
-    // Center circle of knob
-    pg.noStroke();
-    pg.fill(0xff333333);
-    pg.ellipse(arcCenter, arcCenter, arcCenter, arcCenter);
-
-    String knobLabel;
-    if (this.showValue) {
-      knobLabel = (this.parameter != null) ? ("" + this.parameter.getValue())
-          : null;
-    } else {
-      knobLabel = (this.parameter != null) ? this.parameter.getLabel() : null;
-    }
-    if (knobLabel == null) {
-      knobLabel = "-";
-    } else if (knobLabel.length() > 4) {
-      knobLabel = knobLabel.substring(0, 4);
-    }
-    pg.noStroke();
-    pg.fill(ui.BLACK);
-    pg.rect(0, this.knobSize + 2, this.knobSize, this.knobLabelHeight - 2);
-    pg.fill(ui.getTextColor());
-    pg.textAlign(PConstants.CENTER);
-    pg.textFont(ui.getTitleFont());
-    pg.text(knobLabel, arcCenter, this.knobSize + this.knobLabelHeight - 2);
-  }
-
-  private long lastMousePress = 0;
-
-  private double dragValue;
-
-  @Override
-  public void onMousePressed(float mx, float my) {
-    this.dragValue = getNormalized();
-    long now = System.currentTimeMillis();
-    if (now - lastMousePress < DOUBLE_CLICK_THRESHOLD) {
-      if (this.parameter != null) {
-        this.parameter.reset();
-      }
-      this.lastMousePress = 0;
-    } else {
-      this.lastMousePress = now;
-    }
-    this.showValue = true;
-    redraw();
-  }
-
-  @Override
-  public void onMouseReleased(float mx, float my) {
-    this.showValue = false;
-    redraw();
-  }
-
-  @Override
-  public void onMouseDragged(float mx, float my, float dx, float dy) {
-    this.dragValue = LXUtils.constrain(this.dragValue - dy / 100., 0, 1);
-    setNormalized(this.dragValue);
-  }
-
-  @Override
-  public void onParameterChanged(LXParameter parameter) {
-    showValue = true;
-    showValueTimer = 1000;
-    showValueTimerRunning = true;
-
-    super.onParameterChanged(parameter);
-  }
 }
 

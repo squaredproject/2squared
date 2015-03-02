@@ -1,4 +1,4 @@
-class TurnOffDeadPixelsEffect extends LXEffect {
+class TurnOffDeadPixelsEffect extends Effect {
   int[] deadPixelIndices = new int[] { 4 };
   int[] deadPixelClusters = new int[] { 5 };
   
@@ -185,7 +185,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTri
   abstract ObjectType generateObject(float strength);
 }
 
-abstract class MultiObject extends LXLayer {
+abstract class MultiObject extends Layer {
   
   boolean firstRun = true;
   float runningTimer = 0;
@@ -215,7 +215,7 @@ abstract class MultiObject extends LXLayer {
       }
       if (running) {
         for (Cube cube : model.cubes) {
-          colors[cube.index] = blendColor(colors[cube.index], getColorForCube(cube), LIGHTEST);
+          blendColor(cube.index, getColorForCube(cube), LXColor.Blend.LIGHTEST);
         }
       }
     }
@@ -776,7 +776,7 @@ class ClusterLineTest extends TSPattern {
   }
 }
 
-class GhostEffect extends LXEffect {
+class GhostEffect extends Effect {
   
   final BasicParameter amount = new BasicParameter("GHOS", 0, 0, 1, BasicParameter.Scaling.QUAD_IN);
   
@@ -788,7 +788,7 @@ class GhostEffect extends LXEffect {
   protected void run(double deltaMs) {
   }
   
-  class GhostEffectsLayer extends LXLayer {
+  class GhostEffectsLayer extends Layer {
     
     GhostEffectsLayer(LX lx) {
       super(lx);
@@ -829,7 +829,7 @@ class GhostEffect extends LXEffect {
     }
   }
   
-  class GhostEffectLayer extends LXLayer {
+  class GhostEffectLayer extends Layer {
     
     float lifetime;
     boolean running = true;
@@ -855,8 +855,8 @@ class GhostEffect extends LXEffect {
           }
           
           for (int i = 0; i < colors.length; i++) {
-            ghostColors[i] = blendColor(ghostColors[i], lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / lifetime))), MULTIPLY);
-            colors[i] = blendColor(colors[i], ghostColors[i], LIGHTEST);
+            ghostColors[i] = LXColor.blend(ghostColors[i], lx.hsb(0, 0, 100 * max(0, (float)(1 - deltaMs / lifetime))), LXColor.Blend.MULTIPLY);
+            blendColor(i, ghostColors[i], LXColor.Blend.LIGHTEST);
           }
         }
       }
@@ -864,7 +864,7 @@ class GhostEffect extends LXEffect {
   }
 }
 
-class ScrambleEffect extends LXEffect {
+class ScrambleEffect extends Effect {
   
   final DiscreteParameter amount;
   final int offset;
@@ -885,7 +885,7 @@ class ScrambleEffect extends LXEffect {
   }
 }
 
-class StaticEffect extends LXEffect {
+class StaticEffect extends Effect {
   
   final BasicParameter amount = new BasicParameter("STTC");
   
@@ -917,7 +917,7 @@ class StaticEffect extends LXEffect {
   }
 }
 
-class SpeedEffect extends LXEffect {
+class SpeedEffect extends Effect {
 
   final BasicParameter speed = new BasicParameter("SPEED", 1, .1, 10, BasicParameter.Scaling.QUAD_IN);
 
@@ -989,7 +989,7 @@ class SpinEffect extends ModelTransform {
   }
 }
 
-class ColorStrobeTextureEffect extends LXEffect {
+class ColorStrobeTextureEffect extends Effect {
 
   final BasicParameter amount = new BasicParameter("SEIZ", 0, 0, 1, BasicParameter.Scaling.QUAD_IN);
 
@@ -1010,7 +1010,7 @@ class ColorStrobeTextureEffect extends LXEffect {
   }
 }
 
-class FadeTextureEffect extends LXEffect {
+class FadeTextureEffect extends Effect {
 
   final BasicParameter amount = new BasicParameter("FADE");
 
@@ -1035,7 +1035,7 @@ class FadeTextureEffect extends LXEffect {
   }
 }
 
-class AcidTripTextureEffect extends LXEffect {
+class AcidTripTextureEffect extends Effect {
 
   final BasicParameter amount = new BasicParameter("ACID");
   
@@ -1061,7 +1061,7 @@ class AcidTripTextureEffect extends LXEffect {
   }
 }
 
-class CandyTextureEffect extends LXEffect {
+class CandyTextureEffect extends Effect {
 
   final BasicParameter amount = new BasicParameter("CAND");
 
@@ -1085,7 +1085,7 @@ class CandyTextureEffect extends LXEffect {
   }
 }
 
-class CandyCloudTextureEffect extends LXEffect {
+class CandyCloudTextureEffect extends Effect {
 
   final BasicParameter amount = new BasicParameter("CLOU");
 

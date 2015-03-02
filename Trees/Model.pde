@@ -560,7 +560,7 @@ public static class Cube extends LXModel {
   }
 }
 
-abstract class ModelTransform extends LXEffect {
+abstract class ModelTransform extends Effect {
   ModelTransform(LX lx) {
     super(lx);
 

@@ -1,6 +1,10 @@
 abstract class TSPattern extends LXPattern {
+
+  protected final Model model;
+
   TSPattern(LX lx) {
     super(lx);
+    model = (Model)lx.model;
   }
 
   void onTriggerableModeEnabled() {
@@ -8,6 +12,26 @@ abstract class TSPattern extends LXPattern {
 
   Triggerable getTriggerable() {
     return new ParameterTriggerableAdapter(getChannel().getFader());
+  }
+}
+
+abstract class Effect extends LXEffect {
+
+  protected final Model model;
+
+  Effect(LX lx) {
+    super(lx);
+    model = (Model)lx.model;
+  }
+}
+
+abstract class Layer extends LXLayer {
+
+  protected final Model model;
+
+  Layer(LX lx) {
+    super(lx);
+    model = (Model)lx.model;
   }
 }
 

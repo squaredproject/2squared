@@ -180,7 +180,7 @@ class UIMasterBpm extends UIWindow {
     int windowHeight = 102;
     this.bpmTool = bpmTool;
 
-    new _UIKnob(xPos, yPos)
+    new UIKnob(xPos, yPos)
     .setParameter(bpmTool.modulationController.tempoAdapter.bpm)
     .addToContainer(this);
     
@@ -230,7 +230,7 @@ class UIMasterBpm extends UIWindow {
   }
 }
 
-class UIBeatIndicator extends UIObject implements LXParameterListener {
+class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
   
   final private TempoAdapter tempoAdapter;
   private boolean lightOn;
