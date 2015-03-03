@@ -1,3 +1,5 @@
+import heronarts.lx.LX;
+
 import codeanticode.syphon.*;
 
 PGraphics buffer;
@@ -33,11 +35,11 @@ class SyphonPattern extends TSPattern {
     }
   }
 
-  private color mode1(Cube cube, int cubeIdx) {    
+  private int mode1(Cube cube, int cubeIdx) {    
     return weighted_get(imgbuffer, int(this.buffWidth * (cube.transformedTheta / 360.0)), this.buffHeight - int(this.buffHeight * (cube.transformedY/model.yMax)), getWidth.getValuei());
   }
   
-  private color mode2(Cube cube, int cubeIdx) {
+  private int mode2(Cube cube, int cubeIdx) {
     boolean reverse = false;
     if (cube.transformedTheta > (360.0 / 2))
       reverse = true;
@@ -47,7 +49,7 @@ class SyphonPattern extends TSPattern {
     return weighted_get(imgbuffer, int(this.buffWidth * ((cube.transformedTheta * 2.0) / 360.0)), this.buffHeight - int(this.buffHeight * (cube.transformedY/model.yMax)), getWidth.getValuei());
   }
   
-  private color mode3(Cube cube, int cubeIdx) {
+  private int mode3(Cube cube, int cubeIdx) {
     return weighted_get(imgbuffer, xpoints[cubeIdx], ypoints[cubeIdx], getWidth.getValuei());
   }
         
@@ -62,7 +64,7 @@ class SyphonPattern extends TSPattern {
         generateMap(buffer.width, buffer.height);
       }
       int cubeIdx = 0;
-      color c = 0;
+      int c = 0;
       for (Cube cube : model.cubes) {
         switch (mode.getValuei()) {
           case 1: c = mode1(cube, cubeIdx);
@@ -102,12 +104,12 @@ class SyphonPattern extends TSPattern {
 }
 
 
-color weighted_get(PImage imgbuffer, int xpos, int ypos, int radius) {
+int weighted_get(PImage imgbuffer, int xpos, int ypos, int radius) {
   int h, s, b;
   int xoffset, yoffset;
   int pixels_counted;
 
-  color thispixel;
+  int thispixel;
 
 
   h = s = b = pixels_counted = 0;

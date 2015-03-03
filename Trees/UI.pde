@@ -1,27 +1,31 @@
+int focusedChannel() {
+  return lx.engine.focusedChannel.getValuei();
+}
+
 class UITrees extends UI3dComponent {
   
-  color[] previewBuffer;
-  color[] black;
+  int[] previewBuffer;
+  int[] black;
   
   UITrees() {
     previewBuffer = new int[lx.total];
     black = new int[lx.total];
     for (int i = 0; i < black.length; ++i) {
-      black[i] = #000000;
+      black[i] = LXColor.BLACK;
     }
   }
   
   protected void onDraw(UI ui, PGraphics pg) {
     lights();
-    pointLight(0, 0, 80, model.cx, geometry.HEIGHT/2, -10*FEET);
+    pointLight(0, 0, 80, model.cx, geometry.HEIGHT/2, -10*Geometry.FEET);
 
     noStroke();
     fill(#191919);
     beginShape();
     vertex(0, 0, 0);
-    vertex(30*FEET, 0, 0);
-    vertex(30*FEET, 0, 30*FEET);
-    vertex(0, 0, 30*FEET);
+    vertex(30*Geometry.FEET, 0, 0);
+    vertex(30*Geometry.FEET, 0, 30*Geometry.FEET);
+    vertex(0, 0, 30*Geometry.FEET);
     endShape(CLOSE);
 
     drawTrees(ui);
@@ -34,7 +38,7 @@ class UITrees extends UI3dComponent {
     for (Tree tree : model.trees) {
       pushMatrix();
       translate(tree.x, 0, tree.z);
-      rotateY(-tree.ry * PI / 180);
+      rotateY(-tree.ry * MathUtils.PI / 180);
       drawTree(ui);
       popMatrix();
     }
@@ -71,13 +75,13 @@ class UITrees extends UI3dComponent {
         vertex(distance-geometry.BEAM_WIDTH/2, beamY, -distance-geometry.BEAM_WIDTH/2);
         endShape(CLOSE);        
       }
-      rotateY(PI/2); 
+      rotateY(MathUtils.HALF_PI); 
     }    
   }
      
   private void drawLights(UI ui) {
     
-    color[] colors;
+    int[] colors;
     boolean isPreviewOn = false;
     for (BooleanParameter previewChannel : previewChannels) {
       isPreviewOn |= previewChannel.isOn();
@@ -86,7 +90,7 @@ class UITrees extends UI3dComponent {
       colors = lx.getColors();
     } else {
       colors = black;
-      for (int i = 0; i < NUM_CHANNELS; i++) {
+      for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
         if (previewChannels[i].isOn()) {
           LXChannel channel = lx.engine.getChannel(i);
           channel.getFaderTransition().blend(colors, channel.getColors(), 1);
@@ -103,32 +107,32 @@ class UITrees extends UI3dComponent {
     
     if (mappingTool.isEnabled()) {
       Cluster cluster = mappingTool.getCluster();
-      JSONObject config = mappingTool.getConfig();
-      Tree tree = model.trees.get(config.getInt("treeIndex"));
+      TreeConfig config = mappingTool.getConfig();
+      Tree tree = model.trees.get(config.treeIndex);
       
       pushMatrix();
       translate(tree.x, 0, tree.z);
-      rotateY(-tree.ry * PI / 180);
+      rotateY(-tree.ry * MathUtils.PI / 180);
       
       // This is some bad duplicated code from Model, hack for now
-      int clusterLevel = config.getInt("level");
-      int clusterFace = config.getInt("face");
-      float clusterOffset = config.getFloat("offset");
-      float clusterMountPoint = config.getFloat("mountPoint");
-      float clusterSkew = config.getFloat("skew", 0);
+      int clusterLevel = config.level;
+      int clusterFace = config.face;
+      float clusterOffset = config.offset;
+      float clusterMountPoint = config.mountPoint;
+      float clusterSkew = config.skew;
       float cry = 0;
       switch (clusterFace) {
         // Could be math, but this way it's readable!
-        case FRONT: case FRONT_RIGHT:                  break;
-        case RIGHT: case REAR_RIGHT:  cry = HALF_PI;   break;
-        case REAR:  case REAR_LEFT:   cry = PI;        break;
-        case LEFT:  case FRONT_LEFT:  cry = 3*HALF_PI; break;
+        case Geometry.FRONT: case Geometry.FRONT_RIGHT:                  break;
+        case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = MathUtils.HALF_PI;   break;
+        case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = MathUtils.PI;        break;
+        case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = MathUtils.THREE_HALVES_PI; break;
       }
       switch (clusterFace) {
-        case FRONT_RIGHT:
-        case REAR_RIGHT:
-        case REAR_LEFT:
-        case FRONT_LEFT:
+        case Geometry.FRONT_RIGHT:
+        case Geometry.REAR_RIGHT:
+        case Geometry.REAR_LEFT:
+        case Geometry.FRONT_LEFT:
           clusterOffset = 0;
           break;
       }
@@ -136,18 +140,18 @@ class UITrees extends UI3dComponent {
       translate(clusterOffset * geometry.distances[clusterLevel], geometry.heights[clusterLevel] + clusterMountPoint, -geometry.distances[clusterLevel]);
       
       switch (clusterFace) {
-        case FRONT_RIGHT:
-        case REAR_RIGHT:
-        case REAR_LEFT:
-        case FRONT_LEFT:
+        case Geometry.FRONT_RIGHT:
+        case Geometry.REAR_RIGHT:
+        case Geometry.REAR_LEFT:
+        case Geometry.FRONT_LEFT:
           translate(geometry.distances[clusterLevel], 0, 0);
-          rotateY(-QUARTER_PI);
-          cry += QUARTER_PI;
+          rotateY(MathUtils.QUARTER_PI);
+          cry += MathUtils.QUARTER_PI;
           break;
       }
       
       rotateX(-geometry.angleFromAxis(geometry.heights[clusterLevel]));
-      rotateZ(-clusterSkew * PI / 180);
+      rotateZ(-clusterSkew * MathUtils.PI / 180);
       drawCubes(cluster, colors);
       
       popMatrix();
@@ -160,31 +164,31 @@ class UITrees extends UI3dComponent {
     noLights();
   }
   
-  void drawCluster(Cluster cluster, color[] colors) {
+  void drawCluster(Cluster cluster, int[] colors) {
     pushMatrix();
     translate(cluster.x, cluster.y, cluster.z);
-    rotateY(-cluster.ry * PI / 180);
-    rotateX(-cluster.rx * PI / 180);
-    rotateZ(-cluster.skew * PI / 180);
+    rotateY(-cluster.ry * MathUtils.PI / 180);
+    rotateX(-cluster.rx * MathUtils.PI / 180);
+    rotateZ(-cluster.skew * MathUtils.PI / 180);
     drawCubes(cluster, colors);
     popMatrix();
   }
   
-  void drawCubes(Cluster cluster, color[] colors) {
+  void drawCubes(Cluster cluster, int[] colors) {
     for (Cube cube : cluster.cubes) {
       pushMatrix();
       fill(colors[cube.index]);
       translate(cube.lx, cube.ly, cube.lz);
-      rotateY(-cube.ry * PI / 180);
-      rotateX(-cube.rx * PI / 180);
-      rotateZ(-cube.rz * PI / 180);
+      rotateY(-cube.ry * MathUtils.PI / 180);
+      rotateX(-cube.rx * MathUtils.PI / 180);
+      rotateZ(-cube.rz * MathUtils.PI / 180);
       box(cube.size, cube.size, cube.size);
       popMatrix();
     }
   }
 }
 
-public class UILoopRecorder extends UIWindow {
+class UILoopRecorder extends UIWindow {
   
   private final UILabel slotLabel;
   private final String[] labels = new String[] { "-", "-", "-", "-" };
@@ -207,7 +211,7 @@ public class UILoopRecorder extends UIWindow {
     final UIButton armButton = new UIButton(6 + 2*(this.width-8)/3, yPos, 40, 20);
     armButton
     .setLabel("ARM")
-    .setActiveColor(#cc3333)
+    .setActiveColor(0xcc3333)
     .addToContainer(this);
     
     yPos += 24;
@@ -296,7 +300,7 @@ class UIChannelFaders extends UI2dContext {
   final static int PADDING = 4;
   final static int BUTTON_HEIGHT = 14;
   final static int FADER_WIDTH = 40;
-  final static int WIDTH = 2 * SPACER + PADDING + MASTER + (PADDING+FADER_WIDTH)*(NUM_CHANNELS+2);
+  final static int WIDTH = 2 * SPACER + PADDING + MASTER + (PADDING+FADER_WIDTH)*(Engine.NUM_CHANNELS+2);
   final static int HEIGHT = 140;
   final static int PERF_PADDING = PADDING + 1;
   
@@ -305,10 +309,10 @@ class UIChannelFaders extends UI2dContext {
     setBackgroundColor(#292929);
     setBorderColor(#444444);
     int di = 0;
-    final UISlider[] sliders = new UISlider[NUM_CHANNELS];
-    final UIButton[] cues = new UIButton[NUM_CHANNELS];
-    final UILabel[] labels = new UILabel[NUM_CHANNELS];
-    for (int i = 0; i < NUM_CHANNELS; i++) {
+    final UISlider[] sliders = new UISlider[Engine.NUM_CHANNELS];
+    final UIButton[] cues = new UIButton[Engine.NUM_CHANNELS];
+    final UILabel[] labels = new UILabel[Engine.NUM_CHANNELS];
+    for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
       final LXChannel channel = lx.engine.getChannel(i);
       float xPos = PADDING + channel.getIndex()*(PADDING+FADER_WIDTH) + SPACER;
       
@@ -350,6 +354,7 @@ class UIChannelFaders extends UI2dContext {
       };
       sliders[channel.getIndex()]
       .setParameter(channel.getFader())
+      .setShowLabel(false)
       .addToContainer(this);
             
       labels[channel.getIndex()] = new UILabel(xPos, this.height - 2*PADDING - 2*BUTTON_HEIGHT, FADER_WIDTH, BUTTON_HEIGHT);
@@ -392,6 +397,7 @@ class UIChannelFaders extends UI2dContext {
       }
     }
     .setParameter(output.brightness)
+    .setShowLabel(false)
     .addToContainer(this);
     
     LXParameterListener listener;
@@ -475,51 +481,51 @@ class UIChannelFaders extends UI2dContext {
   
   private String shortPatternName(LXPattern pattern) {
     String simpleName = pattern.getClass().getSimpleName(); 
-    return simpleName.substring(0, min(7, simpleName.length()));
+    return simpleName.substring(0, Math.min(7, simpleName.length()));
   }
   
   class UIPerfMeters extends UI2dComponent {
     
-    DampedParameter dampers[] = new DampedParameter[NUM_CHANNELS+7];
-    BasicParameter perfs[] = new BasicParameter[NUM_CHANNELS+7];
+    DampedParameter dampers[] = new DampedParameter[Engine.NUM_CHANNELS+7];
+    BasicParameter perfs[] = new BasicParameter[Engine.NUM_CHANNELS+7];
    
     UIPerfMeters() {
-      for (int i = 0; i < NUM_CHANNELS+7; ++i) {
+      for (int i = 0; i < Engine.NUM_CHANNELS+7; ++i) {
         lx.addModulator((dampers[i] = new DampedParameter(perfs[i] = new BasicParameter("PERF", 0), 3))).start();
       }
     } 
     
     public void onDraw(UI ui, PGraphics pg) {
-      for (int i = 0; i < NUM_CHANNELS; i++) {
+      for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
         LXChannel channel = lx.engine.getChannel(i);
         LXPattern pattern = channel.getActivePattern();
         float goMillis = pattern.timer.runNanos / 1000000.;
         float fps60 = 1000 / 60. / 3.;
-        perfs[channel.getIndex()].setValue(constrain((goMillis-1) / fps60, 0, 1));
+        perfs[channel.getIndex()].setValue(LXUtils.constrainf((goMillis-1) / fps60, 0, 1));
       }
 
       float engMillis = lx.engine.timer.channelNanos / 1000000.;
-      perfs[NUM_CHANNELS].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.copyNanos / 1000000.;
-      perfs[NUM_CHANNELS+1].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+1].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.fxNanos / 1000000.;
-      perfs[NUM_CHANNELS+2].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+2].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.inputNanos / 1000000.;
-      perfs[NUM_CHANNELS+3].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+3].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.midiNanos / 1000000.;
-      perfs[NUM_CHANNELS+4].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+4].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
       
       engMillis = lx.engine.timer.outputNanos / 1000000.;
-      perfs[NUM_CHANNELS+5].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+5].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
 
       engMillis = lx.engine.timer.runNanos / 1000000.;
-      perfs[NUM_CHANNELS+6].setValue(constrain(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+6].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
       
-      for (int i = 0; i < NUM_CHANNELS; ++i) {
+      for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
         float val = dampers[i].getValuef();
         pg.stroke(#666666);
         pg.fill(#292929);
@@ -529,14 +535,14 @@ class UIChannelFaders extends UI2dContext {
         pg.rect(i*(PADDING + FADER_WIDTH)+1, HEIGHT - 2 * PADDING - BUTTON_HEIGHT + 1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
       }
 
-      for (int i = NUM_CHANNELS; i < NUM_CHANNELS + 7; ++i) {
+      for (int i = Engine.NUM_CHANNELS; i < Engine.NUM_CHANNELS + 7; ++i) {
         float val = dampers[i].getValuef();
         pg.stroke(#666666);
         pg.fill(#292929);
-        pg.rect((NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH), (i - (NUM_CHANNELS))*(PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH-1, BUTTON_HEIGHT-1); 
+        pg.rect((Engine.NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH), (i - (Engine.NUM_CHANNELS))*(PERF_PADDING + BUTTON_HEIGHT-1), FADER_WIDTH-1, BUTTON_HEIGHT-1); 
         pg.fill(lx.hsb(120*(1-val), 50, 80));
         pg.noStroke();
-        pg.rect((NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH) + 1, (i - (NUM_CHANNELS))*(PERF_PADDING + BUTTON_HEIGHT-1)+1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
+        pg.rect((Engine.NUM_CHANNELS + 1)*(PADDING + FADER_WIDTH) + 1, (i - (Engine.NUM_CHANNELS))*(PERF_PADDING + BUTTON_HEIGHT-1)+1, val * (FADER_WIDTH-2), BUTTON_HEIGHT-2);
       }
 
       redraw();
@@ -544,7 +550,7 @@ class UIChannelFaders extends UI2dContext {
   }
 }
 
-public class UIMultiDeck extends UIWindow {
+class UIMultiDeck extends UIWindow implements InterfaceController {
 
   private final static int KNOBS_PER_ROW = 4;
 
@@ -564,10 +570,10 @@ public class UIMultiDeck extends UIWindow {
     super(ui, "CHANNEL " + (focusedChannel()+1), Trees.this.width - 4 - DEFAULT_WIDTH, Trees.this.height - 128 - DEFAULT_HEIGHT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     int yp = TITLE_LABEL_HEIGHT;
 
-    patternLists = new UIItemList[NUM_CHANNELS];
-    blendModes = new UIToggleSet[NUM_CHANNELS];
+    patternLists = new UIItemList[Engine.NUM_CHANNELS];
+    blendModes = new UIToggleSet[Engine.NUM_CHANNELS];
     lxListeners = new LXChannel.Listener[patternLists.length];
-    for (int i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
       LXChannel channel = lx.engine.getChannel(i);
       List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
       for (LXPattern p : channel.getPatterns()) {
@@ -579,7 +585,7 @@ public class UIMultiDeck extends UIWindow {
     }
     
     yp += patternLists[0].getHeight() + 10;
-    knobs = new UIKnob[NUM_KNOBS];
+    knobs = new UIKnob[Engine.NUM_KNOBS];
     for (int ki = 0; ki < knobs.length; ++ki) {
       knobs[ki] = new UIKnob(5 + 34 * (ki % KNOBS_PER_ROW), yp
         + (ki / KNOBS_PER_ROW) * 48);
@@ -587,7 +593,7 @@ public class UIMultiDeck extends UIWindow {
     }
     
     yp += 100;
-    for (int i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
       LXChannel channel = lx.engine.getChannel(i);
       blendModes[channel.getIndex()] = new UIToggleSet(4, yp, this.width-8, 18)
       .setOptions(new String[] { "ADD", "MLT", "LITE", "SUBT" })
@@ -597,7 +603,7 @@ public class UIMultiDeck extends UIWindow {
       blendModes[channel.getIndex()].addToContainer(this);
     }
      
-    for (int i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
       LXChannel channel = lx.engine.getChannel(i); 
       lxListeners[channel.getIndex()] = new LXChannel.AbstractListener() {
         public void patternWillChange(LXChannel channel, LXPattern pattern,
@@ -743,5 +749,286 @@ class UIEffects extends UIWindow {
     
   } 
   
+}
+
+class UIMasterBpm extends UIWindow {
+  
+  final static int BUTT_WIDTH = 12 * 3;
+  final static int BUTT_HEIGHT = 20;
+  final static int SPACING = 4;
+  final static int MARGIN = 2 * SPACING;
+  
+  final private BPMTool bpmTool;
+  
+  UIMasterBpm(UI ui, float x, float y, final BPMTool bpmTool) {
+    super(ui, "MASTER BPM", x, y, 140, 102);
+    int yPos = TITLE_LABEL_HEIGHT - 3;
+    int xPos = MARGIN;
+    int windowWidth = 140;
+    int windowHeight = 102;
+    this.bpmTool = bpmTool;
+
+    new UIKnob(xPos, yPos)
+    .setParameter(bpmTool.modulationController.tempoAdapter.bpm)
+    .addToContainer(this);
+    
+    xPos += BUTT_WIDTH + SPACING;
+    
+    new UIButton(xPos, yPos, BUTT_WIDTH + 1, BUTT_HEIGHT)
+    .setLabel("TAP")
+    .setMomentary(true)
+    .setParameter(bpmTool.tapTempo)
+    .addToContainer(this);
+    
+    xPos += BUTT_WIDTH + 1 + SPACING;
+    
+    new UIButton(xPos, yPos, BUTT_WIDTH / 2 + 2, BUTT_HEIGHT)
+    .setLabel("-")
+    .setMomentary(true)
+    .setParameter(bpmTool.nudgeDownTempo)
+    .addToContainer(this);
+    
+    xPos += BUTT_WIDTH / 2 + 2 + SPACING;
+    
+    new UIButton(xPos, yPos, BUTT_WIDTH / 2 + 2, BUTT_HEIGHT)
+    .setLabel("+")
+    .setMomentary(true)
+    .setParameter(bpmTool.nudgeUpTempo)
+    .addToContainer(this);
+    
+    xPos = MARGIN + BUTT_WIDTH + SPACING;
+    yPos += BUTT_HEIGHT + SPACING;
+
+    new UIToggleSet(xPos, yPos, windowWidth - xPos - MARGIN, BUTT_HEIGHT)
+    .setOptions(bpmTool.beatLabels)
+    .setParameter(bpmTool.beatType)
+    .addToContainer(this);
+    
+    yPos += BUTT_HEIGHT + SPACING;
+
+    xPos = MARGIN;
+
+    new UIToggleSet(xPos, yPos, windowWidth - xPos - MARGIN, BUTT_HEIGHT)
+    .setOptions(bpmTool.bpmLabels)
+    .setParameter(bpmTool.tempoLfoType)
+    .addToContainer(this);
+    
+    new UIBeatIndicator(windowWidth * 2 / 3, MARGIN, bpmTool.modulationController.tempoAdapter)
+    .addToContainer(this);
+  }
+}
+
+class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
+  
+  final private TempoAdapter tempoAdapter;
+  private boolean lightOn;
+  
+  protected UIBeatIndicator(float x, float y, TempoAdapter tempoAdapter) {
+    super(x, y, 6, 6);
+    this.tempoAdapter = tempoAdapter;
+    lightOn = shouldLightBeOn();
+    
+    tempoAdapter.ramp.addListener(this);
+  }
+  
+  protected void onDraw(UI ui, PGraphics pg) {
+    if (shouldLightBeOn()) {
+      pg.fill(0xFFFF0000);
+    } else {
+      pg.fill(getBackgroundColor());
+    }
+    pg.ellipse(getWidth() / 2, getHeight() / 2, getWidth(), getHeight());
+  }
+  
+  public void onParameterChanged(LXParameter parameter) {
+    if (shouldLightBeOn() != lightOn) {
+      redraw();
+      lightOn = shouldLightBeOn();
+    }
+  }
+  
+  private boolean shouldLightBeOn() {
+    return tempoAdapter.tempo.ramp() < 0.1;
+  }
+}
+
+class UIMapping extends UIWindow {
+  
+  final UILabel ipAddress;
+  final UIToggleSet tree;
+  final UIIntegerBox level;
+  final UIToggleSet face;
+  final UISlider offset;
+  final UISlider mountPoint;
+  final UISlider skew;
+  
+  UIMapping(UI ui) {
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);
+    
+    final UIIntegerBox clusterIndex = new UIIntegerBox().setParameter(mappingTool.clusterIndex);
+    
+    (ipAddress = new UILabel()).setAlignment(CENTER, CENTER).setBorderColor(#666666).setBackgroundColor(#292929);
+    tree = new UIToggleSet() {
+      protected void onToggle(String value) {
+        mappingTool.getConfig().treeIndex =  (value == "L") ? 0 : 1;
+      }
+    }.setOptions(new String[] { "L", "R" });
+    
+    level = new UIIntegerBox() {
+      protected void onValueChange(int value) {
+        mappingTool.getConfig().level =  value;
+      }
+    }.setRange(0, 14);
+    
+    face = new UIToggleSet() {
+      protected void onToggle(String value) {
+        mappingTool.getConfig().face = face.getValueIndex();
+      }
+    }.setOptions(new String[] { " ", " ", " ", " ", " ", " ", " ", " " });
+    
+    BasicParameter offsetParameter;
+    (offset = new UISlider(0, 0, 0, 16)).setParameter(offsetParameter = new BasicParameter("OFFSET", 0, -1, 1)).setShowLabel(false);
+    offsetParameter.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        mappingTool.getConfig().offset = parameter.getValuef();
+      }
+    });
+    
+    BasicParameter mountPointParameter;
+    (mountPoint = new UISlider(0, 0, 0, 16))
+    .setParameter(mountPointParameter = new BasicParameter("MOUNT", CHAIN, CHAIN, BOLT)).setShowLabel(false);
+    mountPointParameter.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        mappingTool.getConfig().mountPoint = parameter.getValuef();
+      }
+    });
+    
+    BasicParameter skewParameter;
+    (skew = new UISlider(0, 0, 0, 16)).setParameter(skewParameter = new BasicParameter("SKEW", 0, 30, -30)).setShowLabel(false);
+    skewParameter.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        mappingTool.getConfig().skew = parameter.getValuef();
+      }
+    });
+    
+    mappingTool.clusterIndex.addListener(new LXParameterListener() {
+      public void onParameterChanged(LXParameter parameter) {
+        setCluster();
+      }
+    });
+    
+    float yPos = TITLE_LABEL_HEIGHT;
+    new UIButton(4, yPos, width-8, 20) {
+      void onToggle(boolean enabled) {
+        if (enabled) {
+          clusterIndex.focus();
+        }
+      }
+    }
+    .setInactiveLabel("Disabled")
+    .setActiveLabel("Enabled")
+    .setParameter(mappingTool.enabled)
+    .addToContainer(this);
+    yPos += 24;
+    
+    // yPos = labelRow(yPos, "BLANKS", new UIButton().setParameter(mappingTool.showBlanks));
+    yPos = labelRow(yPos, "CLUSTER #", clusterIndex);
+    yPos = labelRow(yPos, "IP", ipAddress);
+    // yPos = labelRow(yPos, "TREE", tree);
+    yPos = labelRow(yPos, "LEVEL", level);
+    yPos = labelRow(yPos, "FACE", face);
+    yPos = labelRow(yPos, "OFFSET", offset);
+    yPos = labelRow(yPos, "MOUNT", mountPoint);
+    yPos = labelRow(yPos, "SKEW", skew);
+    
+    new UIButton(4, yPos, this.width-8, 20) {
+      void onToggle(boolean active) {
+        if (active) {
+          String backupFileName = CLUSTER_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
+          saveStream(backupFileName, CLUSTER_CONFIG_FILE);
+          saveJSONToFile(clusterConfig, CLUSTER_CONFIG_FILE);
+          setLabel("Saved. Restart needed.");
+        }
+      }
+    }.setMomentary(true).setLabel("Save Changes").addToContainer(this);
+    
+    setCluster();
+  }
+  
+  float labelRow(float yPos, String label, UI2dComponent obj) {
+    new UILabel(4, yPos+5, 50, 20)
+    .setLabel(label)
+    .addToContainer(this);
+    obj
+    .setPosition(58, yPos)
+    .setSize(width-62, 20)
+    .addToContainer(this);
+    yPos += 24;
+    return yPos;
+  }
+  
+  void setCluster() {
+    TreeConfig cp = clusterConfig.get(mappingTool.clusterIndex.getValuei());
+    ipAddress.setLabel(cp.ipAddress);
+    tree.setValue(cp.treeIndex);
+    level.setValue(cp.level);
+    face.setValue(cp.face);
+    offset.getParameter().setValue(cp.offset);
+    mountPoint.getParameter().setValue(cp.mountPoint);
+    skew.getParameter().setValue(cp.skew);
+  }
+}
+
+class UIOutput extends UIWindow {
+  static final int LIST_NUM_ROWS = 3;
+  static final int LIST_ROW_HEIGHT = 20;
+  static final int LIST_HEIGHT = LIST_NUM_ROWS * LIST_ROW_HEIGHT;
+  static final int BUTTON_HEIGHT = 20;
+  static final int SPACER = 8;
+  UIOutput(UI ui, float x, float y) {
+    super(ui, "LIVE OUTPUT", x, y, 140, UIWindow.TITLE_LABEL_HEIGHT - 1 + BUTTON_HEIGHT + SPACER + LIST_HEIGHT);
+    float yPos = UIWindow.TITLE_LABEL_HEIGHT - 2;
+    new UIButton(4, yPos, width-8, BUTTON_HEIGHT)
+      .setParameter(output.enabled)
+      .setActiveLabel("Enabled")
+      .setInactiveLabel("Disabled")
+      .addToContainer(this);
+    yPos += BUTTON_HEIGHT + SPACER;
+    
+    List<UIItemList.Item> items = new ArrayList<UIItemList.Item>();
+    for (LXDatagram datagram : datagrams) {
+      items.add(new DatagramItem(datagram));
+    }
+    new UIItemList(1, yPos, width-2, LIST_HEIGHT)
+    .setItems(items)
+    .setBackgroundColor(0xff0000)
+    .addToContainer(this);
+  }
+  
+  class DatagramItem extends UIItemList.AbstractItem {
+    
+    final LXDatagram datagram;
+    
+    DatagramItem(LXDatagram datagram) {
+      this.datagram = datagram;
+      datagram.enabled.addListener(new LXParameterListener() {
+        public void onParameterChanged(LXParameter parameter) {
+          redraw();
+        }
+      });
+    }
+    
+    String getLabel() {
+      return datagram.getAddress().toString();
+    }
+    
+    boolean isSelected() {
+      return datagram.enabled.isOn();
+    }
+    
+    void onMousePressed() {
+      datagram.enabled.toggle();
+    }
+  }
 }
 

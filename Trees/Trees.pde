@@ -1,3 +1,16 @@
+static final boolean enableIPad = false;
+static final boolean autoplayBMSet = true;
+
+static final boolean enableNFC = false;
+static final boolean enableAPC40 = false;
+static final boolean enableSyphon = false;
+
+static final boolean enableOutputMinitree = true;
+static final boolean enableOutputBigtree = false;
+
+static final String clusterMappingFile = "clusters.json";
+
+
 import heronarts.lx.*;
 import heronarts.lx.audio.*;
 import heronarts.lx.effect.*;
@@ -19,6 +32,13 @@ import heronarts.p2lx.ui.control.*;
 import ddf.minim.*;
 import processing.opengl.*;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,37 +47,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-final static int INCHES = 1;
-final static int FEET = 12 * INCHES;
-
 final static int SECONDS = 1000;
 final static int MINUTES = 60*SECONDS;
 
-final static float CHAIN = -12*INCHES;
-final static float BOLT = 22*INCHES;
-
-final static int FRONT = 0;
-final static int RIGHT = 1;
-final static int REAR = 2;
-final static int LEFT = 3;
-final static int FRONT_RIGHT = 4;
-final static int REAR_RIGHT = 5;
-final static int REAR_LEFT = 6;
-final static int FRONT_LEFT = 7;
-
-final static int NUM_CHANNELS = 8;
-final static int NUM_KNOBS = 8;
-final static int NUM_AUTOMATION = 4;
-
-/**
- * This defines the positions of the trees, which are
- * x (left to right), z (front to back), and rotation
- * in degrees.
- */
-final static float[][] TREE_POSITIONS = {
-  /*  X-pos    Y-pos    Rot  */
-  {  15*FEET,  15*FEET,   0  }
-};
+final static float CHAIN = -12*Geometry.INCHES;
+final static float BOLT = 22*Geometry.INCHES;
 
 final static String CLUSTER_CONFIG_FILE = "data/clusters.json";
 
@@ -113,10 +107,6 @@ LXPattern[] getPatternListForChannels() {
   patterns.add(new MidEQ(lx));
   patterns.add(new HighEQ(lx));
   patterns.add(new GalaxyCloud(lx));
-  patterns.add(new Verty(lx));
-  patterns.add(new Spinny(lx));
-
-  patterns.add(new CameraWrap(lx));
 
   for (LXPattern pattern : patterns) {
     LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
@@ -254,7 +244,7 @@ VisualType[] readerPatternTypeRestrictions() {
   };
 }
 
-static JSONArray clusterConfig;
+static List<TreeConfig> clusterConfig;
 static Geometry geometry = new Geometry();
 
 Model model;
@@ -263,31 +253,29 @@ LXDatagramOutput output;
 LXDatagram[] datagrams;
 UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
-final BasicParameter bgLevel = new BasicParameter("BG", 25, 0, 50);
 final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
 final BasicParameter drumpadVelocity = new BasicParameter("DVEL", 1);
 BPMTool bpmTool;
 MappingTool mappingTool;
-LXAutomationRecorder[] automation = new LXAutomationRecorder[NUM_AUTOMATION];
-BooleanParameter[] automationStop = new BooleanParameter[NUM_AUTOMATION]; 
-DiscreteParameter automationSlot = new DiscreteParameter("AUTO", NUM_AUTOMATION);
+LXAutomationRecorder[] automation = new LXAutomationRecorder[Engine.NUM_AUTOMATION];
+BooleanParameter[] automationStop = new BooleanParameter[Engine.NUM_AUTOMATION]; 
+DiscreteParameter automationSlot = new DiscreteParameter("AUTO", Engine.NUM_AUTOMATION);
 LXListenableNormalizedParameter[] effectKnobParameters;
 MidiEngine midiEngine;
 TSDrumpad apc40Drumpad;
 NFCEngine nfcEngine;
-SpeedIndependentContainer speedIndependentContainer;
 BooleanParameter[][] nfcToggles = new BooleanParameter[6][9];
+BooleanParameter[] previewChannels = new BooleanParameter[Engine.NUM_CHANNELS];
 
 void setup() {
   size(1148, 720, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
-  clusterConfig = loadJSONArray(CLUSTER_CONFIG_FILE);
+  clusterConfig = loadJSONFile(CLUSTER_CONFIG_FILE);
   geometry = new Geometry();
-  model = new Model();
+  model = new Model(geometry, clusterConfig);
   
   lx = new P2LX(this, model);
-  lx.engine.addLoopTask(speedIndependentContainer = new SpeedIndependentContainer(lx));
   lx.engine.addParameter(drumpadVelocity);
 
   configureChannels();
@@ -299,8 +287,8 @@ void setup() {
 
   configureTriggerables();
 
-  lx.addEffect(mappingTool = new MappingTool(lx));
-  lx.engine.addLoopTask(new ModelTransformTask());
+  lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
+  lx.engine.addLoopTask(new ModelTransformTask(model));
   lx.addEffect(new TurnOffDeadPixelsEffect(lx));
 
   configureBMPTool();
@@ -320,11 +308,48 @@ void setup() {
   // essentially this lets us have extra decks for the drumpad
   // patterns without letting them be assigned to channels
   // -kf
-  lx.engine.focusedChannel.setRange(NUM_CHANNELS);
+  lx.engine.focusedChannel.setRange(Engine.NUM_CHANNELS);
   
   // Engine threading
   lx.engine.framesPerSecond.setValue(60);  
   lx.engine.setThreaded(true);
+}
+
+List<TreeConfig> loadJSONFile(String filename) {
+  Reader reader = null;
+  try {
+    // for (int i = 0; i < args.length; i++) {
+    //   if (args[i].startsWith(ARGS_SKETCH_FOLDER)){
+    //     println(args[i].substring(args[i].indexOf('=') + 1));
+    //   }
+    // }
+    reader = new BufferedReader(new FileReader(sketchPath(filename)));
+    return new Gson().fromJson(reader, new TypeToken<List<TreeConfig>>() {}.getType());
+  } catch (IOException ioe) { 
+    System.out.println("Error reading json file: ");
+    System.out.println(ioe);
+  } finally {
+    if (reader != null) {
+      try {
+        reader.close();
+      } catch (IOException ioe) { }
+    }
+  }
+  return null;
+}
+
+void saveJSONToFile(List<TreeConfig> config, String filename) {
+  PrintWriter writer = null;
+  try {
+    writer = new PrintWriter(new BufferedWriter(new FileWriter(sketchPath(filename))));
+    writer.write(new Gson().toJson(config));
+  } catch (IOException ioe) {
+    System.out.println("Error writing json file.");
+  } finally {
+    if (writer != null) {
+      writer.close();
+    }
+  }
 }
 
 /* configureChannels */
@@ -344,7 +369,7 @@ void setupChannel(final LXChannel channel, boolean noOpWhenNotRunning) {
 
 void configureChannels() {
   lx.setPatterns(getPatternListForChannels());
-  for (int i = 1; i < NUM_CHANNELS; ++i) {
+  for (int i = 1; i < Engine.NUM_CHANNELS; ++i) {
     lx.engine.addChannel(getPatternListForChannels());
   }
   
@@ -412,7 +437,7 @@ void registerEffectControlParameter(LXListenableNormalizedParameter parameter, S
 }
 
 void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
-  ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(parameter, offValue, onValue);
+  ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(lx, parameter, offValue, onValue);
     BooleanParameter toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
   nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect, toggle);
   apc40DrumpadTriggerablesLists[row].add(triggerable);
@@ -493,7 +518,7 @@ void configureMIDI() {
   apc40Drumpad.triggerables = apc40DrumpadTriggerables;
 
   // MIDI control
-  midiEngine = new MidiEngine(effectKnobParameters);
+  midiEngine = new MidiEngine(lx, effectKnobParameters, apc40Drumpad, drumpadVelocity, previewChannels, bpmTool, uiDeck, nfcToggles, output, automationSlot, automation, automationStop);
 }
 
 /* configureNFC */
@@ -519,17 +544,17 @@ void configureUI() {
       protected void beforeDraw(UI ui, PGraphics pg) {
         hint(ENABLE_DEPTH_TEST);
         pushMatrix();
-        translate(0, 12*FEET, 0);
+        translate(0, 12*Geometry.FEET, 0);
       }
       protected void afterDraw(UI ui, PGraphics pg) {
         popMatrix();
         hint(DISABLE_DEPTH_TEST);
       }  
     }
-    .setRadius(90*FEET)
+    .setRadius(90*Geometry.FEET)
     .setCenter(model.cx, model.cy, model.cz)
-    .setTheta(30*PI/180)
-    .setPhi(10*PI/180)
+    .setTheta(30*MathUtils.PI/180)
+    .setPhi(10*MathUtils.PI/180)
     .addComponent(new UITrees())
   );
   lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
@@ -550,7 +575,7 @@ void configureExternalOutput() {
     datagrams = new LXDatagram[model.clusters.size()];
     int ci = 0;
     for (Cluster cluster : model.clusters) {
-      output.addDatagram(datagrams[ci++] = clusterDatagram(cluster).setAddress(cluster.ipAddress));
+      output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
     }
     output.enabled.setValue(false);
     lx.addOutput(output);
@@ -585,50 +610,6 @@ void draw() {
 
 TreesTransition getFaderTransition(LXChannel channel) {
   return (TreesTransition) channel.getFaderTransition();
-}
-
-class TreesTransition extends LXTransition {
-  
-  private final LXChannel channel;
-  
-  public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
- 
-  private LXColor.Blend blendType = LXColor.Blend.ADD;
-    
-  TreesTransition(LX lx, LXChannel channel) {
-    super(lx);
-    addParameter(blendMode);
-    
-    this.channel = channel;
-    blendMode.addListener(new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        switch (blendMode.getValuei()) {
-        case 0: blendType = LXColor.Blend.ADD; break;
-        case 1: blendType = LXColor.Blend.MULTIPLY; break;
-        case 2: blendType = LXColor.Blend.LIGHTEST; break;
-        case 3: blendType = LXColor.Blend.SUBTRACT; break;
-        }
-      }
-    });
-  }
-  
-  protected void computeBlend(int[] c1, int[] c2, double progress) {
-    if (progress == 0) {
-      for (int i = 0; i < colors.length; ++i) {
-        colors[i] = c1[i];
-      }
-    } else if (progress == 1) {
-      for (int i = 0; i < colors.length; ++i) {
-        int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i]; 
-        colors[i] = LXColor.blend(c1[i], color2, this.blendType);
-      }
-    } else {
-      for (int i = 0; i < colors.length; ++i) {
-        int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i];
-        colors[i] = LXColor.lerp(c1[i], LXColor.blend(c1[i], color2, this.blendType), progress);
-      }
-    }
-  }
 }
 
 class BooleanProxyParameter extends BooleanParameter {
