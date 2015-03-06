@@ -735,7 +735,7 @@ class Pulley extends TSTriggerablePattern { //ported from SugarCubes
       } 
       else {
         gravity[j].setVelocity(0).setAcceleration(-420);
-        delays[j].setDuration(MathUtils.random(0, 500)).trigger();
+        delays[j].setPeriod(MathUtils.random(0, 500)).trigger();
       }
       ++i;
     }
@@ -902,7 +902,7 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
     public Pulley() {
       baseSpeed = MathUtils.random(10,50);
       baseHue = MathUtils.random(0, 30);
-      delay.setDuration(MathUtils.random(0,500));
+      delay.setPeriod(MathUtils.random(0,500));
       gravity.setSpeed(this.baseSpeed, 0);
       if (autoMode) {
         maxBrt.setRange(0,1,3000);
@@ -910,7 +910,7 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
         maxBrt.setRange(0.5,1,3000);
       }
       
-      turnOff.setDuration(6000);
+      turnOff.setPeriod(6000);
       addModulator(gravity);
       addModulator(delay);
       addModulator(maxBrt).start();

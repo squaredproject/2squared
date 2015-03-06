@@ -138,11 +138,12 @@ class NFCEngine {
     }
   }
   
-  public void stop() {
-    if (libNFCMainThread != null) {
-      libNFCMainThread.stop();
-    }
-  }
+  // Thread.stop() is deprecated
+  // public void stop() {
+  //   if (libNFCMainThread != null) {
+  //     libNFCMainThread.stop();
+  //   }
+  // }
   
   public void registerTriggerable(String serialNumber, Triggerable triggerable, VisualType VisualType, BooleanParameter toggle) {
     cardToTriggerableMap.put(serialNumber, new NFCEngineVisual(triggerable, VisualType, toggle));

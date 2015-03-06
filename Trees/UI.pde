@@ -17,7 +17,7 @@ class UITrees extends UI3dComponent {
   
   protected void onDraw(UI ui, PGraphics pg) {
     lights();
-    pointLight(0, 0, 80, model.cx, geometry.HEIGHT/2, -10*Geometry.FEET);
+    pointLight(0, 0, 80, model.cx, model.geometry.HEIGHT/2, -10*Geometry.FEET);
 
     noStroke();
     fill(#191919);
@@ -46,33 +46,33 @@ class UITrees extends UI3dComponent {
   
   private void drawTree(UI ui) {
     for (int i = 0; i < 4; ++i) {
-      for (int y = 1; y < geometry.distances.length; ++y) {
-        float beamY = geometry.heights[y];
-        float prevY = geometry.heights[y-1];
-        float distance = geometry.distances[y];
-        float prevDistance = geometry.distances[y-1];
+      for (int y = 1; y < model.geometry.distances.length; ++y) {
+        float beamY = model.geometry.heights[y];
+        float prevY = model.geometry.heights[y-1];
+        float distance = model.geometry.distances[y];
+        float prevDistance = model.geometry.distances[y-1];
         
-        if (y <= geometry.NUM_BEAMS) {
+        if (y <= model.geometry.NUM_BEAMS) {
           beginShape();
-          vertex(-distance, beamY - geometry.BEAM_WIDTH/2, -distance);
-          vertex(-distance, beamY + geometry.BEAM_WIDTH/2, -distance);
-          vertex(distance, beamY + geometry.BEAM_WIDTH/2, -distance);
-          vertex(distance, beamY - geometry.BEAM_WIDTH/2, -distance);
+          vertex(-distance, beamY - model.geometry.BEAM_WIDTH/2, -distance);
+          vertex(-distance, beamY + model.geometry.BEAM_WIDTH/2, -distance);
+          vertex(distance, beamY + model.geometry.BEAM_WIDTH/2, -distance);
+          vertex(distance, beamY - model.geometry.BEAM_WIDTH/2, -distance);
           endShape(CLOSE);
         }
         
         beginShape();
-        vertex(-geometry.BEAM_WIDTH/2, prevY, -prevDistance);
-        vertex(geometry.BEAM_WIDTH/2, prevY, -prevDistance);
-        vertex(geometry.BEAM_WIDTH/2, beamY, -distance);
-        vertex(-geometry.BEAM_WIDTH/2, beamY, -distance);
+        vertex(-model.geometry.BEAM_WIDTH/2, prevY, -prevDistance);
+        vertex(model.geometry.BEAM_WIDTH/2, prevY, -prevDistance);
+        vertex(model.geometry.BEAM_WIDTH/2, beamY, -distance);
+        vertex(-model.geometry.BEAM_WIDTH/2, beamY, -distance);
         endShape(CLOSE);
         
         beginShape();
-        vertex(prevDistance-geometry.BEAM_WIDTH/2, prevY, -prevDistance-geometry.BEAM_WIDTH/2);
-        vertex(prevDistance+geometry.BEAM_WIDTH/2, prevY, -prevDistance+geometry.BEAM_WIDTH/2);
-        vertex(distance+geometry.BEAM_WIDTH/2, beamY, -distance+geometry.BEAM_WIDTH/2);
-        vertex(distance-geometry.BEAM_WIDTH/2, beamY, -distance-geometry.BEAM_WIDTH/2);
+        vertex(prevDistance-model.geometry.BEAM_WIDTH/2, prevY, -prevDistance-model.geometry.BEAM_WIDTH/2);
+        vertex(prevDistance+model.geometry.BEAM_WIDTH/2, prevY, -prevDistance+model.geometry.BEAM_WIDTH/2);
+        vertex(distance+model.geometry.BEAM_WIDTH/2, beamY, -distance+model.geometry.BEAM_WIDTH/2);
+        vertex(distance-model.geometry.BEAM_WIDTH/2, beamY, -distance-model.geometry.BEAM_WIDTH/2);
         endShape(CLOSE);        
       }
       rotateY(MathUtils.HALF_PI); 
@@ -137,20 +137,20 @@ class UITrees extends UI3dComponent {
           break;
       }
       rotateY(-cry);
-      translate(clusterOffset * geometry.distances[clusterLevel], geometry.heights[clusterLevel] + clusterMountPoint, -geometry.distances[clusterLevel]);
+      translate(clusterOffset * model.geometry.distances[clusterLevel], model.geometry.heights[clusterLevel] + clusterMountPoint, -model.geometry.distances[clusterLevel]);
       
       switch (clusterFace) {
         case Geometry.FRONT_RIGHT:
         case Geometry.REAR_RIGHT:
         case Geometry.REAR_LEFT:
         case Geometry.FRONT_LEFT:
-          translate(geometry.distances[clusterLevel], 0, 0);
+          translate(model.geometry.distances[clusterLevel], 0, 0);
           rotateY(MathUtils.QUARTER_PI);
           cry += MathUtils.QUARTER_PI;
           break;
       }
       
-      rotateX(-geometry.angleFromAxis(geometry.heights[clusterLevel]));
+      rotateX(-model.geometry.angleFromAxis(model.geometry.heights[clusterLevel]));
       rotateZ(-clusterSkew * MathUtils.PI / 180);
       drawCubes(cluster, colors);
       
@@ -267,12 +267,7 @@ class UILoopRecorder extends UIWindow {
     });
     listener.onParameterChanged(null);
 
-    File file = new File(dataPath("Burning Man Playlist.json"));
-    if (file != null) {
-      automation[automationSlot.getValuei()].looping.setValue(true);
-      loadSet(file);
-      automation[automationSlot.getValuei()].start();
-    }
+    slotLabel.setLabel(labels[automationSlot.getValuei()] = "Burning Man Playlist.json");
   }
 
   public void saveSet(File file) {
@@ -387,7 +382,7 @@ class UIChannelFaders extends UI2dContext {
     }
     
     float xPos = this.width - 2 * (FADER_WIDTH + PADDING) - SPACER;
-    new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-1*BUTTON_HEIGHT) {
+    UISlider masterSlider = new UISlider(UISlider.Direction.VERTICAL, xPos, PADDING, FADER_WIDTH, this.height-3*PADDING-1*BUTTON_HEIGHT) {
       @Override
       protected void onDraw(UI ui, PGraphics pg) {
         int primaryColor = ui.theme.getPrimaryColor();
@@ -395,10 +390,14 @@ class UIChannelFaders extends UI2dContext {
         super.onDraw(ui, pg);
         ui.theme.setPrimaryColor(primaryColor);
       }
-    }
-    .setParameter(output.brightness)
+    };
+    masterSlider
     .setShowLabel(false)
     .addToContainer(this);
+
+    if (engine.enableOutputBigtree) {
+      masterSlider.setParameter(output.brightness);
+    }
     
     LXParameterListener listener;
     lx.engine.focusedChannel.addListener(listener = new LXParameterListener() {
@@ -944,9 +943,9 @@ class UIMapping extends UIWindow {
     new UIButton(4, yPos, this.width-8, 20) {
       void onToggle(boolean active) {
         if (active) {
-          String backupFileName = CLUSTER_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
-          saveStream(backupFileName, CLUSTER_CONFIG_FILE);
-          saveJSONToFile(clusterConfig, CLUSTER_CONFIG_FILE);
+          String backupFileName = engine.CLUSTER_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
+          saveStream(backupFileName, engine.CLUSTER_CONFIG_FILE);
+          engine.saveJSONToFile(clusterConfig, engine.CLUSTER_CONFIG_FILE);
           setLabel("Saved. Restart needed.");
         }
       }

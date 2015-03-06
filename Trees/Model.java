@@ -151,9 +151,11 @@ class Model extends LXModel {
    */
   public final List<Cube> cubes;
 
+  public final static Geometry geometry = new Geometry();
+
   private final ArrayList<ModelTransform> modelTransforms = new ArrayList<ModelTransform>();
     
-  Model(Geometry geometry, List<TreeConfig> clusterConfig) {
+  Model(List<TreeConfig> clusterConfig) {
     super(new Fixture(geometry, clusterConfig));
     Fixture f = (Fixture) this.fixtures.get(0);
     this.trees = Collections.unmodifiableList(f.trees);

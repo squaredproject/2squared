@@ -137,13 +137,13 @@ class MidiEngine {
             
           case APC40.MASTER_TRACK:
           case APC40.SHIFT:
-            uiDeck.select();
+            if (uiDeck != null) uiDeck.select();
             break;
           case APC40.BANK_UP:
-            uiDeck.scroll(-1);
+            if (uiDeck != null) uiDeck.scroll(-1);
             break;
           case APC40.BANK_DOWN:
-            uiDeck.scroll(1);
+            if (uiDeck != null) uiDeck.scroll(1);
             break;
           case APC40.BANK_RIGHT:
             lx.engine.focusedChannel.increment();
@@ -157,7 +157,7 @@ class MidiEngine {
         protected void controlChange(LXMidiControlChange controller) {
           switch (controller.getCC()) {
           case APC40.CUE_LEVEL:
-            uiDeck.knob(controller.getValue());
+            if (uiDeck != null) uiDeck.knob(controller.getValue());
             break;
           }
         }

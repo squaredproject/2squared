@@ -353,6 +353,7 @@ class LightningLine {
   private final float propagationSpeed;
   private final float lineWidth;
   private float wideningStartTime = 0;
+  @SuppressWarnings("unchecked")
   private ArrayList<LightningLine> forks = new ArrayList();
   LightningLine(long startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepthLeft, float forkingChance){
     this.propagationSpeed = propagationSpeed;

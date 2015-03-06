@@ -114,6 +114,7 @@ class LibNFC {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public LibNFC() throws Exception{
         num_readers = 0;
         max_num_readers = 10;
@@ -178,7 +179,7 @@ class LibNFC {
 
         String []connstrings = new String[current_num_readers];
         for (int i = 0; i < current_num_readers; ++i){
-            connstrings[i] = m_connstrings.getString(i*NFC_BUFSIZE_CONNSTRING, false);
+            connstrings[i] = m_connstrings.getString(i*NFC_BUFSIZE_CONNSTRING);
         }
 
         add_unconnected_readers(current_num_readers, connstrings);
