@@ -1,6 +1,9 @@
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import heronarts.lx.LX;
+import heronarts.lx.LXChannel;
 import heronarts.lx.LXUtils;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.modulator.Accelerator;
@@ -22,8 +25,8 @@ class Fireflies extends TSTriggerablePattern {
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private float radius = 40;
   private int numFireflies = 0;
-  private Firefly[] fireflies;
-  private Firefly[] queue;
+  private List<Firefly> fireflies;
+  private List<Firefly> queue;
   private SinLFO[] blinkers = new SinLFO[10];
   private LinearEnvelope decay = new LinearEnvelope(0,0,3000);
   
@@ -36,11 +39,11 @@ class Fireflies extends TSTriggerablePattern {
     public int blinkIndex = 0;
 
     public Firefly() {
-      theta = MathUtils.random(0, 360);
+      theta = MathUtils.random(0f, 360f);
       yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(-1,1), MathUtils.random(0.25f, 1));
+      velocity = new Vec2D(MathUtils.random(-1f,1f), MathUtils.random(0.25f, 1f));
       radius = 30;
-      blinkIndex = (int) MathUtils.random(0, blinkers.length);
+      blinkIndex = MathUtils.random(0, blinkers.length);
     }
 
     public void move(float speed) {
@@ -57,7 +60,7 @@ class Fireflies extends TSTriggerablePattern {
   Fireflies(LX lx, int initial_flyCount, float initial_speed, float initial_hue) {
     super(lx);
 
-    patternMode = PATTERN_MODE_CUSTOM;
+    patternMode = PATTERN_MODE_FIRED;
 
     addParameter(flyCount);
     addParameter(speed);
@@ -70,50 +73,22 @@ class Fireflies extends TSTriggerablePattern {
 
     for (int i = 0; i < blinkers.length; ++i) {
       blinkers[i] = new SinLFO(0, 75, 1000  * MathUtils.random(1.0f, 3.0f));      
-      addModulator(blinkers[i]).setValue(MathUtils.random(0,50)).start();
+      addModulator(blinkers[i]).setValue(MathUtils.random(0f,50f)).start();
     }
     
-    fireflies = new Firefly[numFireflies];
-    queue = new Firefly[0];
+    fireflies = new ArrayList<Firefly>(numFireflies);
+    queue = new ArrayList<Firefly>();
     for (int i = 0; i < numFireflies; ++i) {
-      fireflies[i] = new Firefly();
+      fireflies.add(new Firefly());
     }
-  }
-  
-  public void addToQueue(int numFlies) {
-    int oldQueueLength = queue.length;
-    queue = Arrays.copyOf(queue, oldQueueLength + numFlies);
-    for (int i = oldQueueLength; i < queue.length; ++i) {
-      queue[i] = new Firefly();
-    }
-  }
-
-  public Firefly removeFromQueue(int index) {
-    Firefly[] newQueue = Arrays.copyOf(queue, queue.length - 1);
-    for (int i = index; i < newQueue.length; ++i) {
-      newQueue[i] = queue[i + 1];
-    }
-    Firefly addedFly = queue[index];
-    queue = newQueue;
-    return addedFly;
-  }
-
-  public void addFirefly(Firefly fly) {
-    Firefly[] newFireflies = Arrays.copyOf(fireflies, fireflies.length + 1);
-    newFireflies[newFireflies.length - 1] = fly;
-    fireflies = newFireflies;
-  }
-  
-  public void removeFirefly(int index) {
-    Firefly[] newFireflies = Arrays.copyOf(fireflies, fireflies.length - 1);
-    for (int i = index; i < newFireflies.length; ++i) {
-      newFireflies[i] = fireflies[i + 1];
-    }
-    fireflies = newFireflies;
   }
   
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
+
+    if (!triggered && fireflies.size() == 0) {
+      setCallRun(false);
+    }
 
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
@@ -129,27 +104,29 @@ class Fireflies extends TSTriggerablePattern {
       numFireflies = flyCount.getValuei();  
     }
     
-    if (fireflies.length < numFireflies) { 
-      addToQueue(numFireflies - fireflies.length);
-    }
-
-    for (int i = 0; i < queue.length; ++i) { //only add fireflies when they're about to blink on
-      if (blinkers[queue[i].blinkIndex].getValuef() > 70) {
-        addFirefly(removeFromQueue(i));
+    if (fireflies.size() < numFireflies) { 
+      for (int i = 0; i < numFireflies - fireflies.size(); ++i) {
+        queue.add(new Firefly());
       }
     }
 
-    for (int i = 0; i < fireflies.length; ++i) { //remove fireflies while blinking off
-      if (numFireflies < fireflies.length) {
-        if (blinkers[fireflies[i].blinkIndex].getValuef() > 70) {
-          removeFirefly(i);
+    for (int i = 0; i < queue.size(); ++i) { //only add fireflies when they're about to blink on
+      if (blinkers[queue.get(i).blinkIndex].getValuef() > 70) {
+        fireflies.add(queue.remove(i));
+      }
+    }
+
+    for (int i = 0; i < fireflies.size(); ++i) { //remove fireflies while blinking off
+      if (numFireflies < fireflies.size()) {
+        if (blinkers[fireflies.get(i).blinkIndex].getValuef() > 70) {
+          fireflies.remove(i);
         }
       }
     }
 
-    for (int i = 0; i < fireflies.length; ++i) {
-      if (fireflies[i].yPos > model.yMax + radius) {
-          fireflies[i].yPos = model.yMin - radius;
+    for (int i = 0; i < fireflies.size(); ++i) {
+      if (fireflies.get(i).yPos > model.yMax + radius) {
+          fireflies.get(i).yPos = model.yMin - radius;
       }
     }
 
@@ -170,7 +147,7 @@ class Fireflies extends TSTriggerablePattern {
     }
 
     for (Firefly firefly: fireflies) {
-      firefly.move(speed.getValuef());
+      firefly.move(speed.getValuef() * (float)deltaMs * 60 / 1000);
     }
   }
 
@@ -238,18 +215,18 @@ class Fire extends TSTriggerablePattern {
 
   private float height = 0;
   private int numFlames = 75;
-  private Flame[] flames;
+  private List<Flame> flames;
   
   private class Flame {
     public float flameHeight = 0;
-    public float theta = MathUtils.random(0, 360);
+    public float theta = MathUtils.random(0f, 360f);
     public LinearEnvelope decay = new LinearEnvelope(0,0,0);
   
     public Flame(float maxHeight, boolean groundStart){
-      float flameHeight = MathUtils.random(0, maxHeight);
+      float flameHeight = MathUtils.random(0f, maxHeight);
       decay.setRange(75, model.yMax * flameHeight, 1200 * flameHeight);
       if (!groundStart) {
-        decay.setBasis(MathUtils.random(0,1));
+        decay.setBasis(MathUtils.random(0f,1f));
       }
       addModulator(decay).start();
     }
@@ -258,7 +235,7 @@ class Fire extends TSTriggerablePattern {
   Fire(LX lx) {
     super(lx);
 
-    patternMode = PATTERN_MODE_CUSTOM;
+    patternMode = PATTERN_MODE_FIRED;
 
     addParameter(maxHeight);
     addParameter(flameSize);
@@ -266,39 +243,39 @@ class Fire extends TSTriggerablePattern {
     addParameter(hue);
     addModulator(fireHeight);
 
-    flames = new Flame[numFlames];
+    flames = new ArrayList<Flame>(numFlames);
     for (int i = 0; i < numFlames; ++i) {
-      flames[i] = new Flame(height, false);
+      flames.add(new Flame(height, false));
     }
   }
 
   public void updateNumFlames(int numFlames) {
-    Flame[] newFlames = Arrays.copyOf(flames, numFlames);
-    if (flames.length < numFlames) {
-      for (int i = flames.length; i < numFlames; ++i) {
-        newFlames[i] = new Flame(height, false);
-      }
+    for (int i = flames.size(); i < numFlames; ++i) {
+      flames.add(new Flame(height, false));
     }
-    flames = newFlames;
   }
 
   public void run(double deltaMs) {
-    if (!triggerableModeEnabled) {
     if (getChannel().getFader().getNormalized() == 0) return;
 
+    if (!triggered && flames.size() == 0) {
+      setCallRun(false);
+    }
+
+    if (!triggerableModeEnabled) {
       height = maxHeight.getValuef();
       numFlames = (int) flameCount.getValuef();
     } else {
       height = fireHeight.getValuef();
     }
 
-    if (flames.length != numFlames) {
+    if (flames.size() != numFlames) {
       updateNumFlames(numFlames);
     }
-    for (int i = 0; i < flames.length; ++i) {
-      if (flames[i].decay.finished()) {
-        removeModulator(flames[i].decay);
-        flames[i] = new Flame(height, true);
+    for (int i = 0; i < flames.size(); ++i) {
+      if (flames.get(i).decay.finished()) {
+        removeModulator(flames.get(i).decay);
+        flames.set(i, new Flame(height, true));
       }
     }
 
@@ -307,9 +284,9 @@ class Fire extends TSTriggerablePattern {
       float cBrt = 0;
       float cHue = 0;
       float flameWidth = flameSize.getValuef();
-      for (int i = 0; i < flames.length; ++i) {
-        if (Math.abs(flames[i].theta - cube.transformedTheta) < (flameWidth * (1- yn))) {
-          cBrt = Math.min(100, Math.max(0, 100 + cBrt- 2 * Math.abs(cube.transformedY - flames[i].decay.getValuef()) - flames[i].decay.getBasisf() * 25)) ;
+      for (int i = 0; i < flames.size(); ++i) {
+        if (Math.abs(flames.get(i).theta - cube.transformedTheta) < (flameWidth * (1- yn))) {
+          cBrt = Math.min(100, Math.max(0, 100 + cBrt- 2 * Math.abs(cube.transformedY - flames.get(i).decay.getValuef()) - flames.get(i).decay.getBasisf() * 25)) ;
           cHue = Math.max(0,  (cHue + cBrt * 0.7f) * 0.5f);
         }
       }
@@ -343,7 +320,7 @@ class Bubbles extends TSTriggerablePattern {
   final BasicParameter hue = new BasicParameter("HUE", 0, 0, 360);
   private LinearEnvelope decay = new LinearEnvelope(0,0,2000);
   private int numBubbles = 0;
-  private Bubble[] bubbles;
+  private List<Bubble> bubbles;
   
   private class Bubble {
     public float theta = 0;
@@ -353,11 +330,11 @@ class Bubbles extends TSTriggerablePattern {
     public float radius = 0;
 
     public Bubble(float maxRadius) {
-      theta = MathUtils.random(0, 360);
-      bHue = MathUtils.random(0, 30);
-      baseSpeed = MathUtils.random(2, 5);
-      radius = MathUtils.random(5, maxRadius);
-      yPos = model.yMin - radius * MathUtils.random(1,10);
+      theta = MathUtils.random(0f, 360f);
+      bHue = MathUtils.random(0f, 30f);
+      baseSpeed = MathUtils.random(2f, 5f);
+      radius = MathUtils.random(5f, maxRadius);
+      yPos = model.yMin - radius * MathUtils.random(1f,10f);
     }
 
     public void move(float speed) {
@@ -368,7 +345,7 @@ class Bubbles extends TSTriggerablePattern {
   Bubbles(LX lx) {
     super(lx);
 
-    patternMode = PATTERN_MODE_CUSTOM;
+    patternMode = PATTERN_MODE_FIRED;
 
     addParameter(ballCount);
     addParameter(maxRadius);
@@ -376,30 +353,24 @@ class Bubbles extends TSTriggerablePattern {
     addParameter(hue);
     addModulator(decay);
     
-    bubbles = new Bubble[numBubbles];
+    bubbles = new ArrayList<Bubble>(numBubbles);
     for (int i = 0; i < numBubbles; ++i) {
-      bubbles[i] = new Bubble(maxRadius.getValuef());
+      bubbles.add(new Bubble(maxRadius.getValuef()));
     }
   }
   
   public void addBubbles(int numBubbles) {
-    Bubble[] newBubbles = Arrays.copyOf(bubbles, numBubbles);
-    for (int i = bubbles.length; i < numBubbles; ++i) {
-      newBubbles[i] = new Bubble(maxRadius.getValuef());
+    for (int i = bubbles.size(); i < numBubbles; ++i) {
+      bubbles.add(new Bubble(maxRadius.getValuef()));
     }
-    bubbles = newBubbles;
-  }
-  
-  public void removeBubble(int index) {
-    Bubble[] newBubbles = Arrays.copyOf(bubbles, bubbles.length - 1);
-    for (int i = index; i < newBubbles.length; ++i) {
-      newBubbles[i] = bubbles[i + 1];
-    }
-    bubbles = newBubbles;
   }
   
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
+
+    if (!triggered && bubbles.size() == 0) {
+      setCallRun(false);
+    }
 
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
@@ -414,16 +385,17 @@ class Bubbles extends TSTriggerablePattern {
       numBubbles = (int) decay.getValuef();
     }
     
-    if (bubbles.length < numBubbles) {
+    if (bubbles.size() < numBubbles) {
       addBubbles(numBubbles);
     }
     
-    for (int i = 0; i < bubbles.length; ++i) {
-      if (bubbles[i].yPos > model.yMax + bubbles[i].radius) { //bubble is now off screen
-        if (numBubbles < bubbles.length) {
-          removeBubble(i);
+    for (int i = 0; i < bubbles.size(); ++i) {
+      if (bubbles.get(i).yPos > model.yMax + bubbles.get(i).radius) { //bubble is now off screen
+        if (numBubbles < bubbles.size()) {
+          bubbles.remove(i);
+          i--;
         } else {
-          bubbles[i] = new Bubble(maxRadius.getValuef());
+          bubbles.set(i, new Bubble(maxRadius.getValuef()));
         }
       }
     }
@@ -446,7 +418,7 @@ class Bubbles extends TSTriggerablePattern {
         }
       }
     
-      bubble.move(speed.getValuef());
+      bubble.move(speed.getValuef() * (float)deltaMs * 60 / 1000);
     }
   }
 
@@ -480,9 +452,9 @@ class Voronoi extends TSPattern {
     public Vec2D velocity = new Vec2D(0,0);
     
     public Site() {
-      theta = MathUtils.random(0, 360);
+      theta = MathUtils.random(0f, 360f);
       yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(-1,1), MathUtils.random(-1,1));
+      velocity = new Vec2D(MathUtils.random(-1f,1f), MathUtils.random(-1f,1f));
     }
     
     public void move(float speed) {
@@ -530,7 +502,7 @@ class Voronoi extends TSPattern {
       );
     }
     for (Site site: sites) {
-      site.move(speed.getValuef());
+      site.move(speed.getValuef() * (float)deltaMs * 60 / 1000);
     }
   }
 }
@@ -548,9 +520,9 @@ class Cells extends TSPattern {
     public Vec2D velocity = new Vec2D(0,0);
     
     public Site() {
-      theta = MathUtils.random(0, 360);
+      theta = MathUtils.random(0f, 360f);
       yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(-1,1), MathUtils.random(-1,1));
+      velocity = new Vec2D(MathUtils.random(-1f,1f), MathUtils.random(-1f,1f));
     }
     
     public void move(float speed) {
@@ -598,7 +570,7 @@ class Cells extends TSPattern {
       );
     }
     for (Site site: sites) {
-      site.move(speed.getValuef());
+      site.move(speed.getValuef() * (float)deltaMs * 60 / 1000);
     }
   }
 }
@@ -617,9 +589,9 @@ class Fumes extends TSPattern {
     public Vec2D velocity = new Vec2D(0,0);
     
     public Site() {
-      theta = MathUtils.random(0, 360);
+      theta = MathUtils.random(0f, 360f);
       yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(0,1), MathUtils.random(0,0.75f));
+      velocity = new Vec2D(MathUtils.random(0f,1f), MathUtils.random(0f,0.75f));
     }
     
     public void move(float speed) {
@@ -672,7 +644,7 @@ class Fumes extends TSPattern {
       );
     }
     for (Site site: sites) {
-      site.move(speed.getValuef());
+      site.move(speed.getValuef() * (float)deltaMs * 60 / 1000);
     }
   }
 }
@@ -730,12 +702,12 @@ class Pulley extends TSTriggerablePattern { //ported from SugarCubes
     int i = 0;
     for (int j = 0; j < NUM_DIVISIONS; ++j) {
       if (isRising) {
-        baseSpeed[j] = MathUtils.random(20, 33);
+        baseSpeed[j] = MathUtils.random(20f, 33f);
         gravity[j].setSpeed(baseSpeed[j], 0).start();
       } 
       else {
         gravity[j].setVelocity(0).setAcceleration(-420);
-        delays[j].setPeriod(MathUtils.random(0, 500)).trigger();
+        delays[j].setPeriod(MathUtils.random(0f, 500f)).trigger();
       }
       ++i;
     }
@@ -888,7 +860,7 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   boolean triggered = true; //has the trigger to rise/fall been pulled
   boolean autoMode = true; //triggerMode vs autoMode.
   private int numPulleys = 0;
-  private Pulley[] pulleys = new Pulley[numPulleys];
+  private List<Pulley> pulleys = new ArrayList<Pulley>(numPulleys);
   
 
   private class Pulley {
@@ -900,9 +872,9 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
     public LinearEnvelope maxBrt = new LinearEnvelope(0,0,0);
     
     public Pulley() {
-      baseSpeed = MathUtils.random(10,50);
-      baseHue = MathUtils.random(0, 30);
-      delay.setPeriod(MathUtils.random(0,500));
+      baseSpeed = MathUtils.random(10f,50f);
+      baseHue = MathUtils.random(0f, 30f);
+      delay.setPeriod(MathUtils.random(0f,500f));
       gravity.setSpeed(this.baseSpeed, 0);
       if (autoMode) {
         maxBrt.setRange(0,1,3000);
@@ -921,7 +893,7 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   Pulleys(LX lx) {
     super(lx);
 
-    patternMode = PATTERN_MODE_CUSTOM;
+    patternMode = PATTERN_MODE_FIRED;
 
     addParameter(sz);
     addParameter(beatAmount);
@@ -931,16 +903,16 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
     onParameterChanged(speed);
     addModulator(dropPulley);
 
-    for (int i = 0; i < pulleys.length; i++) {
-      pulleys[i] = new Pulley();
+    for (int i = 0; i < numPulleys; i++) {
+      pulleys.add(new Pulley());
     } 
   }
 
   public void onParameterChanged(LXParameter parameter) {
     super.onParameterChanged(parameter);
     if (parameter == speed && isRising) {
-      for (int i = 0; i < pulleys.length; i++) {
-        pulleys[i].gravity.setVelocity(pulleys[i].baseSpeed * speed.getValuef());
+      for (int i = 0; i < pulleys.size(); i++) {
+        pulleys.get(i).gravity.setVelocity(pulleys.get(i).baseSpeed * speed.getValuef());
       }
     }
     if (parameter == automated) {
@@ -954,13 +926,13 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
     if (autoMode) {
       isRising = !isRising;
     }
-    for (int j = 0; j < pulleys.length; j++) {
+    for (int j = 0; j < pulleys.size(); j++) {
       if (isRising) {
-        pulleys[j].gravity.setSpeed(pulleys[j].baseSpeed,0).start();
+        pulleys.get(j).gravity.setSpeed(pulleys.get(j).baseSpeed,0).start();
       } 
       else {
-        pulleys[j].gravity.setVelocity(0).setAcceleration(-420);
-        pulleys[j].delay.trigger();
+        pulleys.get(j).gravity.setVelocity(0).setAcceleration(-420);
+        pulleys.get(j).delay.trigger();
       }
     }
   }
@@ -968,12 +940,16 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   public void run(double deltaMS) {
     if (getChannel().getFader().getNormalized() == 0) return;
 
+    if (!triggered && pulleys.size() == 0) {
+      setCallRun(false);
+    }
+
     if (autoMode) {
       numPulleys = pulleyCount.getValuei();
       
-      if (numPulleys < pulleys.length) {
-        for (int i = numPulleys; i < pulleys.length; i++) {
-          pulleys[i].maxBrt.start();  //fadeOut then delete
+      if (numPulleys < pulleys.size()) {
+        for (int i = numPulleys; i < pulleys.size(); i++) {
+          pulleys.get(i).maxBrt.start();  //fadeOut then delete
         }
       }
     } else {
@@ -982,14 +958,14 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
       }
     }
     
-    if (numPulleys > pulleys.length) {
+    if (numPulleys > pulleys.size()) {
       addPulleys(numPulleys);
     }
 
-    for (int i = 0; i < pulleys.length; i++) {
-      if (pulleys[i].maxBrt.finished()) {
-        if (pulleys[i].maxBrt.getValuef() == 1) {
-          pulleys[i].maxBrt.setRange(1,0,3000).reset();
+    for (int i = 0; i < pulleys.size(); i++) {
+      if (pulleys.get(i).maxBrt.finished()) {
+        if (pulleys.get(i).maxBrt.getValuef() == 1) {
+          pulleys.get(i).maxBrt.setRange(1,0,3000).reset();
         } else {
           removePulley(i);
           numPulleys -= 1;
@@ -997,22 +973,22 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
       }
     }
 
-    for (int i = 0; i < pulleys.length; i++) {
-      if (pulleys[i].turnOff.click()) {
-        pulleys[i].maxBrt.start();
+    for (int i = 0; i < pulleys.size(); i++) {
+      if (pulleys.get(i).turnOff.click()) {
+        pulleys.get(i).maxBrt.start();
       }
     }
     
     if(triggered) {
       if (!isRising) {
-        for (int j = 0; j < pulleys.length; ++j) {
-          if (pulleys[j].delay.click()) {
-            pulleys[j].gravity.start();
-            pulleys[j].delay.stop();
+        for (int j = 0; j < pulleys.size(); ++j) {
+          if (pulleys.get(j).delay.click()) {
+            pulleys.get(j).gravity.start();
+            pulleys.get(j).delay.stop();
           }
-          if (pulleys[j].gravity.getValuef() < 0) { //bouncebounce
-            pulleys[j].gravity.setValue(-pulleys[j].gravity.getValuef());
-            pulleys[j].gravity.setVelocity(-pulleys[j].gravity.getVelocityf() * MathUtils.random(0.74f,0.84f));
+          if (pulleys.get(j).gravity.getValuef() < 0) { //bouncebounce
+            pulleys.get(j).gravity.setValue(-pulleys.get(j).gravity.getValuef());
+            pulleys.get(j).gravity.setVelocity(-pulleys.get(j).gravity.getVelocityf() * MathUtils.random(0.74f,0.84f));
           }
         }
       }
@@ -1026,9 +1002,9 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
       for (Cube cube : model.cubes) {
         float cBrt = 0;
         float cHue = 0;
-        for (int j = 0; j < pulleys.length; ++j) {
-          cHue = (lx.getBaseHuef() + Math.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f + pulleys[j].baseHue) % 360;
-          cBrt += Math.max(0, pulleys[j].maxBrt.getValuef() * (100 - Math.abs(cube.transformedY/2 - 50 - pulleys[j].gravity.getValuef())*falloff));
+        for (int j = 0; j < pulleys.size(); ++j) {
+          cHue = (lx.getBaseHuef() + Math.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f + pulleys.get(j).baseHue) % 360;
+          cBrt += Math.max(0, pulleys.get(j).maxBrt.getValuef() * (100 - Math.abs(cube.transformedY/2 - 50 - pulleys.get(j).gravity.getValuef())*falloff));
         }
         float yn =  cube.transformedY/model.yMax;
         colors[cube.index] = lx.hsb(
@@ -1041,14 +1017,13 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   }
 
   public void addPulleys(int numPulleys) {
-    Pulley[] newPulleys = Arrays.copyOf(pulleys, numPulleys);
-    for (int i = pulleys.length; i < numPulleys; ++i) {
+    for (int i = pulleys.size(); i < numPulleys; ++i) {
       Pulley newPulley = new Pulley();
       if (isRising) {
         newPulley.gravity.setSpeed(newPulley.baseSpeed,0).start();
       } else {
         if (autoMode) {
-          newPulley.gravity.setValue(MathUtils.random(0,225));
+          newPulley.gravity.setValue(MathUtils.random(0f,225f));
         } else {
           newPulley.gravity.setValue(250);
           newPulley.turnOff.start();
@@ -1057,19 +1032,12 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
         newPulley.gravity.setVelocity(0).setAcceleration(-420);
         newPulley.delay.trigger();
       }
-      newPulleys[i] = newPulley;
+      pulleys.add(newPulley);
     }
-    pulleys = newPulleys;
   }
 
   public void removePulley(int index) {
-    Pulley[] newPulleys = Arrays.copyOf(pulleys, pulleys.length - 1);
-    Pulley pulley = pulleys[index];
-
-    for (int i = index; i < newPulleys.length; ++i) {
-      newPulleys[i] = pulleys[i+1];
-    }
-    pulleys = newPulleys;
+    Pulley pulley = pulleys.remove(index);
     removeModulator(pulley.turnOff);
     removeModulator(pulley.gravity);
     removeModulator(pulley.maxBrt);

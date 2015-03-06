@@ -12,14 +12,14 @@ class Twinkle extends TSPattern {
   final BasicParameter brightnessParam = new BasicParameter("Brightness", 0.8, 0.5, 1);
   final int numBrights = 18;
   final int density = 20;
-  long[] sparkleTimeOuts;
+  int[] sparkleTimeOuts;
   int[] cubeToModulatorMapping;
 
   Twinkle(LX lx) {
     super(lx);
     addParameter(brightnessParam);
 
-    sparkleTimeOuts = new long[model.cubes.size()];
+    sparkleTimeOuts = new int[model.cubes.size()];
     cubeToModulatorMapping = new int[model.cubes.size()];
 
     for (int i = 0; i < cubeToModulatorMapping.length; i++ ) {
@@ -32,18 +32,18 @@ class Twinkle extends TSPattern {
 
     for (int i = 0; i < bright.length; i++ ) {
       if (i <= numLight) {
-        if (MathUtils.random(1) < 0.5) {
-          bright[i] = new SinLFO(MathUtils.random(80, 100), 0, MathUtils.random(2300, 7700));
+        if (MathUtils.random(1f) < 0.5) {
+          bright[i] = new SinLFO(MathUtils.random(80f, 100f), 0, MathUtils.random(2300f, 7700f));
         } 
         else {
-          bright[i] = new SinLFO(0, MathUtils.random(70, 90), MathUtils.random(5300, 9200));
+          bright[i] = new SinLFO(0, MathUtils.random(70f, 90f), MathUtils.random(5300f, 9200f));
         }
       } 
       else if ( i < numDarkReverse ) {
-        bright[i] = new SinLFO(MathUtils.random(50, 70), 0, MathUtils.random(3300, 11300));
+        bright[i] = new SinLFO(MathUtils.random(50f, 70f), 0, MathUtils.random(3300f, 11300f));
       } 
       else {
-        bright[i] = new SinLFO(0, MathUtils.random(30, 80), MathUtils.random(3100, 9300));
+        bright[i] = new SinLFO(0, MathUtils.random(30f, 80f), MathUtils.random(3100f, 9300f));
       }
       addModulator(bright[i]).start();
     }
@@ -53,12 +53,12 @@ class Twinkle extends TSPattern {
     if (getChannel().getFader().getNormalized() == 0) return;
 
     for (Cube cube : model.cubes) {
-      if (sparkleTimeOuts[cube.index] < System.currentTimeMillis()) {
+      if (sparkleTimeOuts[cube.index] < Utils.millis()) {
         // randomly change modulators        
-        if (MathUtils.random(10) <= 3) {
+        if (MathUtils.random(10f) <= 3) {
           cubeToModulatorMapping[cube.index] = MathUtils.random(numBrights);
         }
-        sparkleTimeOuts[cube.index] = System.currentTimeMillis() + MathUtils.random(11100, 23300);
+        sparkleTimeOuts[cube.index] = Utils.millis() + MathUtils.random(11100, 23300);
       }
       colors[cube.index] = lx.hsb(
       0, 

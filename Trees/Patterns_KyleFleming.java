@@ -137,7 +137,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTri
   MultiObjectPattern(LX lx, boolean shouldAutofade) {
     super(lx);
 
-    patternMode = PATTERN_MODE_CUSTOM;
+    patternMode = PATTERN_MODE_FIRED;
     
     frequency = getFrequencyParameter();
     addParameter(frequency);
@@ -168,6 +168,8 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTri
         pauseTimerCountdown = MathUtils.random(delay / 2) + delay * 3 / 4;
         makeObject(0);
       }
+    } else if (objects.size() == 0) {
+      setCallRun(false);
     }
     
     if (shouldAutofade) {
@@ -323,8 +325,8 @@ class Explosions extends MultiObjectPattern<Explosion> {
   
   Explosion generateObject(float strength) {
     Explosion explosion = new Explosion(lx);
-    explosion.origin = new Vec2D(MathUtils.random(360), MathUtils.random(model.yMin + 50, model.yMax - 50));
-    explosion.hue = (int) MathUtils.random(360);
+    explosion.origin = new Vec2D(MathUtils.random(360f), MathUtils.random(model.yMin + 50, model.yMax - 50));
+    explosion.hue = (int) MathUtils.random(360f);
     return explosion;
   }
 }
@@ -352,7 +354,7 @@ class Explosion extends MultiObject {
   }
   
   void init() {
-    explosionThetaOffset = MathUtils.random(360);
+    explosionThetaOffset = MathUtils.random(360f);
     implosionRadius = new Accelerator(0, 700, -accelOfImplosion);
     addModulator(implosionRadius).start();
     explosionFade = new LinearEnvelope(1, 0, 1000);
@@ -460,8 +462,8 @@ class Wisps extends MultiObjectPattern<Wisp> {
     wisp.runningTimerEnd = 5000 / speed.getValuef();
     float pathDirection = (float)(direction.getValuef()
       + MathUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
-    float pathDist = MathUtils.random(200, 400);
-    float startTheta = MathUtils.random(360);
+    float pathDist = MathUtils.random(200f, 400f);
+    float startTheta = MathUtils.random(360f);
     float startY = MathUtils.random(Math.max(model.yMin, model.yMin - pathDist * MathUtils.sin(MathUtils.PI * pathDirection / 180)),
       Math.min(model.yMax, model.yMax - pathDist * MathUtils.sin(MathUtils.PI * pathDirection / 180)));
     wisp.startPoint = new Vec2D(startTheta, startY);
@@ -470,7 +472,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
     wisp.endPoint.addSelf(wisp.startPoint);
     wisp.hue = (int)(baseColor.getValuef()
       + MathUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
-    wisp.thickness = 10 * thickness.getValuef() + MathUtils.random(-3, 3);
+    wisp.thickness = 10 * thickness.getValuef() + MathUtils.random(-3f, 3f);
     
     return wisp;
   }
@@ -504,11 +506,11 @@ class Rain extends MultiObjectPattern<RainDrop> {
   RainDrop generateObject(float strength) {
     RainDrop rainDrop = new RainDrop(lx);
 
-    rainDrop.runningTimerEnd = 180 + MathUtils.random(20);
-    rainDrop.theta = MathUtils.random(360);
+    rainDrop.runningTimerEnd = 180 + MathUtils.random(20f);
+    rainDrop.theta = MathUtils.random(360f);
     rainDrop.startY = model.yMax + 20;
     rainDrop.endY = model.yMin - 20;
-    rainDrop.hue = 200 + (int)MathUtils.random(20);
+    rainDrop.hue = 200 + (int)MathUtils.random(20f);
     rainDrop.thickness = 10 * (1.5f + MathUtils.random(.6f));
     
     return rainDrop;
@@ -629,7 +631,7 @@ class RandomColor extends TSPattern {
     if (frameCount >= speed.getValuef()) {
       for (Cube cube : model.cubes) {
         colors[cube.index] = lx.hsb(
-          MathUtils.random(360),
+          MathUtils.random(360f),
           100,
           100
         );
@@ -640,6 +642,8 @@ class RandomColor extends TSPattern {
 }
 
 class ColorStrobe extends TSTriggerablePattern {
+
+  double timer = 0;
   
   ColorStrobe(LX lx) {
     super(lx);
@@ -647,7 +651,12 @@ class ColorStrobe extends TSTriggerablePattern {
   
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
-    setColors(lx.hsb(MathUtils.random(360), 100, 100));
+
+    timer += deltaMs;
+    if (timer > 16) {
+      timer = 0;
+      setColors(lx.hsb(MathUtils.random(360f), 100, 100));
+    }
   }
 }
 
@@ -657,8 +666,8 @@ class RandomColorGlitch extends TSPattern {
     super(lx);
   }
   
-  final int brokenCubeIndex = (int)MathUtils.random(model.cubes.size());
-  final int cubeColor = (int)MathUtils.random(360);
+  final int brokenCubeIndex = MathUtils.random(model.cubes.size());
+  final int cubeColor = MathUtils.random(360);
   
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
@@ -666,7 +675,7 @@ class RandomColorGlitch extends TSPattern {
     for (Cube cube : model.cubes) {
       if (cube.index == brokenCubeIndex) {
         colors[cube.index] = lx.hsb(
-          MathUtils.random(360),
+          MathUtils.random(360f),
           100,
           100
         );
@@ -918,12 +927,12 @@ class StaticEffect extends Effect {
   protected void run(double deltaMs) {
     if (amount.getValue() > 0) {
       if (isCreatingStatic) {
-        double chance = MathUtils.random(1);
+        float chance = MathUtils.random(1f);
         if (chance > amount.getValue()) {
           isCreatingStatic = false;
         }
       } else {
-        double chance = MathUtils.random(1);
+        float chance = MathUtils.random(1f);
         if (chance < amount.getValue()) {
           isCreatingStatic = true;
         }
@@ -1019,7 +1028,7 @@ class ColorStrobeTextureEffect extends Effect {
 
   public void run(double deltaMs) {
     if (amount.getValue() > 0) {
-      float newHue = MathUtils.random(360);
+      float newHue = MathUtils.random(360f);
       int newColor = lx.hsb(newHue, 100, 100);
       for (int i = 0; i < colors.length; i++) {
         int oldColor = colors[i];
@@ -1221,5 +1230,14 @@ class GalaxyCloud extends TSPattern {
 
       colors[cube.index] = lx.hsb(hue, 100, brightness);
     }
+  }
+}
+
+class NoPattern extends TSPattern {
+  NoPattern(LX lx) {
+    super(lx);
+  }
+
+  public void run(double deltaMs) {
   }
 }

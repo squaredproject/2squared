@@ -23,7 +23,7 @@ class SparkleHelix extends TSPattern {
   final SinLFO rate = new SinLFO(6000, 1000, 19000);
   final SawLFO spin = new SawLFO(0, MathUtils.TWO_PI, rate);
   final SinLFO width = new SinLFO(10, 20, 11000);
-  long[] sparkleTimeOuts;
+  int[] sparkleTimeOuts;
   SparkleHelix(LX lx) {
     super(lx);
     addParameter(minCoil);
@@ -35,7 +35,7 @@ class SparkleHelix extends TSPattern {
     addModulator(coil).start();    
     addModulator(spin).start();
     addModulator(width).start();
-    sparkleTimeOuts = new long[model.cubes.size()];
+    sparkleTimeOuts = new int[model.cubes.size()];
   }
   
   public void run(double deltaMs) {
@@ -46,13 +46,13 @@ class SparkleHelix extends TSPattern {
       float spiralVal = Math.max(0, 100 - (100*MathUtils.TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((MathUtils.TWO_PI / 360) * cube.transformedTheta, 8*MathUtils.TWO_PI + spin.getValuef() + coil.getValuef()*(cube.transformedY-model.cy), MathUtils.TWO_PI));
       float counterSpiralVal = counterSpiralStrength.getValuef() * Math.max(0, 100 - (100*MathUtils.TWO_PI / (compensatedWidth))*LXUtils.wrapdistf((MathUtils.TWO_PI / 360) * cube.transformedTheta, 8*MathUtils.TWO_PI - spin.getValuef() - coil.getValuef()*(cube.transformedY-model.cy), MathUtils.TWO_PI));
       float hueVal = (lx.getBaseHuef() + .1f*cube.transformedY) % 360;
-      if (sparkleTimeOuts[cube.index] > System.currentTimeMillis()){        
+      if (sparkleTimeOuts[cube.index] > Utils.millis()){        
         colors[cube.index] = lx.hsb(hueVal, sparkleSaturation.getValuef(), 100);
       }
       else{
         colors[cube.index] = lx.hsb(hueVal, 100, Math.max(spiralVal, counterSpiralVal));        
         if (MathUtils.random(Math.max(spiralVal, counterSpiralVal)) > sparkle.getValuef()){
-          sparkleTimeOuts[cube.index] = System.currentTimeMillis() + 100;
+          sparkleTimeOuts[cube.index] = Utils.millis() + 100;
         }
       }
     }
@@ -153,8 +153,8 @@ class Ripple extends TSPattern {
 
     if (rippleAge.getValuef() < 5){
       if (!resetDone){
-        yCenter = 150 + MathUtils.random(300);
-        thetaCenter = MathUtils.random(360);
+        yCenter = 150 + MathUtils.random(300f);
+        thetaCenter = MathUtils.random(360f);
         resetDone = true;
       }
     }
@@ -182,7 +182,7 @@ class Ripple extends TSPattern {
 
 
 class SparkleTakeOver extends TSPattern {
-  long[] sparkleTimeOuts;
+  int[] sparkleTimeOuts;
   int lastComplimentaryToggle = 0;
   int complimentaryToggle = 0;
   boolean resetDone = false;
@@ -196,7 +196,7 @@ class SparkleTakeOver extends TSPattern {
   float oldBrightVal = 100;
   SparkleTakeOver(LX lx) {
     super(lx);
-    sparkleTimeOuts = new long[model.cubes.size()];
+    sparkleTimeOuts = new int[model.cubes.size()];
     addModulator(timing).start();    
     addModulator(coverage).start();
     addParameter(hueVariation);
@@ -208,7 +208,7 @@ class SparkleTakeOver extends TSPattern {
       if (!resetDone){
         lastComplimentaryToggle = complimentaryToggle;
         oldBrightVal = newBrightVal;
-        if (MathUtils.random(5) < 2){          
+        if (MathUtils.random(5f) < 2){          
           complimentaryToggle = 1 - complimentaryToggle;
           newBrightVal = 100;
         }
@@ -227,17 +227,17 @@ class SparkleTakeOver extends TSPattern {
     for (Cube cube : model.cubes) {  
       float newHueVal = (lx.getBaseHuef() + complimentaryToggle * hueSeparation + hueVariation.getValuef() * cube.transformedY) % 360;
       float oldHueVal = (lx.getBaseHuef() + lastComplimentaryToggle * hueSeparation + hueVariation.getValuef() * cube.transformedY) % 360;
-      if (sparkleTimeOuts[cube.index] > System.currentTimeMillis()){        
+      if (sparkleTimeOuts[cube.index] > Utils.millis()){        
         colors[cube.index] = lx.hsb(newHueVal,  (30 + coverage.getValuef()) / 1.3f, newBrightVal);
       }
       else {
         colors[cube.index] = lx.hsb(oldHueVal,  (140 - coverage.getValuef()) / 1.4f, oldBrightVal);
         float chance = MathUtils.random(Math.abs(MathUtils.sin((MathUtils.TWO_PI / 360) * cube.transformedTheta * 4) * 50) + Math.abs(MathUtils.sin(MathUtils.TWO_PI * (cube.transformedY / 9000))) * 50);
         if (chance > (100 - 100*((float)Math.pow(coverage.getValuef()/100, 2)))){
-          sparkleTimeOuts[cube.index] = System.currentTimeMillis() + 50000;
+          sparkleTimeOuts[cube.index] = Utils.millis() + 50000;
         }
         else if (chance > 1.1 * (100 - coverage.getValuef())){
-          sparkleTimeOuts[cube.index] = System.currentTimeMillis() + 100;
+          sparkleTimeOuts[cube.index] = Utils.millis() + 100;
         }
           
       }
@@ -254,7 +254,7 @@ class Lightning extends TSTriggerablePattern {
   final BasicParameter lightningChance = new BasicParameter("Chance", 5, 1, 10);
   final BasicParameter forkingChance = new BasicParameter("Fork", 3, 1, 10);
   final BooleanParameter firesOnBeat = new BooleanParameter("Beat");
-  long[] randomCheckTimeOuts = {0, 0};
+  int[] randomCheckTimeOuts = {0, 0};
 
   Lightning(LX lx) {
     super(lx);
@@ -275,25 +275,38 @@ class Lightning extends TSTriggerablePattern {
     if (getChannel().getFader().getNormalized() == 0) return;
 
     int treeIndex = 0;
-    
+
+    if (!triggered) {
+      boolean running = false;
+      for (Tree tree : model.trees) {
+        if (!bolts[treeIndex].isDead()) {
+          running = true;
+          break;
+        }
+        treeIndex++;
+      }
+      if (!running) {
+        setCallRun(false);
+      }
+    }
+
+    treeIndex = 0;
     for (Tree tree : model.trees){
-      if (bolts[treeIndex].isDead()) {
-        if (triggered) {
+      if (triggered) {
+        if (bolts[treeIndex].isDead()) {
           if (firesOnBeat.isOn()) {
             if (lx.tempo.beat()) {
-              randomCheckTimeOuts[treeIndex] = System.currentTimeMillis() + 100;
+              randomCheckTimeOuts[treeIndex] = Utils.millis() + 100;
               bolts[treeIndex] = makeBolt();
             }
           } else {
-            if (randomCheckTimeOuts[treeIndex] < System.currentTimeMillis()){
-              randomCheckTimeOuts[treeIndex] = System.currentTimeMillis() + 100;
-              if (MathUtils.random(15) < lightningChance.getValuef()){
+            if (randomCheckTimeOuts[treeIndex] < Utils.millis()){
+              randomCheckTimeOuts[treeIndex] = Utils.millis() + 100;
+              if (MathUtils.random(15f) < lightningChance.getValuef()){
                 bolts[treeIndex] = makeBolt();
               }
             }
           }
-        } else {
-          getChannel().enabled.setValue(false);
         }
       }
       for (Cube cube : tree.cubes) {
@@ -319,9 +332,9 @@ class Lightning extends TSTriggerablePattern {
     }
   }
   LightningLine makeBolt(){
-    float theta = 45 * (int) MathUtils.random(8);
+    float theta = 45 * (int)MathUtils.random(8);
     float boltWidth = (maxBoltWidth.getValuef() + MathUtils.random(maxBoltWidth.getValuef())) / 2;
-    return new LightningLine (System.currentTimeMillis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3, forkingChance.getValuef());
+    return new LightningLine (Utils.millis(), 550, theta, boltAngle.getValuef(), propagationSpeed.getValuef(), boltWidth, 3, forkingChance.getValuef());
   }
   
   public void onTriggered(float strength) {
@@ -333,7 +346,7 @@ class Lightning extends TSTriggerablePattern {
     
     for (Tree tree : model.trees){
       if (bolts[treeIndex].isDead()){
-        randomCheckTimeOuts[treeIndex] = System.currentTimeMillis() + 100;
+        randomCheckTimeOuts[treeIndex] = Utils.millis() + 100;
         bolts[treeIndex] = makeBolt();
       }
       treeIndex ++;
@@ -348,14 +361,14 @@ class LightningLine {
   private float[] yKeyPoints = {};
   private float[] thetaKeyPoints = {};
   private int lifeCycleState = 0;
-  private final long startTime;
+  private final int startTime;
   private final float startY;
   private final float propagationSpeed;
   private final float lineWidth;
   private float wideningStartTime = 0;
   @SuppressWarnings("unchecked")
   private ArrayList<LightningLine> forks = new ArrayList();
-  LightningLine(long startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepthLeft, float forkingChance){
+  LightningLine(int startTime, float startY, float startTheta, float basicAngle, float propagationSpeed, float lineWidth, int recursionDepthLeft, float forkingChance){
     this.propagationSpeed = propagationSpeed;
     this.lineWidth = lineWidth;
     this.startY = startY;
@@ -365,27 +378,27 @@ class LightningLine {
     float straightLineTheta;
     addKeyPoint(y, theta);
     while (y > treeBottomY){
-      y -= (25 + MathUtils.random(75));
+      y -= (25 + MathUtils.random(75f));
       if (y > 450){
-        theta = startTheta - 20 + MathUtils.random(40);
+        theta = startTheta - 20 + MathUtils.random(40f);
       }
       else {
         straightLineTheta = startTheta + MathUtils.sin((MathUtils.TWO_PI/360) * basicAngle) * (startY - y) * 0.9f;
-        theta = straightLineTheta - 50 + MathUtils.random(100);
+        theta = straightLineTheta - 50 + MathUtils.random(100f);
       }
       addKeyPoint(y, theta);
-      if (recursionDepthLeft > 0 && y < 500 && MathUtils.random(20) < forkingChance){
-        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * MathUtils.random(2)), propagationSpeed, (lineWidth - MathUtils.random(2)), recursionDepthLeft - 1, forkingChance));
+      if (recursionDepthLeft > 0 && y < 500 && MathUtils.random(20f) < forkingChance){
+        forks.add(new LightningLine(startTime + (int)((startY - y) / propagationSpeed), y, theta,(-basicAngle * MathUtils.random(2f)), propagationSpeed, (lineWidth - MathUtils.random(2f)), recursionDepthLeft - 1, forkingChance));
       }
     }
   }
   public float getLightningFactor (float yToCheck, float thetaToCheck){
-    float yLowerLimit = startY - (System.currentTimeMillis() - startTime) * (propagationSpeed);
+    float yLowerLimit = startY - (Utils.millis() - startTime) * (propagationSpeed);
     if (lifeCycleState == 0 && yLowerLimit < treeBottomY){
       lifeCycleState = 1;
-      wideningStartTime = System.currentTimeMillis();
+      wideningStartTime = Utils.millis();
     }
-    if (lifeCycleState == 1 && System.currentTimeMillis() > startTime + 2000 / propagationSpeed){
+    if (lifeCycleState == 1 && Utils.millis() > startTime + 2000 / propagationSpeed){
       lifeCycleState = 2;
     }
     if (lifeCycleState > 1 || yLowerLimit > yToCheck){
@@ -409,7 +422,7 @@ class LightningLine {
         thinnedLineWidth = lineWidth / 2;
       }
       else {
-        thinnedLineWidth = lineWidth / (Math.max(1, 2 - propagationSpeed * ((float)System.currentTimeMillis() - wideningStartTime) / 500));
+        thinnedLineWidth = lineWidth / (Math.max(1, 2 - propagationSpeed * (Utils.millis() - wideningStartTime) / 500f));
       }
       result = Math.max(0, 100 * (thinnedLineWidth - thetaDelta) / lineWidth);
     }
@@ -487,11 +500,11 @@ class IceCrystals extends TSPattern {
   void startCrystal(){
     crystal.doReset();
     settingsObj.doSettings(recursionDepth.getValuei(), lineWidth.getValuef(), 150, propagationSpeed.getValuef());
-    crystal.doStart(100, MathUtils.random(360), (7 + (int)MathUtils.random(2.9f)) % 8);
+    crystal.doStart(100, MathUtils.random(360f), (7 + ((int)MathUtils.random(2.9f))) % 8);
   }
 
-  Triggerable getTriggerable() {
-    return new ParameterTriggerableAdapter(lx, getChannel().getFader()) {
+  ParameterTriggerableAdapter getParameterTriggerableAdapter() {
+    return new ParameterTriggerableAdapter(lx, getChannelFade()) {
       public void onTriggered(float strength) {
         startCrystal();
         super.onTriggered(strength);
@@ -506,7 +519,7 @@ class IceCrystalSettings {
   protected float basePropagationSpeed;
   protected float[] lineLengths;
   protected boolean growthFinished = false;
-  protected long growthFinishedTime = 0;
+  protected int growthFinishedTime = 0;
   protected final int maxRecursionDepth;
   IceCrystalSettings(int maxRecursionDepth){
     this.maxRecursionDepth = maxRecursionDepth;
@@ -520,7 +533,7 @@ class IceCrystalSettings {
     growthFinished = false;
     lineLengths = new float[totalRecursionDepth + 1];
     for (int i=0; i <= totalRecursionDepth; i++){
-      lineLengths[i] =  (float)Math.pow(0.9f, i) * (0.5f + MathUtils.random(1)) * baseLineLength;
+      lineLengths[i] =  ((float)Math.pow(0.9f, i)) * (0.5f + MathUtils.random(1f)) * baseLineLength;
     }
   }
   
@@ -535,7 +548,7 @@ class IceCrystalSettings {
   }
   public void setGrowthFinished(){
     if (!growthFinished){
-      growthFinishedTime = System.currentTimeMillis();
+      growthFinishedTime = Utils.millis();
     }
     growthFinished = true;
   }
@@ -543,7 +556,7 @@ class IceCrystalSettings {
 class IceCrystalLine {
   protected int lifeCycleState = -1;
   private final int recursionDepth;
-  private long startTime;
+  private int startTime;
   private float startY;
   private float startTheta;
   private float endY;
@@ -552,7 +565,7 @@ class IceCrystalLine {
   private float lineLength;
   private float lineWidth;
   private int angleIndex;
-  private long lifeCycleStateChangeTime;
+  private int lifeCycleStateChangeTime;
   private final float[][] angleFactors = {{0, 1}, {0.7071f, 0.7071f}, {1, 0}, {0.7071f, -0.7071f}, {0, -1}, {-0.7071f, -0.7071f}, {-1, 0}, {-0.7071f, 0.7071f}};
   private IceCrystalLine[] children = new IceCrystalLine[2];
   protected float[][] applicableRange = {{0, 0}, {0, 0}};
@@ -575,7 +588,7 @@ class IceCrystalLine {
     this.propagationSpeed = settings.getPropagationSpeed(recursionDepth);
     lineLength = settings.getLineLength(recursionDepth);
     lineWidth = settings.getLineWidth(recursionDepth);
-    startTime = System.currentTimeMillis();
+    startTime = Utils.millis();
     doUpdate();
   }
   public void doReset(){
@@ -591,7 +604,7 @@ class IceCrystalLine {
   public void doUpdate(){
     switch(lifeCycleState){
       case 0: //this line is growing
-        float currentLineLength = (System.currentTimeMillis() - startTime) * propagationSpeed / 10;
+        float currentLineLength = (Utils.millis() - startTime) * propagationSpeed / 10;
         if (currentLineLength > lineLength) {
           currentLineLength = lineLength;
           if (recursionDepth >= settings.totalRecursionDepth){
@@ -619,17 +632,17 @@ class IceCrystalLine {
         checkRangeOfChildren();
       break;
       case 3: // frozen
-        if (recursionDepth <= 3 && settings.growthFinished && settings.growthFinishedTime < (System.currentTimeMillis() - 8000 / propagationSpeed)){
+        if (recursionDepth <= 3 && settings.growthFinished && settings.growthFinishedTime < (Utils.millis() - 8000 / propagationSpeed)){
           changeLifeCycleState(4);
         }
       break;
       case 4: // melting
-        nodeMeltRadius = (float)Math.pow((settings.totalRecursionDepth - recursionDepth) * (System.currentTimeMillis() - lifeCycleStateChangeTime) * propagationSpeed  / 7000, 2) ;
+        nodeMeltRadius = ((float)Math.pow((settings.totalRecursionDepth - recursionDepth) * (Utils.millis() - lifeCycleStateChangeTime) * propagationSpeed  / 7000, 2));
         applicableRange[0][0] = Math.min(applicableRange[0][0], Math.max(0, endTheta - nodeMeltRadius));
         applicableRange[0][1] = Math.max(applicableRange[0][1], Math.min(720, endTheta + nodeMeltRadius));
         applicableRange[1][0] = Math.min(applicableRange[1][0], Math.max(100, (endY - nodeMeltRadius)));
         applicableRange[1][1] = Math.max(applicableRange[1][1], Math.min(700, (endY + nodeMeltRadius)));
-        if (lifeCycleStateChangeTime < (System.currentTimeMillis() - 27000 / propagationSpeed)){
+        if (lifeCycleStateChangeTime < (Utils.millis() - 27000 / propagationSpeed)){
           changeLifeCycleState(5);
           children[0].doReset();
           children[1].doReset();
@@ -637,7 +650,7 @@ class IceCrystalLine {
         }
       break;
       case 5: //water
-        if (lifeCycleStateChangeTime < (System.currentTimeMillis() - 8000 / propagationSpeed)){
+        if (lifeCycleStateChangeTime < (Utils.millis() - 8000 / propagationSpeed)){
           changeLifeCycleState(6);
         }
       break;
@@ -710,7 +723,7 @@ class IceCrystalLine {
     }
   }
   void changeLifeCycleState(int lifeCycleStateIn){
-    lifeCycleStateChangeTime = System.currentTimeMillis();
+    lifeCycleStateChangeTime = Utils.millis();
     this.lifeCycleState = lifeCycleStateIn;
   }
   public boolean isDone(){

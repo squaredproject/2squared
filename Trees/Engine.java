@@ -42,7 +42,6 @@ abstract class Engine {
 
   static final boolean enableNFC = false;
   static final boolean enableAPC40 = false;
-  static final boolean enableSyphon = false;
 
   static final boolean enableOutputMinitree = true;
   static final boolean enableOutputBigtree = false;
@@ -112,7 +111,9 @@ abstract class Engine {
 
     postCreateLX();
 
-    configureMIDI();
+    if (enableAPC40) {
+      configureMIDI();
+    }
     
     // bad code I know
     // (shouldn't mess with engine internals)
@@ -372,6 +373,7 @@ abstract class Engine {
   void setupChannel(final LXChannel channel, boolean noOpWhenNotRunning) {
     channel.setFaderTransition(new TreesTransition(lx, channel));
 
+    // System.out.println(noOpWhenNotRunning && channel.getFader().getValue() == 0);
     if (noOpWhenNotRunning) {
       channel.enabled.setValue(channel.getFader().getValue() != 0);
       channel.getFader().addListener(new LXParameterListener() {
@@ -390,7 +392,7 @@ abstract class Engine {
     
     for (LXChannel channel : lx.engine.getChannels()) {
       channel.goIndex(channel.getIndex());
-      setupChannel(channel, false);
+      setupChannel(channel, true);
     }
   }
 
@@ -415,16 +417,19 @@ abstract class Engine {
     pattern.setTransition(t);
 
     Triggerable triggerable = configurePatternAsTriggerable(pattern);
-    BooleanParameter toggle = apc40DrumpadTriggerablesLists[apc40DrumpadRow].size() < 9 ? nfcToggles[apc40DrumpadRow][apc40DrumpadTriggerablesLists[apc40DrumpadRow].size()] : null;
+    BooleanParameter toggle = null;
+    if (apc40Drumpad != null) {
+      toggle = apc40DrumpadTriggerablesLists[apc40DrumpadRow].size() < 9 ? nfcToggles[apc40DrumpadRow][apc40DrumpadTriggerablesLists[apc40DrumpadRow].size()] : null;
+      apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
+    }
     if (nfcEngine != null) {
       nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, visualType, toggle);
     }
-    apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
   }
 
   Triggerable configurePatternAsTriggerable(TSPattern pattern) {
     LXChannel channel = lx.engine.addChannel(new TSPattern[] { pattern });
-    setupChannel(channel, true);
+    setupChannel(channel, false);
 
     pattern.onTriggerableModeEnabled();
     return pattern.getTriggerable();
@@ -435,11 +440,14 @@ abstract class Engine {
   void registerEffect(LXEffect effect, String nfcSerialNumber) {
     if (effect instanceof Triggerable) {
       Triggerable triggerable = (Triggerable)effect;
-      BooleanParameter toggle = apc40DrumpadTriggerablesLists[0].size() < 9 ? nfcToggles[0][apc40DrumpadTriggerablesLists[0].size()] : null;
+      BooleanParameter toggle = null;
+      if (apc40Drumpad != null) {
+        toggle = apc40DrumpadTriggerablesLists[0].size() < 9 ? nfcToggles[0][apc40DrumpadTriggerablesLists[0].size()] : null;
+        apc40DrumpadTriggerablesLists[0].add(triggerable);
+      }
       if (nfcEngine != null) {
         nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect, toggle);
       }
-      apc40DrumpadTriggerablesLists[0].add(triggerable);
     }
   }
 
@@ -457,11 +465,14 @@ abstract class Engine {
 
   void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
     ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(lx, parameter, offValue, onValue);
-      BooleanParameter toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
+      BooleanParameter toggle = null;
+    if (apc40Drumpad != null) {
+      toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
+      apc40DrumpadTriggerablesLists[row].add(triggerable);
+    }
     if (nfcEngine != null) {
       nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect, toggle);
     }
-    apc40DrumpadTriggerablesLists[row].add(triggerable);
   }
 
   /* configureBMPTool */
@@ -506,13 +517,15 @@ abstract class Engine {
       });
     }
 
-    String filename = "data/Burning Man Playlist.json";
-    JsonArray jsonArr = loadSavedSetFile(filename);
-    automation[automationSlot.getValuei()].loadJson(jsonArr);
-    // slotLabel.setLabel(labels[automationSlot.getValuei()] = filename);
+    if (autoplayBMSet) {
+      String filename = "data/Burning Man Playlist.json";
+      JsonArray jsonArr = loadSavedSetFile(filename);
+      automation[automationSlot.getValuei()].loadJson(jsonArr);
+      // slotLabel.setLabel(labels[automationSlot.getValuei()] = filename);
 
-    automation[automationSlot.getValuei()].looping.setValue(true);
-    automation[automationSlot.getValuei()].start();
+      automation[automationSlot.getValuei()].looping.setValue(true);
+      automation[automationSlot.getValuei()].start();
+    }
   }
 
   /* configureTriggerables */
@@ -522,25 +535,29 @@ abstract class Engine {
 
   @SuppressWarnings("unchecked")
   void configureTriggerables() {
-    apc40DrumpadTriggerablesLists = new ArrayList[] {
-      new ArrayList<Triggerable>(),
-      new ArrayList<Triggerable>(),
-      new ArrayList<Triggerable>(),
-      new ArrayList<Triggerable>(),
-      new ArrayList<Triggerable>(),
-      new ArrayList<Triggerable>()
-    };
+    if (apc40Drumpad != null) {
+      apc40DrumpadTriggerablesLists = new ArrayList[] {
+        new ArrayList<Triggerable>(),
+        new ArrayList<Triggerable>(),
+        new ArrayList<Triggerable>(),
+        new ArrayList<Triggerable>(),
+        new ArrayList<Triggerable>(),
+        new ArrayList<Triggerable>()
+      };
+    }
 
     registerPatternTriggerables();
     registerOneShotTriggerables();
     registerEffectTriggerables();
 
-    apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
-    for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
-      ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
-      apc40DrumpadTriggerables[i] = triggerablesList.toArray(new Triggerable[triggerablesList.size()]);
+    if (apc40Drumpad != null) {
+      apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
+      for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
+        ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
+        apc40DrumpadTriggerables[i] = triggerablesList.toArray(new Triggerable[triggerablesList.size()]);
+      }
+      apc40DrumpadTriggerablesLists = null;
     }
-    apc40DrumpadTriggerablesLists = null;
   }
 
   /* configureMIDI */
@@ -612,8 +629,9 @@ class TreesTransition extends LXTransition {
   private final LXChannel channel;
   
   public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
- 
   private LXColor.Blend blendType = LXColor.Blend.ADD;
+
+  final BasicParameter fade = new BasicParameter("FADE", 1);
     
   TreesTransition(LX lx, LXChannel channel) {
     super(lx);

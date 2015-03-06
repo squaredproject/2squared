@@ -93,11 +93,11 @@ class MarkLottor extends TSPattern {
     for (n = 0; n < maxballs; n++)
     {
       if (balls[n].getposx() != -1) continue;
-      if (MathUtils.random(100) < 95) continue;
+      if (MathUtils.random(100f) < 95) continue;
 
       // init new ball
       balls[n].setcolor(lx.hsb(lx.getBaseHuef() % 360,100,100));
-      balls[n].setpos(MathUtils.random(0,360),0,0);  // theta,y,n/a
+      balls[n].setpos(MathUtils.random(0f,360f),0,0);  // theta,y,n/a
       balls[n].setvel(0,MathUtils.random(0.1f,0.5f),0);    // up speed
     }
 
@@ -164,8 +164,8 @@ class MarkLottor extends TSPattern {
     */
   }
 
-  Triggerable getTriggerable() {
-    return new ParameterTriggerableAdapter(lx, getChannel().getFader()) {
+  ParameterTriggerableAdapter getParameterTriggerableAdapter() {
+    return new ParameterTriggerableAdapter(lx, getChannelFade()) {
       public void onTriggered(float strength) {
         if (!isFresh) {
           for (n = 0; n < BALLS; n++)

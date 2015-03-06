@@ -18,16 +18,16 @@ class APattern extends MultiObjectPattern<SnowFlake> {
   SnowFlake generateObject(float strength) {
     SnowFlake snowFlake = new SnowFlake(lx);
     snowFlake.runningTimer = 0;
-    snowFlake.runningTimerEnd = 90 + MathUtils.random(50);
+    snowFlake.runningTimerEnd = 90 + MathUtils.random(50f);
     snowFlake.decayTime = snowFlake.runningTimerEnd;
     float pathDirection = 270;
     snowFlake.pathDist = model.yMax - model.yMin + 40;
-    snowFlake.startTheta = MathUtils.random(160);
+    snowFlake.startTheta = MathUtils.random(160f);
     snowFlake.startY = model.yMax + 20;
     snowFlake.startPoint = new Vec2D(snowFlake.startTheta, snowFlake.startY);
     snowFlake.endTheta = snowFlake.startTheta;
     snowFlake.endY = model.yMin - 20;
-    snowFlake.displayColor = 200 + (int)MathUtils.random(20);
+    snowFlake.displayColor = 200 + (int)MathUtils.random(20f);
     snowFlake.thickness = .5f + MathUtils.random(.6f);
     
     return snowFlake;
