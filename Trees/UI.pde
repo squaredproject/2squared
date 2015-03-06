@@ -499,30 +499,30 @@ class UIChannelFaders extends UI2dContext {
         LXChannel channel = lx.engine.getChannel(i);
         LXPattern pattern = channel.getActivePattern();
         float goMillis = pattern.timer.runNanos / 1000000.;
-        float fps60 = 1000 / 60. / 3.;
+        float fps60 = 1000 / 60. / 3. / 5;
         perfs[channel.getIndex()].setValue(LXUtils.constrainf((goMillis-1) / fps60, 0, 1));
       }
 
       float engMillis = lx.engine.timer.channelNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.copyNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+1].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+1].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.fxNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+2].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+2].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.inputNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+3].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+3].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.midiNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+4].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+4].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.outputNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+5].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+5].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
 
       engMillis = lx.engine.timer.runNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+6].setValue(LXUtils.constrainf(engMillis / (1000. / 60.), 0, 1));
+      perfs[Engine.NUM_CHANNELS+6].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
       
       for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
         float val = dampers[i].getValuef();
