@@ -1,7 +1,5 @@
 import java.util.Random;
 
-import toxi.math.MathUtils;
-
 class Utils {
 
   static final float PI = (float) Math.PI;
@@ -60,8 +58,20 @@ class Utils {
     return (float)Math.sin(angle);
   }
 
+  static public final float cos(float angle) {
+    return (float)Math.cos(angle);
+  }
+
   static public final float asin(float value) {
     return (float)Math.asin(value);
+  }
+
+  static public final float acos(float value) {
+    return (float)Math.acos(value);
+  }
+  
+  static public final float atan2(float y, float x) {
+    return (float)Math.atan2(y, x);
   }
 
   static public final int ceil(float n) {

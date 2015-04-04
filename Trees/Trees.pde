@@ -125,8 +125,8 @@ void configureUI() {
     }
     .setRadius(90*Geometry.FEET)
     .setCenter(model.cx, model.cy, model.cz)
-    .setTheta(30*MathUtils.PI/180)
-    .setPhi(10*MathUtils.PI/180)
+    .setTheta(30*Utils.PI/180)
+    .setPhi(10*Utils.PI/180)
     .addComponent(new UITrees())
   );
   if (engine.enableOutputBigtree) {

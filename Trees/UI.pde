@@ -38,7 +38,7 @@ class UITrees extends UI3dComponent {
     for (Tree tree : model.trees) {
       pushMatrix();
       translate(tree.x, 0, tree.z);
-      rotateY(-tree.ry * MathUtils.PI / 180);
+      rotateY(-tree.ry * Utils.PI / 180);
       drawTree(ui);
       popMatrix();
     }
@@ -75,7 +75,7 @@ class UITrees extends UI3dComponent {
         vertex(distance-model.geometry.BEAM_WIDTH/2, beamY, -distance-model.geometry.BEAM_WIDTH/2);
         endShape(CLOSE);        
       }
-      rotateY(MathUtils.HALF_PI); 
+      rotateY(Utils.PI/2); 
     }    
   }
      
@@ -112,7 +112,7 @@ class UITrees extends UI3dComponent {
       
       pushMatrix();
       translate(tree.x, 0, tree.z);
-      rotateY(-tree.ry * MathUtils.PI / 180);
+      rotateY(-tree.ry * Utils.PI / 180);
       
       // This is some bad duplicated code from Model, hack for now
       int clusterLevel = config.level;
@@ -124,9 +124,9 @@ class UITrees extends UI3dComponent {
       switch (clusterFace) {
         // Could be math, but this way it's readable!
         case Geometry.FRONT: case Geometry.FRONT_RIGHT:                  break;
-        case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = MathUtils.HALF_PI;   break;
-        case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = MathUtils.PI;        break;
-        case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = MathUtils.THREE_HALVES_PI; break;
+        case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = Utils.HALF_PI;   break;
+        case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = Utils.PI;        break;
+        case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = 3*Utils.HALF_PI; break;
       }
       switch (clusterFace) {
         case Geometry.FRONT_RIGHT:
@@ -145,13 +145,13 @@ class UITrees extends UI3dComponent {
         case Geometry.REAR_LEFT:
         case Geometry.FRONT_LEFT:
           translate(model.geometry.distances[clusterLevel], 0, 0);
-          rotateY(MathUtils.QUARTER_PI);
-          cry += MathUtils.QUARTER_PI;
+          rotateY(-Utils.QUARTER_PI);
+          cry += Utils.QUARTER_PI;
           break;
       }
       
       rotateX(-model.geometry.angleFromAxis(model.geometry.heights[clusterLevel]));
-      rotateZ(-clusterSkew * MathUtils.PI / 180);
+      rotateZ(-clusterSkew * Utils.PI / 180);
       drawCubes(cluster, colors);
       
       popMatrix();
@@ -167,9 +167,9 @@ class UITrees extends UI3dComponent {
   void drawCluster(Cluster cluster, int[] colors) {
     pushMatrix();
     translate(cluster.x, cluster.y, cluster.z);
-    rotateY(-cluster.ry * MathUtils.PI / 180);
-    rotateX(-cluster.rx * MathUtils.PI / 180);
-    rotateZ(-cluster.skew * MathUtils.PI / 180);
+    rotateY(-cluster.ry * Utils.PI / 180);
+    rotateX(-cluster.rx * Utils.PI / 180);
+    rotateZ(-cluster.skew * Utils.PI / 180);
     drawCubes(cluster, colors);
     popMatrix();
   }
@@ -179,9 +179,9 @@ class UITrees extends UI3dComponent {
       pushMatrix();
       fill(colors[cube.index]);
       translate(cube.lx, cube.ly, cube.lz);
-      rotateY(-cube.ry * MathUtils.PI / 180);
-      rotateX(-cube.rx * MathUtils.PI / 180);
-      rotateZ(-cube.rz * MathUtils.PI / 180);
+      rotateY(-cube.ry * Utils.PI / 180);
+      rotateX(-cube.rx * Utils.PI / 180);
+      rotateZ(-cube.rz * Utils.PI / 180);
       box(cube.size, cube.size, cube.size);
       popMatrix();
     }
@@ -500,29 +500,29 @@ class UIChannelFaders extends UI2dContext {
         LXPattern pattern = channel.getActivePattern();
         float goMillis = pattern.timer.runNanos / 1000000.;
         float fps60 = 1000 / 60. / 3. / 5;
-        perfs[channel.getIndex()].setValue(LXUtils.constrainf((goMillis-1) / fps60, 0, 1));
+        perfs[channel.getIndex()].setValue(Utils.constrain((goMillis-1) / fps60, 0, 1));
       }
 
       float engMillis = lx.engine.timer.channelNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.copyNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+1].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS+1].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.fxNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+2].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS+2].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.inputNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+3].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS+3].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.midiNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+4].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS+4].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
       
       engMillis = lx.engine.timer.outputNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+5].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS+5].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
 
       engMillis = lx.engine.timer.runNanos / 1000000.;
-      perfs[Engine.NUM_CHANNELS+6].setValue(LXUtils.constrainf(engMillis / (1000. / 60. / 5), 0, 1));
+      perfs[Engine.NUM_CHANNELS+6].setValue(Utils.constrain(engMillis / (1000. / 60. / 5), 0, 1));
       
       for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
         float val = dampers[i].getValuef();

@@ -760,7 +760,7 @@ class Fade extends TSPattern {
 class OrderTest extends TSPattern {
   
   SawLFO sweep = new SawLFO(0, 15.999, 8000);
-  int[] order = new int[] { 1, 2, 3, 4, 5, 6, 9, 8, 10, 11, 12, 13, 14, 16, 15, 7 };
+  int[] order = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
   
   OrderTest(LX lx) {
     super(lx);
@@ -802,7 +802,7 @@ class Palette extends TSPattern {
 class SolidColor extends TSPattern {
   // 235 = blue, 135 = green, 0 = red
   final BasicParameter hue = new BasicParameter("HUE", 135, 0, 360);
-  final BasicParameter brightness = new BasicParameter("BRT", 100, 0, 900);
+  final BasicParameter brightness = new BasicParameter("BRT", 100, 0, 100);
   
   SolidColor(LX lx) {
     super(lx);
@@ -826,7 +826,7 @@ class ClusterLineTest extends TSPattern {
   ClusterLineTest(LX lx) {
     super(lx);
     
-    addParameter(theta = new BasicParameter("θ", 0, -90, 430));
+    addParameter(theta = new BasicParameter("\u0398", 0, -90, 430));
     addParameter(y = new BasicParameter("Y", 200, lx.model.yMin, lx.model.yMax));
     addParameter(spin = new BasicParameter("SPIN", 0, -90, 430));
   }

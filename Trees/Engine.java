@@ -37,6 +37,7 @@ import heronarts.lx.transition.DissolveTransition;
 import heronarts.lx.transition.LXTransition;
 
 abstract class Engine {
+
   static final boolean enableIPad = false;
   static final boolean autoplayBMSet = true;
 
@@ -46,7 +47,7 @@ abstract class Engine {
   static final boolean enableOutputMinitree = true;
   static final boolean enableOutputBigtree = false;
 
-  static final String CLUSTER_CONFIG_FILE = "data/clusters.json";
+  static final String CLUSTER_CONFIG_FILE = "data/clusters_minitree1.json";
 
 
   static final int NUM_CHANNELS = 8;
@@ -136,7 +137,7 @@ abstract class Engine {
   void addPatterns(ArrayList<LXPattern> patterns) {
     // Add patterns here.
     // The order here is the order it shows up in the patterns list
-  //  patterns.add(new SolidColor(lx));
+    // patterns.add(new SolidColor(lx));
     // patterns.add(new ClusterLineTest(lx));
     // patterns.add(new OrderTest(lx));
     patterns.add(new Twister(lx));
@@ -605,7 +606,7 @@ abstract class Engine {
   /* configureFadeCandyOutput */
 
   void configureFadeCandyOutput() {
-    int[] clusterOrdering = new int[] { 0, 1, 2, 3, 4, 5, 8, 7, 9, 10, 11, 12, 13, 15, 14, 6 };
+    int[] clusterOrdering = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     int numCubesInCluster = clusterOrdering.length;
     int numClusters = 48;
     int[] pixelOrder = new int[numClusters * numCubesInCluster];

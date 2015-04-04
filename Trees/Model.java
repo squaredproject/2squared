@@ -19,7 +19,6 @@ import heronarts.lx.transform.LXTransform;
 
 import toxi.geom.Vec2D;
 import toxi.geom.Vec3D;
-import toxi.math.MathUtils;
 
 class Geometry {
 
@@ -100,15 +99,15 @@ class Geometry {
     distances = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
     heights = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
     for (int i = 0; i < heights.length; ++i) {
-      heights[i] = Math.min(HEIGHT, i * BEAM_SPACING);
+      heights[i] = Utils.min(HEIGHT, i * BEAM_SPACING);
       distances[i] = distanceFromCenter(heights[i]);
     }
   }
   
   float distanceFromCenter(float atHeight) {
     float oppositeLeg = VERTICAL_MIDPOINT - atHeight;
-    double angle = Math.asin(oppositeLeg / MIDDLE_RADIUS);
-    float adjacentLeg = MIDDLE_RADIUS * (float)Math.cos(angle);
+    float angle = Utils.asin(oppositeLeg / MIDDLE_RADIUS);
+    float adjacentLeg = MIDDLE_RADIUS * Utils.cos(angle);
     return MIDDLE_DISTANCE - adjacentLeg;  
   }
   
@@ -116,16 +115,16 @@ class Geometry {
     // This is some shitty trig. I am sure there
     // is a simpler way but it wasn't occuring to me.
     float x1 = MIDDLE_DISTANCE - distanceFromCenter(atHeight);
-    double a1 = Math.acos(x1 / MIDDLE_RADIUS); 
+    float a1 = Utils.acos(x1 / MIDDLE_RADIUS); 
     
     float r = MIDDLE_RADIUS;
     float y = Cluster.BRACE_LENGTH / 2;
-    double a = Math.asin(y/r);
-    double a2 = a1 - 2*a;
+    float a = Utils.asin(y/r);
+    float a2 = a1 - 2*a;
     
-    double x2 = Math.cos(a2) * MIDDLE_RADIUS;
+    float x2 = Utils.cos(a2) * MIDDLE_RADIUS;
     
-    return (float)Math.asin((x2-x1) /Cluster.BRACE_LENGTH); 
+    return Utils.asin((x2-x1) /Cluster.BRACE_LENGTH); 
   }
 }
 
@@ -281,7 +280,7 @@ class Tree extends LXModel {
       Vec3D treeCenter = new Vec3D(x, 0, z);
       LXTransform t = new LXTransform();
       t.translate(x, 0, z);
-      t.rotateY(ry * MathUtils.PI / 180);
+      t.rotateY(ry * Utils.PI / 180);
       
       for (TreeConfig cp : clusterConfig) {
         if (cp.treeIndex == treeIndex) {
@@ -297,9 +296,9 @@ class Tree extends LXModel {
           switch (clusterFace) {
             // Could be math, but this way it's readable!
             case Geometry.FRONT: case Geometry.FRONT_RIGHT:                  break;
-            case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = MathUtils.HALF_PI;   break;
-            case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = MathUtils.PI;        break;
-            case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = MathUtils.THREE_HALVES_PI; break;
+            case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = Utils.HALF_PI;   break;
+            case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = Utils.PI;        break;
+            case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = 3*Utils.HALF_PI; break;
           }
           switch (clusterFace) {
             case Geometry.FRONT_RIGHT:
@@ -318,11 +317,11 @@ class Tree extends LXModel {
             case Geometry.REAR_LEFT:
             case Geometry.FRONT_LEFT:
               t.translate(geometry.distances[clusterLevel], 0, 0);
-              t.rotateY(MathUtils.QUARTER_PI);
-              cry += MathUtils.QUARTER_PI;
+              t.rotateY(Utils.QUARTER_PI);
+              cry += Utils.QUARTER_PI;
               break;
           }
-          clusters.add(new Cluster(ipAddress, treeCenter, t, ry + cry*180/MathUtils.PI, 180/MathUtils.PI*geometry.angleFromAxis(t.y()), clusterSkew));
+          clusters.add(new Cluster(ipAddress, treeCenter, t, ry + cry*180/Utils.PI, 180/Utils.PI*geometry.angleFromAxis(t.y()), clusterSkew));
           t.pop();
         }
       }
@@ -437,26 +436,26 @@ class Cluster extends LXModel {
     
     Fixture(Vec3D treeCenter, LXTransform transform, float ry, float rx, float skew) {
       transform.push();
-      transform.rotateX(rx * MathUtils.PI / 180);
-      transform.rotateZ(skew * MathUtils.PI / 180);
+      transform.rotateX(rx * Utils.PI / 180);
+      transform.rotateZ(skew * Utils.PI / 180);
       this.cubes = Arrays.asList(new Cube[] {
   // Cube(int clusterPosition, Vec2D treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz)
-        new Cube( 1, treeCenter, transform, Cube.SMALL,    7, -98, -10,  185,  18, -18),
-        new Cube( 2, treeCenter, transform, Cube.SMALL,    4, -87,  -9,  183,  20, -20),
-        new Cube( 3, treeCenter, transform, Cube.SMALL,   -1, -78,  -8,  170,  30,   5),        
-        new Cube( 4, treeCenter, transform, Cube.MEDIUM,   6, -70, -10,  183,  20,   0),        
-        new Cube( 5, treeCenter, transform, Cube.MEDIUM,  -8, -65, -10,   0, -20,  -5),
-        new Cube( 6, treeCenter, transform, Cube.GIANT,    6, -51,  -9,   0,  -5, -30),
-        new Cube( 7, treeCenter, transform, Cube.SMALL,   -3,   1, -16, 190,   0,  20),
-        new Cube( 8, treeCenter, transform, Cube.SMALL,   22, -44, -11,  185,   0,  15),
-        new Cube( 9, treeCenter, transform, Cube.SMALL,   -8, -47, -13, 190,   0, -45),
-        new Cube(10, treeCenter, transform, Cube.MEDIUM,  12, -33,  -8, 190,   0,   8),
-        new Cube(11, treeCenter, transform, Cube.LARGE,   -4, -33,  -8,   0,  10, -15),
-        new Cube(12, treeCenter, transform, Cube.SMALL,   18, -22,  -7, 190,   0,  45),        
-        new Cube(13, treeCenter, transform, Cube.LARGE,    4, -16,  -9,   0,   0,  -5),
-        new Cube(14, treeCenter, transform, Cube.MEDIUM, -12, -17,  -9,  175, -20,   0),
-        new Cube(15, treeCenter, transform, Cube.SMALL,   -8,  -5,  -8,  185,  10, -45),
-        new Cube(16, treeCenter, transform, Cube.SMALL,    3,  -2,  -7,  190, -10, -50),
+        new Cube( 1, treeCenter, transform, Cube.SMALL,    10, -82, -13, 0,  0, 0),
+        new Cube( 2, treeCenter, transform, Cube.SMALL,    6, -74,  -12, 0,  0, 0),
+        new Cube( 3, treeCenter, transform, Cube.SMALL,   -2, -69,  -13, 0,  0, 0),
+        new Cube( 4, treeCenter, transform, Cube.MEDIUM,   9, -64, -10, 0,  0, 0),
+        new Cube( 5, treeCenter, transform, Cube.MEDIUM,  -5, -56, -10, 0,  0, 0),
+        new Cube( 6, treeCenter, transform, Cube.SMALL,   -8, -45, -13, 0,  0, 0),
+        new Cube( 7, treeCenter, transform, Cube.GIANT,    5, -47,  -9, 0,  0, 0),
+        new Cube( 8, treeCenter, transform, Cube.SMALL,   17, -40, -11, 0,  0, 0),
+        new Cube( 9, treeCenter, transform, Cube.MEDIUM,  10, -30,  -10, 0,  0, 0),
+        new Cube(10, treeCenter, transform, Cube.LARGE,   -8, -32,  -10, 0,  0, 0),
+        new Cube(11, treeCenter, transform, Cube.MEDIUM, -11, -17,  -11, 0,  0, 0),
+        new Cube(12, treeCenter, transform, Cube.LARGE,    4, -16,  -9, 0,  0, 0),
+        new Cube(13, treeCenter, transform, Cube.SMALL,   16, -20,  -11, 0,  0, 0),
+        new Cube(14, treeCenter, transform, Cube.SMALL,    3,  -3,  -14, 0,  0, 0),
+        new Cube(15, treeCenter, transform, Cube.SMALL,   -7,  -5,  -14, 0,  0, 0),
+        new Cube(16, treeCenter, transform, Cube.SMALL,   -5,   3, -14, 0,  0, 0),
       });
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
@@ -473,10 +472,10 @@ class Cube extends LXModel {
   public static final int PIXELS_PER_SMALL_CUBE = 6;
   public static final int PIXELS_PER_LARGE_CUBE = 12;
   
-  public static final float SMALL = 8;
-  public static final float MEDIUM = 12;
-  public static final float LARGE = 16;
-  public static final float GIANT = 17.5f;
+  public static final float SMALL = 7.5f;
+  public static final float MEDIUM = 11.25f;
+  public static final float LARGE = 15;
+  public static final float GIANT = 16.5f;
   
   /**
    * Index of this cube in color buffer, colors[cube.index]
@@ -600,7 +599,7 @@ class Cube extends LXModel {
     this.tz = this.z - treeCenter.z;
 
     this.r = (float)Point2D.distance(treeCenter.x, treeCenter.z, this.x, this.z);
-    this.theta = 180 + 180/MathUtils.PI*(float)Math.atan2(this.z - treeCenter.z, this.x - treeCenter.x);
+    this.theta = 180 + 180/Utils.PI*Utils.atan2(this.z - treeCenter.z, this.x - treeCenter.x);
     this.cylinderPoint = new Vec2D(this.theta, this.ty);
     
     transform.pop();
