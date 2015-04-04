@@ -374,7 +374,6 @@ abstract class Engine {
   void setupChannel(final LXChannel channel, boolean noOpWhenNotRunning) {
     channel.setFaderTransition(new TreesTransition(lx, channel));
 
-    // System.out.println(noOpWhenNotRunning && channel.getFader().getValue() == 0);
     if (noOpWhenNotRunning) {
       channel.enabled.setValue(channel.getFader().getValue() != 0);
       channel.getFader().addListener(new LXParameterListener() {
