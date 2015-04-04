@@ -10,7 +10,6 @@ import heronarts.lx.parameter.BasicParameter;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.LXParameter;
 
-import toxi.math.MathUtils;
 
 class DoubleHelix extends TSPattern {
   
@@ -31,9 +30,9 @@ class DoubleHelix extends TSPattern {
     for (Cube cube : model.cubes) {
       float coilf = coil.getValuef() * (cube.cy - model.cy);
       colors[cube.index] = lx.hsb(
-        lx.getBaseHuef() + 0.4f*Math.abs(cube.transformedY - model.cy) + 0.2f * Math.abs(cube.transformedTheta - 180),
+        lx.getBaseHuef() + .4f*Utils.abs(cube.transformedY - model.cy) +.2f* Utils.abs(cube.transformedTheta - 180),
         100,
-        Math.max(0, 100 - 2*LXUtils.wrapdistf(cube.transformedTheta, theta.getValuef() + coilf, 180))
+        Utils.max(0, 100 - 2*LXUtils.wrapdistf(cube.transformedTheta, theta.getValuef() + coilf, 180))
       );
     }
   }
@@ -96,13 +95,13 @@ class SeeSaw extends TSPattern {
     projection
       .reset()
       .center()
-      .rotate(rx.getValuef() * MathUtils.PI / 180, 1, 0, 0)
-      .rotate(rz.getValuef() * MathUtils.PI / 180, 0, 0, 1);
+      .rotate(rx.getValuef() * Utils.PI / 180, 1, 0, 0)
+      .rotate(rz.getValuef() * Utils.PI / 180, 0, 0, 1);
     for (LXVector v : projection) {
       colors[v.index] = lx.hsb(
-        (lx.getBaseHuef() + Math.min(120, Math.abs(v.y))) % 360,
+        (lx.getBaseHuef() + Utils.min(120, Utils.abs(v.y))) % 360,
         100,
-        (float)Math.max(bgLevel.getValuef(), 100 - (100/(1*Geometry.FEET))*Math.max(0, Math.abs(v.y) - 0.5*width.getValuef()))
+        Utils.max(bgLevel.getValuef(), 100 - (100/(1*Geometry.FEET))*Utils.max(0, Utils.abs(v.y) - 0.5f*width.getValuef()))
       );
     }
   }
@@ -113,7 +112,7 @@ class Twister extends TSPattern {
   final SinLFO spin = new SinLFO(0, 5*360, 16000);
   
   float coil(float basis) {
-    return MathUtils.sin(basis*MathUtils.TWO_PI - MathUtils.PI);
+    return Utils.sin(basis*Utils.TWO_PI - Utils.PI);
   }
   
   Twister(LX lx) {
@@ -130,10 +129,10 @@ class Twister extends TSPattern {
       float wrapdist = LXUtils.wrapdistf(cube.transformedTheta, spinf + (model.yMax - cube.transformedY)*coilf, 360);
       float yn = (cube.transformedY / model.yMax);
       float width = 10 + 30 * yn;
-      float df = Math.max(0, 100 - (100 / 45) * Math.max(0, wrapdist-width));
+      float df = Utils.max(0, 100 - (100 / 45) * Utils.max(0, wrapdist-width));
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + .2f*cube.transformedY - 360 - wrapdist) % 360,
-        Math.max(0, 100 - 500*Math.max(0, yn-.8f)),
+        Utils.max(0, 100 - 500*Utils.max(0, yn-.8f)),
         df
       );
     }
@@ -146,7 +145,7 @@ class SweepPattern extends TSPattern {
   final SinLFO yPos = new SinLFO(model.yMin, model.yMax, speedMod);
   final SinLFO width = new SinLFO("WIDTH", 2*Geometry.FEET, 20*Geometry.FEET, 19000);
   
-  final SawLFO offset = new SawLFO(0, MathUtils.TWO_PI, 9000);
+  final SawLFO offset = new SawLFO(0, Utils.TWO_PI, 9000);
   
   final BasicParameter amplitude = new BasicParameter("AMP", 10*Geometry.FEET, 0, 20*Geometry.FEET);
   final BasicParameter speed = new BasicParameter("SPEED", 1, 0, 3);
@@ -178,11 +177,11 @@ class SweepPattern extends TSPattern {
     if (getChannel().getFader().getNormalized() == 0) return;
 
     for (Cube cube : model.cubes) {
-      float yp = yPos.getValuef() + amp.getValuef() * MathUtils.sin((cube.cx - model.cx) * .01f + offset.getValuef());
+      float yp = yPos.getValuef() + amp.getValuef() * Utils.sin((cube.cx - model.cx) * .01f + offset.getValuef());
       colors[cube.index] = lx.hsb(
-        (lx.getBaseHuef() + Math.abs(cube.x - model.cx) * .2f +  cube.cz*.1f + cube.cy*.1f) % 360,
-        LXUtils.constrainf(Math.abs(cube.transformedY - model.cy), 0, 100),
-        Math.max(0, 100 - (100/width.getValuef())*Math.abs(cube.cy - yp - height.getValuef()))
+        (lx.getBaseHuef() + Utils.abs(cube.x - model.cx) * .2f +  cube.cz*.1f + cube.cy*.1f) % 360,
+        Utils.constrain(Utils.abs(cube.transformedY - model.cy), 0, 100),
+        Utils.max(0, 100 - (100/width.getValuef())*Utils.abs(cube.cy - yp - height.getValuef()))
       );
     }
   }
@@ -211,7 +210,7 @@ class DiffusionTestPattern extends TSPattern {
       colors[i] = lx.hsb(
         (hue.getValuef() + (i / 4) * spread.getValuef()) % 360,
         sat.getValuef() * 100,
-        Math.min(100, brt.getValuef() * (i+1) / 12.f * 200)
+        Utils.min(100, brt.getValuef() * (i+1) / 12.f * 200)
       );
     }
   }
@@ -238,7 +237,7 @@ class TestPattern extends TSPattern {
       setColor(cube, lx.hsb(
         (lx.getBaseHuef() + cube.cx + cube.cy) % 360,
         100,
-        Math.max(0, 100 - 30*Math.abs((ci % CUBE_MOD) - cubeIndex.getValuef()))
+        Utils.max(0, 100 - 30*Utils.abs((ci % CUBE_MOD) - cubeIndex.getValuef()))
       ));
       ++ci;
     
@@ -268,7 +267,7 @@ class TestCluster extends TSPattern {
           setColor(cube, lx.hsb(
             lx.getBaseHuef(),
             100,
-            Math.max(0, 100 - 400*Math.abs(d - pos.getValuef()))
+            Utils.max(0, 100 - 400*Utils.abs(d - pos.getValuef()))
           ));
         } else if ((cube.clusterPosition == lightNo.getValuei()) ||
             (0 == lightNo.getValuei())) {
@@ -325,17 +324,17 @@ class ColorEffect extends Effect {
         float b = LXColor.b(colors[i]) / 100.f;
         float bOrig = b;
         if (sharpf > 0) {
-          if (b < .5) {
-            b = (float)Math.pow(b, pSharp);
+          if (b < .5f) {
+            b = Utils.pow(b, pSharp);
           } else {
-            b = 1-(float)Math.pow(1-b, pSharp);
+            b = 1-Utils.pow(1-b, pSharp);
           }
         }
         if (softf > 0) {
-          if (b > 0.5) {
-            b = (float)LXUtils.lerp(b, 0.5 + 2 * (b-0.5)*(b-0.5), softf);
+          if (b > 0.5f) {
+            b = Utils.lerp(b, 0.5f + 2 * (b-0.5f)*(b-0.5f), softf);
           } else {
-            b = (float)LXUtils.lerp(b, 0.5 * (float)Math.sqrt(2*b), softf);
+            b = Utils.lerp(b, 0.5f * Utils.sqrt(2*b), softf);
           }
         }
         
@@ -345,7 +344,7 @@ class ColorEffect extends Effect {
           h = bh + (h - bh) * (1+3*rainbowf);
           h = (h + 5*360) % 360;
         }
-        if (Math.abs(h - bh) > 180) {
+        if (Utils.abs(h - bh) > 180) {
           if (h > bh) {
             bh += 360;
           } else {
@@ -354,7 +353,7 @@ class ColorEffect extends Effect {
         }
         
         colors[i] = lx.hsb(
-          ((float)LXUtils.lerp(h, bh, monof) + huef) % 360,
+          (Utils.lerp(h, bh, monof) + huef) % 360,
           LXColor.s(colors[i]) * (1 - desatf),
           100*b
         );

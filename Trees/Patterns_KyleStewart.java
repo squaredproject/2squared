@@ -3,7 +3,6 @@ import heronarts.lx.LXUtils;
 import heronarts.lx.parameter.BasicParameter;
 
 import toxi.geom.Vec2D;
-import toxi.math.MathUtils;
 
 class APattern extends MultiObjectPattern<SnowFlake> {
   
@@ -18,17 +17,17 @@ class APattern extends MultiObjectPattern<SnowFlake> {
   SnowFlake generateObject(float strength) {
     SnowFlake snowFlake = new SnowFlake(lx);
     snowFlake.runningTimer = 0;
-    snowFlake.runningTimerEnd = 90 + MathUtils.random(50f);
+    snowFlake.runningTimerEnd = 90 + Utils.random(50);
     snowFlake.decayTime = snowFlake.runningTimerEnd;
     float pathDirection = 270;
     snowFlake.pathDist = model.yMax - model.yMin + 40;
-    snowFlake.startTheta = MathUtils.random(160f);
+    snowFlake.startTheta = Utils.random(160);
     snowFlake.startY = model.yMax + 20;
     snowFlake.startPoint = new Vec2D(snowFlake.startTheta, snowFlake.startY);
     snowFlake.endTheta = snowFlake.startTheta;
     snowFlake.endY = model.yMin - 20;
-    snowFlake.displayColor = 200 + (int)MathUtils.random(20f);
-    snowFlake.thickness = .5f + MathUtils.random(.6f);
+    snowFlake.displayColor = 200 + (int)Utils.random(20);
+    snowFlake.thickness = .5f + Utils.random(.6f);
     
     return snowFlake;
   }
@@ -65,7 +64,7 @@ class SnowFlake extends MultiObject {
       if (runningTimer >= runningTimerEnd + decayTime) {
         running = false;
       } else {
-        percentDone = Math.min(runningTimer, runningTimerEnd) / runningTimerEnd;
+        percentDone = Utils.min(runningTimer, runningTimerEnd) / runningTimerEnd;
         currentTheta = (float)LXUtils.lerp(startTheta, endTheta, percentDone);
         currentY = (float)LXUtils.lerp(startY, endY, percentDone);
         currentPoint = new Vec2D(currentTheta, currentY);
@@ -77,6 +76,6 @@ class SnowFlake extends MultiObject {
     Vec2D cubePointPrime = VecUtils.movePointToSamePlane(currentPoint, cube.transformedCylinderPoint);
     float distFromSource = cubePointPrime.distanceTo(currentPoint);
     float tailFadeFactor = distFromSource / pathDist;
-    return lx.hsb(displayColor, 60, Math.max(5, (100 - 10 * distFromSource / thickness)));
+    return lx.hsb(displayColor, 60, Utils.max(5, (100 - 10 * distFromSource / thickness)));
   }
 }

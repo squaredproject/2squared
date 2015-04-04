@@ -16,9 +16,49 @@ import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.parameter.LXParameterListener;
 
 import toxi.geom.Vec2D;
-import toxi.math.MathUtils;
 import toxi.math.noise.PerlinNoise;
 import toxi.math.noise.SimplexNoise;
+
+class MappingPattern extends TSPattern {
+
+  int numBits;
+  int count;
+  int numCompleteResetCycles = 10;
+  int numCyclesToShowFrame = 2;
+  int numResetCycles = 3;
+  int numCyclesBlack = 4;
+  int cycleCount = 0;
+
+  MappingPattern(LX lx) {
+    super(lx);
+
+    numBits = model.cubes.size();
+  }
+
+  public void run(double deltaMs) {
+    if (count >= numBits) {
+      if (numBits + numCyclesBlack <= count && count < numBits + numCyclesBlack + numCompleteResetCycles) {
+        setColors(LXColor.WHITE);
+      } else {
+        setColors(LXColor.BLACK);
+      }
+    } else if (cycleCount >= numCyclesToShowFrame) {
+      if (numCyclesToShowFrame + numCyclesBlack <= cycleCount && cycleCount < numCyclesToShowFrame + numCyclesBlack + numResetCycles) {
+        setColors(LXColor.WHITE);
+      } else {
+        setColors(LXColor.BLACK);
+      }
+    } else {
+      for (Cube cube : model.cubes) {
+        setColor(cube.index, cube.index == count ? LXColor.WHITE : LXColor.BLACK);
+      }
+    }
+    cycleCount = (cycleCount + 1) % (numCyclesToShowFrame + numResetCycles + 2*numCyclesBlack);
+    if (cycleCount == 0) {
+      count = (count + 1) % (numBits + numCompleteResetCycles + 2*numCyclesBlack);
+    }
+  }
+}
 
 class TurnOffDeadPixelsEffect extends Effect {
   int[] deadPixelIndices = new int[] { 4 };
@@ -39,11 +79,11 @@ class TurnOffDeadPixelsEffect extends Effect {
 
 class VecUtils {
   static boolean insideOfBoundingBox(Vec2D origin, Vec2D point, float xTolerance, float yTolerance) {
-    return Math.abs(origin.x - point.x) <= xTolerance && Math.abs(origin.y - point.y) <= yTolerance;
+    return Utils.abs(origin.x - point.x) <= xTolerance && Utils.abs(origin.y - point.y) <= yTolerance;
   }
    
   static float wrapDist2d(Vec2D a, Vec2D b) {
-    return (float)Math.sqrt((float)Math.pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + (float)Math.pow(a.y - b.y, 2));
+    return Utils.sqrt(Utils.pow((LXUtils.wrapdistf(a.x, b.x, 360)), 2) + Utils.pow(a.y - b.y, 2));
   }
    
   static Vec2D movePointToSamePlane(Vec2D reference, Vec2D point) {
@@ -70,7 +110,7 @@ class VecUtils {
 
 class BassSlam extends TSTriggerablePattern {
   
-  final private double flashTimePercent = 0.1;
+  final private double flashTimePercent = 0.1f;
   final private int patternHue = 200;
   
   BassSlam(LX lx) {
@@ -93,18 +133,18 @@ class BassSlam extends TSTriggerablePattern {
     if (progress() < flashTimePercent) {
       setColors(lx.hsb(patternHue, 100, 100));
     } else {
-      float time = (float)((progress() - flashTimePercent) / (1 - flashTimePercent) * 1.3755);
+      float time = (float)((progress() - flashTimePercent) / (1 - flashTimePercent) * 1.3755f);
       float y;
-      // y = 0 when time = 1.3755
+      // y = 0 when time = 1.3755f
       if (time < 1) {
-        y = 1 + (float)Math.pow(time + 0.16f, 2) * MathUtils.sin(18 * (time + 0.16f)) / 4;
+        y = 1 + Utils.pow(time + 0.16f, 2) * Utils.sin(18 * (time + 0.16f)) / 4;
       } else {
-        y = 1.32f - 20 * (float)Math.pow(time - 1, 2);
+        y = 1.32f - 20 * Utils.pow(time - 1, 2);
       }
-      y = Math.max(0, 100 * (y - 1) + 250);
+      y = Utils.max(0, 100 * (y - 1) + 250);
       
       for (Cube cube : model.cubes) {
-        setColor(cube.index, lx.hsb(patternHue, 100, LXUtils.constrainf(100 - 2 * Math.abs(y - cube.transformedY), 0, 100)));
+        setColor(cube.index, lx.hsb(patternHue, 100, LXUtils.constrainf(100 - 2 * Utils.abs(y - cube.transformedY), 0, 100)));
       }
     }
   }
@@ -165,7 +205,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTri
 
       if (pauseTimerCountdown <= 0) {
         float delay = 1000 / frequency.getValuef();
-        pauseTimerCountdown = MathUtils.random(delay / 2) + delay * 3 / 4;
+        pauseTimerCountdown = Utils.random(delay / 2) + delay * 3 / 4;
         makeObject(0);
       }
     } else if (objects.size() == 0) {
@@ -174,7 +214,7 @@ abstract class MultiObjectPattern <ObjectType extends MultiObject> extends TSTri
     
     if (shouldAutofade) {
       for (Cube cube : model.cubes) {
-        blendColor(cube.index, lx.hsb(0, 0, 100 * Math.max(0, (float)(1 - deltaMs / fadeTime))), LXColor.Blend.MULTIPLY);
+        blendColor(cube.index, lx.hsb(0, 0, 100 * Utils.max(0, (float)(1 - deltaMs / fadeTime))), LXColor.Blend.MULTIPLY);
       }
     } else {
       clearColors();
@@ -252,8 +292,8 @@ abstract class MultiObject extends Layer {
       } else {
         progress = runningTimer / runningTimerEnd;
         if (shouldFade) {
-          fadeIn = Math.min(1, 3 * (1 - progress));
-          fadeOut = Math.min(1, 3 * progress);
+          fadeIn = Utils.min(1, 3 * (1 - progress));
+          fadeOut = Utils.min(1, 3 * progress);
         }
         if (currentPoint == null) {
         }
@@ -278,16 +318,16 @@ abstract class MultiObject extends Layer {
         point.limit(10).addSelf(localLastPoint);
 
         if (isInsideBoundingBox(cube, cubePointPrime, point)) {
-          dist = Math.min(dist, getDistanceFromGeometry(cube, cubePointPrime, point));
+          dist = Utils.min(dist, getDistanceFromGeometry(cube, cubePointPrime, point));
         }
         localLastPoint = point;
       }
     }
 
     if (isInsideBoundingBox(cube, cubePointPrime, currentPoint)) {
-      dist = Math.min(dist, getDistanceFromGeometry(cube, cubePointPrime, currentPoint));
+      dist = Utils.min(dist, getDistanceFromGeometry(cube, cubePointPrime, currentPoint));
     }
-    return 100 * Math.min(Math.max(1 - dist / thickness, 0), 1) * fadeIn * fadeOut;
+    return 100 * Utils.min(Utils.max(1 - dist / thickness, 0), 1) * fadeIn * fadeOut;
   }
 
   public boolean isInsideBoundingBox(Cube cube, Vec2D cubePointPrime, Vec2D currentPoint) {
@@ -308,7 +348,7 @@ class Explosions extends MultiObjectPattern<Explosion> {
   ArrayList<Explosion> explosions;
   
   Explosions(LX lx) {
-    this(lx, 0.5);
+    this(lx, 0.5f);
   }
   
   Explosions(LX lx, double speed) {
@@ -325,8 +365,8 @@ class Explosions extends MultiObjectPattern<Explosion> {
   
   Explosion generateObject(float strength) {
     Explosion explosion = new Explosion(lx);
-    explosion.origin = new Vec2D(MathUtils.random(360f), MathUtils.random(model.yMin + 50, model.yMax - 50));
-    explosion.hue = (int) MathUtils.random(360f);
+    explosion.origin = new Vec2D(Utils.random(360), (float)LXUtils.random(model.yMin + 50, model.yMax - 50));
+    explosion.hue = (int) Utils.random(360);
     return explosion;
   }
 }
@@ -354,7 +394,7 @@ class Explosion extends MultiObject {
   }
   
   void init() {
-    explosionThetaOffset = MathUtils.random(360f);
+    explosionThetaOffset = Utils.random(360);
     implosionRadius = new Accelerator(0, 700, -accelOfImplosion);
     addModulator(implosionRadius).start();
     explosionFade = new LinearEnvelope(1, 0, 1000);
@@ -404,11 +444,11 @@ class Explosion extends MultiObject {
       case EXPLOSION_STATE_IMPLOSION_CONTRACT:
         return 100 * LXUtils.constrainf((implosionRadius.getValuef() - dist) / 10, 0, 1);
       default:
-        float theta = explosionThetaOffset + cubePointPrime.sub(origin).heading() * 180 / MathUtils.PI + 360;
+        float theta = explosionThetaOffset + cubePointPrime.sub(origin).heading() * 180 / Utils.PI + 360;
         return 100
             * LXUtils.constrainf(1 - (dist - explosionRadius.getValuef()) / 10, 0, 1)
             * LXUtils.constrainf(1 - (explosionRadius.getValuef() - dist) / 200, 0, 1)
-            * LXUtils.constrainf((1 - Math.abs(theta % 30 - 15) / 100 / (float)Math.asin(20 / Math.max(20, dist))), 0, 1)
+            * LXUtils.constrainf((1 - Utils.abs(theta % 30 - 15) / 100 / Utils.asin(20 / Utils.max(20, dist))), 0, 1)
             * explosionFade.getValuef();
     }
   }
@@ -420,7 +460,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
   final BasicParameter colorVariability = new BasicParameter("CVAR", 10, 180);
   final BasicParameter direction = new BasicParameter("DIR", 90, 360);
   final BasicParameter directionVariability = new BasicParameter("DVAR", 20, 180);
-  final BasicParameter thickness = new BasicParameter("WIDT", 3.5, 1, 20, BasicParameter.Scaling.QUAD_IN);
+  final BasicParameter thickness = new BasicParameter("WIDT", 3.5f, 1, 20, BasicParameter.Scaling.QUAD_IN);
   final BasicParameter speed = new BasicParameter("SPEE", 10, 1, 20, BasicParameter.Scaling.QUAD_IN);
 
   // Possible other parameters:
@@ -432,7 +472,7 @@ class Wisps extends MultiObjectPattern<Wisp> {
   //  Fade time
 
   Wisps(LX lx) {
-    this(lx, .5, 210, 10, 90, 20, 3.5, 10);
+    this(lx, .5f, 210, 10, 90, 20, 3.5f, 10);
   }
 
   Wisps(LX lx, double initial_frequency, double initial_color,
@@ -461,18 +501,18 @@ class Wisps extends MultiObjectPattern<Wisp> {
     Wisp wisp = new Wisp(lx);
     wisp.runningTimerEnd = 5000 / speed.getValuef();
     float pathDirection = (float)(direction.getValuef()
-      + MathUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
-    float pathDist = MathUtils.random(200f, 400f);
-    float startTheta = MathUtils.random(360f);
-    float startY = MathUtils.random(Math.max(model.yMin, model.yMin - pathDist * MathUtils.sin(MathUtils.PI * pathDirection / 180)),
-      Math.min(model.yMax, model.yMax - pathDist * MathUtils.sin(MathUtils.PI * pathDirection / 180)));
+      + LXUtils.random(-directionVariability.getValuef(), directionVariability.getValuef())) % 360;
+    float pathDist = (float)LXUtils.random(200, 400);
+    float startTheta = Utils.random(360);
+    float startY = (float)LXUtils.random(Utils.max(model.yMin, model.yMin - pathDist * Utils.sin(Utils.PI * pathDirection / 180)),
+      Utils.min(model.yMax, model.yMax - pathDist * Utils.sin(Utils.PI * pathDirection / 180)));
     wisp.startPoint = new Vec2D(startTheta, startY);
-    wisp.endPoint = Vec2D.fromTheta(pathDirection * MathUtils.PI / 180);
+    wisp.endPoint = Vec2D.fromTheta(pathDirection * Utils.PI / 180);
     wisp.endPoint.scaleSelf(pathDist);
     wisp.endPoint.addSelf(wisp.startPoint);
     wisp.hue = (int)(baseColor.getValuef()
-      + MathUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
-    wisp.thickness = 10 * thickness.getValuef() + MathUtils.random(-3f, 3f);
+      + LXUtils.random(-colorVariability.getValuef(), colorVariability.getValuef())) % 360;
+    wisp.thickness = 10 * thickness.getValuef() + (float)LXUtils.random(-3, 3);
     
     return wisp;
   }
@@ -506,12 +546,12 @@ class Rain extends MultiObjectPattern<RainDrop> {
   RainDrop generateObject(float strength) {
     RainDrop rainDrop = new RainDrop(lx);
 
-    rainDrop.runningTimerEnd = 180 + MathUtils.random(20f);
-    rainDrop.theta = MathUtils.random(360f);
+    rainDrop.runningTimerEnd = 180 + Utils.random(20);
+    rainDrop.theta = Utils.random(360);
     rainDrop.startY = model.yMax + 20;
     rainDrop.endY = model.yMin - 20;
-    rainDrop.hue = 200 + (int)MathUtils.random(20f);
-    rainDrop.thickness = 10 * (1.5f + MathUtils.random(.6f));
+    rainDrop.hue = 200 + (int)Utils.random(20);
+    rainDrop.thickness = 10 * (1.5f + Utils.random(.6f));
     
     return rainDrop;
   }
@@ -631,7 +671,7 @@ class RandomColor extends TSPattern {
     if (frameCount >= speed.getValuef()) {
       for (Cube cube : model.cubes) {
         colors[cube.index] = lx.hsb(
-          MathUtils.random(360f),
+          Utils.random(360),
           100,
           100
         );
@@ -655,7 +695,7 @@ class ColorStrobe extends TSTriggerablePattern {
     timer += deltaMs;
     if (timer > 16) {
       timer = 0;
-      setColors(lx.hsb(MathUtils.random(360f), 100, 100));
+      setColors(lx.hsb(Utils.random(360), 100, 100));
     }
   }
 }
@@ -666,8 +706,8 @@ class RandomColorGlitch extends TSPattern {
     super(lx);
   }
   
-  final int brokenCubeIndex = MathUtils.random(model.cubes.size());
-  final int cubeColor = MathUtils.random(360);
+  final int brokenCubeIndex = (int)Utils.random(model.cubes.size());
+  final int cubeColor = (int)Utils.random(360);
   
   public void run(double deltaMs) {
     if (getChannel().getFader().getNormalized() == 0) return;
@@ -675,7 +715,7 @@ class RandomColorGlitch extends TSPattern {
     for (Cube cube : model.cubes) {
       if (cube.index == brokenCubeIndex) {
         colors[cube.index] = lx.hsb(
-          MathUtils.random(360f),
+          Utils.random(360),
           100,
           100
         );
@@ -734,7 +774,7 @@ class OrderTest extends TSPattern {
       colors[cube.index] = lx.hsb(
         240,
         100,
-        cube.clusterPosition == order[MathUtils.floor(sweep.getValuef())] ? 100 : 0
+        cube.clusterPosition == order[Utils.floor(sweep.getValuef())] ? 100 : 0
       );
     }
   }
@@ -798,9 +838,9 @@ class ClusterLineTest extends TSPattern {
     for (Cube cube : model.cubes) {
       Vec2D cubePointPrime = VecUtils.movePointToSamePlane(origin, cube.transformedCylinderPoint);
       float dist = origin.distanceTo(cubePointPrime);
-      float cubeTheta = (spin.getValuef() + 15) + cubePointPrime.sub(origin).heading() * 180 / MathUtils.PI + 360;
+      float cubeTheta = (spin.getValuef() + 15) + cubePointPrime.sub(origin).heading() * 180 / Utils.PI + 360;
       colors[cube.index] = lx.hsb(135, 100, 100
-          * LXUtils.constrainf((1 - Math.abs(cubeTheta % 90 - 15) / 100 / (float)Math.asin(20 / Math.max(20, dist))), 0, 1));
+          * LXUtils.constrainf((1 - Utils.abs(cubeTheta % 90 - 15) / 100 / Utils.asin(20 / Utils.max(20, dist))), 0, 1));
     }
   }
 }
@@ -884,7 +924,7 @@ class GhostEffect extends Effect {
           }
           
           for (int i = 0; i < colors.length; i++) {
-            ghostColors[i] = LXColor.blend(ghostColors[i], lx.hsb(0, 0, 100 * Math.max(0, (float)(1 - deltaMs / lifetime))), LXColor.Blend.MULTIPLY);
+            ghostColors[i] = LXColor.blend(ghostColors[i], lx.hsb(0, 0, 100 * Utils.max(0, (float)(1 - deltaMs / lifetime))), LXColor.Blend.MULTIPLY);
             blendColor(i, ghostColors[i], LXColor.Blend.LIGHTEST);
           }
         }
@@ -907,7 +947,7 @@ class ScrambleEffect extends Effect {
   
   protected void run(double deltaMs) {
     for (Tree tree : model.trees) {
-      for (int i = Math.min(tree.cubes.size(), amount.getValuei()); i > 0; i--) {
+      for (int i = Utils.min(tree.cubes.size(), amount.getValuei()); i > 0; i--) {
         colors[tree.cubes.get(i).index] = colors[tree.cubes.get((i + offset) % tree.cubes.size()).index];
       }
     }
@@ -927,19 +967,19 @@ class StaticEffect extends Effect {
   protected void run(double deltaMs) {
     if (amount.getValue() > 0) {
       if (isCreatingStatic) {
-        float chance = MathUtils.random(1f);
+        double chance = Utils.random(1);
         if (chance > amount.getValue()) {
           isCreatingStatic = false;
         }
       } else {
-        float chance = MathUtils.random(1f);
+        double chance = Utils.random(1);
         if (chance < amount.getValue()) {
           isCreatingStatic = true;
         }
       }
       if (isCreatingStatic) {
         for (int i = 0; i < colors.length; i++) {
-          colors[i] = MathUtils.random(255);
+          colors[i] = (int)Utils.random(255);
         }
       }
     }
@@ -1028,7 +1068,7 @@ class ColorStrobeTextureEffect extends Effect {
 
   public void run(double deltaMs) {
     if (amount.getValue() > 0) {
-      float newHue = MathUtils.random(360f);
+      float newHue = Utils.random(360);
       int newColor = lx.hsb(newHue, 100, 100);
       for (int i = 0; i < colors.length; i++) {
         int oldColor = colors[i];
@@ -1081,7 +1121,7 @@ class AcidTripTextureEffect extends Effect {
       for (int i = 0; i < colors.length; i++) {
         int oldColor = colors[i];
         Cube cube = model.cubes.get(i);
-        float newHue = Math.abs(model.cy - cube.transformedY) + Math.abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360;
+        float newHue = Utils.abs(model.cy - cube.transformedY) + Utils.abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360;
         int newColor = lx.hsb(newHue, 100, 100);
         int blendedColor = LXColor.lerp(oldColor, newColor, amount.getValuef());
         colors[i] = lx.hsb(LXColor.h(blendedColor), LXColor.s(blendedColor), LXColor.b(oldColor));
@@ -1120,7 +1160,7 @@ class CandyCloudTextureEffect extends Effect {
 
   double time = 0;
   final double scale = 2400;
-  final double speed = 1.0 / 5000;
+  final double speed = 1.0f / 5000;
 
   CandyCloudTextureEffect(LX lx) {
     super(lx);
@@ -1175,7 +1215,7 @@ class CandyCloud extends TSPattern {
 
       float hue = ((float)SimplexNoise.noise(adjustedX, adjustedY, adjustedZ, adjustedTime) + 1) / 2 * 1080 % 360;
 
-      float brightness = Math.min(Math.max((float)SimplexNoise.noise(cube.x / 250, cube.y / 250, cube.z / 250 + 10000, time / 5000) * 8 + 8 - darkness.getValuef(), 0), 1) * 100;
+      float brightness = Utils.min(Utils.max((float)SimplexNoise.noise(cube.x / 250, cube.y / 250, cube.z / 250 + 10000, time / 5000) * 8 + 8 - darkness.getValuef(), 0), 1) * 100;
       
       colors[cube.index] = lx.hsb(hue, 100, brightness);
     }
@@ -1214,19 +1254,19 @@ class GalaxyCloud extends TSPattern {
       PerlinNoise perlinNoise = new PerlinNoise();
       float hue1 = perlinNoise.noise(4 * adjustedTheta, 4 * adjustedY, adjustedTime);
       float hue2 = perlinNoise.noise(4 * ((adjustedTheta + 0.5f) % 1), 4 * adjustedY + 100, adjustedTime);
-      float hue = (float)LXUtils.lerp(hue1, hue2, Math.min(Math.max(Math.abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5, 0), 1));
+      float hue = Utils.lerp(hue1, hue2, Utils.min(Utils.max(Utils.abs(((adjustedTheta * 4 + 1) % 4) - 2) - 0.5f, 0), 1));
 
       float adjustedHue = hue * initialSpreadSize + initialSpreadMin;
-      hue = Math.min(Math.max(adjustedHue, hueMin), hueMax);
+      hue = Utils.min(Utils.max(adjustedHue, hueMin), hueMax);
 
       // make it black if the hue would go below hueMin or above hueMax
       // normalizedFadeOut: 0 = edge of the initial spread, 1 = edge of the hue spread, >1 = in the hue spread
       float normalizedFadeOut = (adjustedHue - hueMid + hueMinExtra) / (hueMinExtra - hueSpread / 2);
       // scaledFadeOut <0 = black sooner, 0-1 = fade out gradient, >1 = regular color
       float scaledFadeOut = normalizedFadeOut * 5 - 4.5f;
-      float brightness = Math.min(Math.max(scaledFadeOut, 0), 1) * 100;
+      float brightness = Utils.min(Utils.max(scaledFadeOut, 0), 1) * 100;
 
-      // float brightness = Math.min(max((float)SimplexNoise.noise(4 * adjustedX, 4 * adjustedY, 4 * adjustedZ + 10000, adjustedTime) * 8 - 1, 0), 1) * 100;
+      // float brightness = Utils.min(Utils.max((float)SimplexNoise.noise(4 * adjustedX, 4 * adjustedY, 4 * adjustedZ + 10000, adjustedTime) * 8 - 1, 0), 1) * 100;
 
       colors[cube.index] = lx.hsb(hue, 100, brightness);
     }

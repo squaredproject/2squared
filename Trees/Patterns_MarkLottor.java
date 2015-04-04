@@ -4,8 +4,6 @@ import heronarts.lx.modulator.SawLFO;
 import heronarts.lx.modulator.SinLFO;
 import heronarts.lx.parameter.BasicParameter;
 
-import toxi.math.MathUtils;
-
 class MarkLottor extends TSPattern {
   
   // These parameters will be knobs on the UI
@@ -93,12 +91,12 @@ class MarkLottor extends TSPattern {
     for (n = 0; n < maxballs; n++)
     {
       if (balls[n].getposx() != -1) continue;
-      if (MathUtils.random(100f) < 95) continue;
+      if (Utils.random(100) < 95) continue;
 
       // init new ball
       balls[n].setcolor(lx.hsb(lx.getBaseHuef() % 360,100,100));
-      balls[n].setpos(MathUtils.random(0f,360f),0,0);  // theta,y,n/a
-      balls[n].setvel(0,MathUtils.random(0.1f,0.5f),0);    // up speed
+      balls[n].setpos(Utils.random(0,360),0,0);  // theta,y,n/a
+      balls[n].setvel(0,Utils.random(0.1f,0.5f),0);    // up speed
     }
 
     // update all ball positions
@@ -127,8 +125,8 @@ class MarkLottor extends TSPattern {
 
       // light up any cubes "near" this ball
       for (Cube cube : model.cubes) {
-	if ((Math.abs(theta - cube.transformedTheta) < (50*p1v)) &&
-	    (Math.abs(y - cube.transformedY) < (50*p1v)))
+	if ((Utils.abs(theta - cube.transformedTheta) < (50*p1v)) &&
+	    (Utils.abs(y - cube.transformedY) < (50*p1v)))
 	  colors[cube.index] = balls[n].getcolor();
       }
     }
@@ -155,9 +153,9 @@ class MarkLottor extends TSPattern {
         //   b: 0-100
         
         colors[cube.index] = lx.hsb(
-          (lx.getBaseHuef() + cube.transformedY * .3) % 360,
+          (lx.getBaseHuef() + cube.transformedY * .3f) % 360,
           100,
-          Math.max(0, 100 - LXUtils.wrapdistf(cube.transformedTheta, apf, 360))
+          Utils.max(0, 100 - LXUtils.wrapdistf(cube.transformedTheta, apf, 360))
         );
       }
     }

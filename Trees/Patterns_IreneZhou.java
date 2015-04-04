@@ -17,7 +17,6 @@ import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.LXParameter;
 
 import toxi.geom.Vec2D;
-import toxi.math.MathUtils;
 
 class Fireflies extends TSTriggerablePattern {
   final DiscreteParameter flyCount = new DiscreteParameter("NUM", 20, 1, 100);
@@ -39,11 +38,11 @@ class Fireflies extends TSTriggerablePattern {
     public int blinkIndex = 0;
 
     public Firefly() {
-      theta = MathUtils.random(0f, 360f);
-      yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(-1f,1f), MathUtils.random(0.25f, 1f));
+      theta = Utils.random(0, 360);
+      yPos = Utils.random(model.yMin, model.yMax);
+      velocity = new Vec2D(Utils.random(-1,1), Utils.random(0.25f, 1));
       radius = 30;
-      blinkIndex = MathUtils.random(0, blinkers.length);
+      blinkIndex = (int) Utils.random(0, blinkers.length);
     }
 
     public void move(float speed) {
@@ -72,8 +71,8 @@ class Fireflies extends TSTriggerablePattern {
     hue.setValue(initial_hue);
 
     for (int i = 0; i < blinkers.length; ++i) {
-      blinkers[i] = new SinLFO(0, 75, 1000  * MathUtils.random(1.0f, 3.0f));      
-      addModulator(blinkers[i]).setValue(MathUtils.random(0f,50f)).start();
+      blinkers[i] = new SinLFO(0, 75, 1000  * Utils.random(1.0f, 3.0f));      
+      addModulator(blinkers[i]).setValue(Utils.random(0,50)).start();
     }
     
     fireflies = new ArrayList<Firefly>(numFireflies);
@@ -132,9 +131,9 @@ class Fireflies extends TSTriggerablePattern {
 
     for (Firefly fly:fireflies) {
       for (Cube cube: model.cubes) {
-        if (Math.abs(fly.yPos - cube.transformedY) <= radius && Math.abs(fly.theta - cube.transformedTheta) <= radius) {
-          float distSq = (float)Math.pow((LXUtils.wrapdistf(fly.theta, cube.transformedTheta, 360)), 2) + (float)Math.pow(fly.yPos - cube.transformedY, 2);
-          float brt = Math.max(0, 100 - (float)Math.sqrt(distSq * 4) - blinkers[fly.blinkIndex].getValuef());
+        if (Utils.abs(fly.yPos - cube.transformedY) <= radius && Utils.abs(fly.theta - cube.transformedTheta) <= radius) {
+          float distSq = Utils.pow((LXUtils.wrapdistf(fly.theta, cube.transformedTheta, 360)), 2) + Utils.pow(fly.yPos - cube.transformedY, 2);
+          float brt = Utils.max(0, 100 - Utils.sqrt(distSq * 4) - blinkers[fly.blinkIndex].getValuef());
           if (brt > LXColor.b(colors[cube.index])) {
             colors[cube.index] = lx.hsb(
               (lx.getBaseHuef() + hue.getValuef()) % 360,
@@ -175,7 +174,7 @@ class Lattice extends TSPattern {
   final BasicParameter yHeight = new BasicParameter("HEIGHT", 0, -500, 500);
 
   float coil(float basis) {
-    return MathUtils.sin(basis*MathUtils.PI);
+    return Utils.sin(basis*Utils.PI);
   }
 
   Lattice(LX lx) {
@@ -195,7 +194,7 @@ class Lattice extends TSPattern {
       float wrapdistleft = LXUtils.wrapdistf(cube.transformedTheta, spinf + (model.yMax - cube.transformedY) * coilf, 180);
       float wrapdistright = LXUtils.wrapdistf(cube.transformedTheta, -spinf - (model.yMax - cube.transformedY) * coilf, 180);
       float width = yClimb.getValuef() + ((cube.transformedY - yHeight.getValuef())/model.yMax) * 50;
-      float df = Math.min(100, 3 * Math.max(0, wrapdistleft - width) + 3 * Math.max(0, wrapdistright - width));
+      float df = Utils.min(100, 3 * Utils.max(0, wrapdistleft - width) + 3 * Utils.max(0, wrapdistright - width));
 
       colors[cube.index] = lx.hsb(
         (hue.getValuef() + lx.getBaseHuef() + .2f*cube.transformedY - 360) % 360, 
@@ -219,14 +218,14 @@ class Fire extends TSTriggerablePattern {
   
   private class Flame {
     public float flameHeight = 0;
-    public float theta = MathUtils.random(0f, 360f);
+    public float theta = Utils.random(0, 360);
     public LinearEnvelope decay = new LinearEnvelope(0,0,0);
   
     public Flame(float maxHeight, boolean groundStart){
-      float flameHeight = MathUtils.random(0f, maxHeight);
+      float flameHeight = Utils.random(0, maxHeight);
       decay.setRange(75, model.yMax * flameHeight, 1200 * flameHeight);
       if (!groundStart) {
-        decay.setBasis(MathUtils.random(0f,1f));
+        decay.setBasis(Utils.random(0,1));
       }
       addModulator(decay).start();
     }
@@ -285,15 +284,15 @@ class Fire extends TSTriggerablePattern {
       float cHue = 0;
       float flameWidth = flameSize.getValuef();
       for (int i = 0; i < flames.size(); ++i) {
-        if (Math.abs(flames.get(i).theta - cube.transformedTheta) < (flameWidth * (1- yn))) {
-          cBrt = Math.min(100, Math.max(0, 100 + cBrt- 2 * Math.abs(cube.transformedY - flames.get(i).decay.getValuef()) - flames.get(i).decay.getBasisf() * 25)) ;
-          cHue = Math.max(0,  (cHue + cBrt * 0.7f) * 0.5f);
+        if (Utils.abs(flames.get(i).theta - cube.transformedTheta) < (flameWidth * (1- yn))) {
+          cBrt = Utils.min(100, Utils.max(0, 100 + cBrt- 2 * Utils.abs(cube.transformedY - flames.get(i).decay.getValuef()) - flames.get(i).decay.getBasisf() * 25)) ;
+          cHue = Utils.max(0,  (cHue + cBrt * 0.7f) * 0.5f);
         }
       }
       colors[cube.index] = lx.hsb(
         (cHue + hue.getValuef()) % 360,
         100,
-        Math.min(100, cBrt + (float) (float)Math.pow(height, 0.25) * (1 - yn)  * (1 - yn) * 75)
+        Utils.min(100, cBrt + (float) Math.pow(height, 0.25f) * (1 - yn)  * (1 - yn) * 75)
       );
     }
   }
@@ -301,7 +300,7 @@ class Fire extends TSTriggerablePattern {
   public void onTriggered(float strength) {
     super.onTriggered(strength);
 
-    fireHeight.setRange(1,0.6);
+    fireHeight.setRange(1,0.6f);
     fireHeight.reset().start();
   };
 
@@ -330,11 +329,11 @@ class Bubbles extends TSTriggerablePattern {
     public float radius = 0;
 
     public Bubble(float maxRadius) {
-      theta = MathUtils.random(0f, 360f);
-      bHue = MathUtils.random(0f, 30f);
-      baseSpeed = MathUtils.random(2f, 5f);
-      radius = MathUtils.random(5f, maxRadius);
-      yPos = model.yMin - radius * MathUtils.random(1f,10f);
+      theta = Utils.random(0, 360);
+      bHue = Utils.random(0, 30);
+      baseSpeed = Utils.random(2, 5);
+      radius = Utils.random(5, maxRadius);
+      yPos = model.yMin - radius * Utils.random(1,10);
     }
 
     public void move(float speed) {
@@ -402,17 +401,17 @@ class Bubbles extends TSTriggerablePattern {
       
     for (Bubble bubble: bubbles) {
       for (Cube cube : model.cubes) {
-        if (Math.abs(bubble.theta - cube.transformedTheta) < bubble.radius && Math.abs(bubble.yPos - (cube.transformedY - model.yMin)) < bubble.radius) {
+        if (Utils.abs(bubble.theta - cube.transformedTheta) < bubble.radius && Utils.abs(bubble.yPos - (cube.transformedY - model.yMin)) < bubble.radius) {
           float distTheta = LXUtils.wrapdistf(bubble.theta, cube.transformedTheta, 360) * 0.8f;
           float distY = bubble.yPos - (cube.transformedY - model.yMin);
           float distSq = distTheta * distTheta + distY * distY;
           
           if (distSq < bubble.radius * bubble.radius) {
-            float dist = (float)Math.sqrt(distSq);
+            float dist = Utils.sqrt(distSq);
             colors[cube.index] = lx.hsb(
               (bubble.bHue + hue.getValuef()) % 360,
               50 + dist/bubble.radius * 50,
-              LXUtils.constrainf(cube.transformedY/model.yMax * 125 - 50 * (dist/bubble.radius), 0, 100)
+              Utils.constrain(cube.transformedY/model.yMax * 125 - 50 * (dist/bubble.radius), 0, 100)
             );
           }
         }
@@ -452,9 +451,9 @@ class Voronoi extends TSPattern {
     public Vec2D velocity = new Vec2D(0,0);
     
     public Site() {
-      theta = MathUtils.random(0f, 360f);
-      yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(-1f,1f), MathUtils.random(-1f,1f));
+      theta = Utils.random(0, 360);
+      yPos = Utils.random(model.yMin, model.yMax);
+      velocity = new Vec2D(Utils.random(-1,1), Utils.random(-1,1));
     }
     
     public void move(float speed) {
@@ -483,8 +482,8 @@ class Voronoi extends TSPattern {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
       for (int i = 0; i < sites.length; ++i) {
-        if (Math.abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
-          float distSq = (float)Math.pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + (float)Math.pow(sites[i].yPos - cube.transformedY, 2);
+        if (Utils.abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
+          float distSq = Utils.pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + Utils.pow(sites[i].yPos - cube.transformedY, 2);
           if (distSq < nextMinDistSq) {
             if (distSq < minDistSq) {
               nextMinDistSq = minDistSq;
@@ -498,7 +497,7 @@ class Voronoi extends TSPattern {
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + hue.getValuef()) % 360,
         100,
-        Math.max(0, Math.min(100, 100 - (float)Math.sqrt(nextMinDistSq - minDistSq) / width.getValuef()))
+        Utils.max(0, Utils.min(100, 100 - Utils.sqrt(nextMinDistSq - minDistSq) / width.getValuef()))
       );
     }
     for (Site site: sites) {
@@ -520,9 +519,9 @@ class Cells extends TSPattern {
     public Vec2D velocity = new Vec2D(0,0);
     
     public Site() {
-      theta = MathUtils.random(0f, 360f);
-      yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(-1f,1f), MathUtils.random(-1f,1f));
+      theta = Utils.random(0, 360);
+      yPos = Utils.random(model.yMin, model.yMax);
+      velocity = new Vec2D(Utils.random(-1,1), Utils.random(-1,1));
     }
     
     public void move(float speed) {
@@ -551,8 +550,8 @@ class Cells extends TSPattern {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
       for (int i = 0; i < sites.length; ++i) {
-        if (Math.abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
-          float distSq = (float)Math.pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + (float)Math.pow(sites[i].yPos - cube.transformedY, 2);
+        if (Utils.abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
+          float distSq = Utils.pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + Utils.pow(sites[i].yPos - cube.transformedY, 2);
           if (distSq < nextMinDistSq) {
             if (distSq < minDistSq) {
               nextMinDistSq = minDistSq;
@@ -566,7 +565,7 @@ class Cells extends TSPattern {
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + hue.getValuef()) % 360,
         100,
-        Math.max(0, Math.min(100, 100 - (float)Math.sqrt(nextMinDistSq - 2 * minDistSq)))
+        Utils.max(0, Utils.min(100, 100 - Utils.sqrt(nextMinDistSq - 2 * minDistSq)))
       );
     }
     for (Site site: sites) {
@@ -589,9 +588,9 @@ class Fumes extends TSPattern {
     public Vec2D velocity = new Vec2D(0,0);
     
     public Site() {
-      theta = MathUtils.random(0f, 360f);
-      yPos = MathUtils.random(model.yMin, model.yMax);
-      velocity = new Vec2D(MathUtils.random(0f,1f), MathUtils.random(0f,0.75f));
+      theta = Utils.random(0, 360);
+      yPos = Utils.random(model.yMin, model.yMax);
+      velocity = new Vec2D(Utils.random(0,1), Utils.random(0,0.75f));
     }
     
     public void move(float speed) {
@@ -624,8 +623,8 @@ class Fumes extends TSPattern {
       float minDistSq = 1000000;
       float nextMinDistSq = 1000000;
       for (int i = 0; i < sites.length; ++i) {
-        if (Math.abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
-          float distSq = (float)Math.pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + (float)Math.pow(sites[i].yPos - cube.transformedY, 2);
+        if (Utils.abs(sites[i].yPos - cube.transformedY) < 150) { //restraint on calculation
+          float distSq = Utils.pow((LXUtils.wrapdistf(sites[i].theta, cube.transformedTheta, 360)), 2) + Utils.pow(sites[i].yPos - cube.transformedY, 2);
           if (distSq < nextMinDistSq) {
             if (distSq < minDistSq) {
               nextMinDistSq = minDistSq;
@@ -636,10 +635,10 @@ class Fumes extends TSPattern {
           }
         }
       }
-      float brt = Math.max(0, 100 - (float)Math.sqrt(nextMinDistSq));
+      float brt = Utils.max(0, 100 - Utils.sqrt(nextMinDistSq));
       colors[cube.index] = lx.hsb(
         (lx.getBaseHuef() + hue.getValuef()) % 360,
-        100 - Math.min( minSat, brt),
+        100 - Utils.min( minSat, brt),
         brt
       );
     }
@@ -702,12 +701,12 @@ class Pulley extends TSTriggerablePattern { //ported from SugarCubes
     int i = 0;
     for (int j = 0; j < NUM_DIVISIONS; ++j) {
       if (isRising) {
-        baseSpeed[j] = MathUtils.random(20f, 33f);
+        baseSpeed[j] = Utils.random(20, 33);
         gravity[j].setSpeed(baseSpeed[j], 0).start();
       } 
       else {
         gravity[j].setVelocity(0).setAcceleration(-420);
-        delays[j].setPeriod(MathUtils.random(0f, 500f)).trigger();
+        delays[j].setPeriod(Utils.random(0, 500)).trigger();
       }
       ++i;
     }
@@ -734,24 +733,24 @@ class Pulley extends TSTriggerablePattern { //ported from SugarCubes
         for (Accelerator g : gravity) {
           if (g.getValuef() < 0) { //bounce
             g.setValue(-g.getValuef());
-            g.setVelocity(-g.getVelocityf() * MathUtils.random(0.74f, 0.84f));
+            g.setVelocity(-g.getVelocityf() * Utils.random(0.74f, 0.84f));
           }
         }
       }
   
       float fPos = 1 -lx.tempo.rampf();
-      if (fPos < .2) {
+      if (fPos < .2f) {
         fPos = .2f + 4 * (.2f - fPos);
       }
   
       float falloff = 100.f / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
       for (Cube cube : model.cubes) {
-        int gi = (int) LXUtils.constrainf((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
+        int gi = (int) Utils.constrain((cube.x - model.xMin) * NUM_DIVISIONS / (model.xMax - model.xMin), 0, NUM_DIVISIONS-1);
         float yn =  cube.transformedY/model.yMax;
         colors[cube.index] = lx.hsb(
-          (lx.getBaseHuef() + Math.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f) % 360, 
-          LXUtils.constrainf(100 *(0.8f -  yn * yn), 0, 100), 
-          Math.max(0, 100 - Math.abs(cube.transformedY/2 - 50 - gravity[gi].getValuef())*falloff)
+          (lx.getBaseHuef() + Utils.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f) % 360, 
+          Utils.constrain(100 *(0.8f -  yn * yn), 0, 100), 
+          Utils.max(0, 100 - Utils.abs(cube.transformedY/2 - 50 - gravity[gi].getValuef())*falloff)
         );
       }
     }
@@ -787,7 +786,7 @@ class Springs extends TSPattern {
   final SinLFO spin = new SinLFO(0, 360, 9600);
   
   float coil(float basis) {
-    return 4 * MathUtils.sin(basis*MathUtils.TWO_PI + MathUtils.PI) ;
+    return 4 * Utils.sin(basis*Utils.TWO_PI + Utils.PI) ;
   }
 
   Springs(LX lx) {
@@ -812,10 +811,10 @@ class Springs extends TSPattern {
   private void trigger() {
     isRising = !isRising;
     if (isRising) {
-      gravity.setSpeed(0.25, 0).start();
+      gravity.setSpeed(0.25f, 0).start();
     } 
     else {
-      gravity.setVelocity(0).setAcceleration(-1.75);
+      gravity.setVelocity(0).setAcceleration(-1.75f);
     }
   }
 
@@ -826,7 +825,7 @@ class Springs extends TSPattern {
       gravity.start();
       if (gravity.getValuef() < 0) {
         gravity.setValue(-gravity.getValuef());
-        gravity.setVelocity(-gravity.getVelocityf() * MathUtils.random(0.74f, 0.84f));
+        gravity.setVelocity(-gravity.getVelocityf() * Utils.random(0.74f, 0.84f));
       }
     }
 
@@ -837,11 +836,11 @@ class Springs extends TSPattern {
       float yn =  cube.transformedY/model.yMax;
       float width = (1-yn) * 25;
       float wrapdist = LXUtils.wrapdistf(cube.transformedTheta, spinf + (cube.transformedY) * 1/(gravity.getValuef() + 0.2f), 360);
-      float df = Math.max(0, 100 - Math.max(0, wrapdist-width));
+      float df = Utils.max(0, 100 - Utils.max(0, wrapdist-width));
       colors[cube.index] = lx.hsb(
-        Math.max(0, (lx.getBaseHuef() - yn * 20 + hue.getValuef()) % 360), 
-        LXUtils.constrainf((1- yn) * 100 + wrapdist, 0, 100),
-        Math.max(0, df - yn * 50)
+        Utils.max(0, (lx.getBaseHuef() - yn * 20 + hue.getValuef()) % 360), 
+        Utils.constrain((1- yn) * 100 + wrapdist, 0, 100),
+        Utils.max(0, df - yn * 50)
       );
     }
   }
@@ -872,14 +871,14 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
     public LinearEnvelope maxBrt = new LinearEnvelope(0,0,0);
     
     public Pulley() {
-      baseSpeed = MathUtils.random(10f,50f);
-      baseHue = MathUtils.random(0f, 30f);
-      delay.setPeriod(MathUtils.random(0f,500f));
+      baseSpeed = Utils.random(10,50);
+      baseHue = Utils.random(0, 30);
+      delay.setPeriod(Utils.random(0,500));
       gravity.setSpeed(this.baseSpeed, 0);
       if (autoMode) {
         maxBrt.setRange(0,1,3000);
       } else {
-        maxBrt.setRange(0.5,1,3000);
+        maxBrt.setRange(0.5f,1,3000);
       }
       
       turnOff.setPeriod(6000);
@@ -988,13 +987,13 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
           }
           if (pulleys.get(j).gravity.getValuef() < 0) { //bouncebounce
             pulleys.get(j).gravity.setValue(-pulleys.get(j).gravity.getValuef());
-            pulleys.get(j).gravity.setVelocity(-pulleys.get(j).gravity.getVelocityf() * MathUtils.random(0.74f,0.84f));
+            pulleys.get(j).gravity.setVelocity(-pulleys.get(j).gravity.getVelocityf() * Utils.random(0.74f,0.84f));
           }
         }
       }
   
       float fPos = 1 -lx.tempo.rampf();
-      if (fPos < .2) {
+      if (fPos < .2f) {
         fPos = .2f + 4 * (.2f - fPos);
       }
   
@@ -1003,14 +1002,14 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
         float cBrt = 0;
         float cHue = 0;
         for (int j = 0; j < pulleys.size(); ++j) {
-          cHue = (lx.getBaseHuef() + Math.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f + pulleys.get(j).baseHue) % 360;
-          cBrt += Math.max(0, pulleys.get(j).maxBrt.getValuef() * (100 - Math.abs(cube.transformedY/2 - 50 - pulleys.get(j).gravity.getValuef())*falloff));
+          cHue = (lx.getBaseHuef() + Utils.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f + pulleys.get(j).baseHue) % 360;
+          cBrt += Utils.max(0, pulleys.get(j).maxBrt.getValuef() * (100 - Utils.abs(cube.transformedY/2 - 50 - pulleys.get(j).gravity.getValuef())*falloff));
         }
         float yn =  cube.transformedY/model.yMax;
         colors[cube.index] = lx.hsb(
           cHue, 
-          LXUtils.constrainf(100 *(0.8f -  yn * yn), 0, 100), 
-          Math.min(100, cBrt)
+          Utils.constrain(100 *(0.8f -  yn * yn), 0, 100), 
+          Utils.min(100, cBrt)
         );
       }
     }
@@ -1023,7 +1022,7 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
         newPulley.gravity.setSpeed(newPulley.baseSpeed,0).start();
       } else {
         if (autoMode) {
-          newPulley.gravity.setValue(MathUtils.random(0f,225f));
+          newPulley.gravity.setValue(Utils.random(0,225));
         } else {
           newPulley.gravity.setValue(250);
           newPulley.turnOff.start();
@@ -1071,7 +1070,7 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
 //
 //  void transform(Model model) {
 //    for (Cube cube: model.cubes) {
-//      cube.transformedY = cube.transformedY * ( 1 - ripple.getValuef() * amplitude.getValuef() * MathUtils.sin((cube.transformedTheta + rotate) / 30 * MathUtils.PI ));
+//      cube.transformedY = cube.transformedY * ( 1 - ripple.getValuef() * amplitude.getValuef() * Utils.sin((cube.transformedTheta + rotate) / 30 * Utils.PI ));
 //    }
 //  }
 //}
@@ -1099,23 +1098,23 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
 
 //     if (rippleAge.getValuef() < 5){
 //       if (!resetDone){
-//         yCenter = 150 + MathUtils.random(300);
-//         thetaCenter = MathUtils.random(360);
+//         yCenter = 150 + Utils.random(300);
+//         thetaCenter = Utils.random(360);
 //         resetDone = true;
 //       }
 //     }
 //     else {
 //       resetDone = false;
 //     }
-//     float radius = (float)Math.pow(rippleAge.getValuef(), 2) / 3;
+//     float radius = Utils.pow(rippleAge.getValuef(), 2) / 3;
 //     for (Cube cube : model.cubes) {
-//       float distVal = (float)Math.sqrt((float)Math.pow((LXUtils.wrapdistf(thetaCenter, cube.transformedTheta, 360)) * 0.8, 2) + (float)Math.pow(yCenter - cube.transformedY, 2));
-//       float heightHueVariance = 0.1 * cube.transformedY;
+//       float distVal = Utils.sqrt(Utils.pow((LXUtils.wrapdistf(thetaCenter, cube.transformedTheta, 360)) * 0.8f, 2) + Utils.pow(yCenter - cube.transformedY, 2));
+//       float heightHueVariance = 0.1f * cube.transformedY;
 //       if (distVal < radius){
 //         float rippleDecayFactor = (100 - rippleAge.getValuef()) / 100;
 //         float timeDistanceCombination = distVal / 20 - rippleAge.getValuef();
-//         hueVal = (lx.getBaseHuef() + 40 * MathUtils.sin(MathUtils.TWO_PI * (12.5 + rippleAge.getValuef() )/ 200) * rippleDecayFactor * MathUtils.sin(timeDistanceCombination) + heightHueVariance + 360) % 360;
-//         brightVal = LXUtils.constrainf((baseBrightness.getValuef() + rippleDecayFactor * (100 - baseBrightness.getValuef()) + 80 * rippleDecayFactor * MathUtils.sin(timeDistanceCombination + MathUtils.TWO_PI / 8)), 0, 100);
+//         hueVal = (lx.getBaseHuef() + 40 * Utils.sin(Utils.TWO_PI * (12.5f + rippleAge.getValuef() )/ 200) * rippleDecayFactor * Utils.sin(timeDistanceCombination) + heightHueVariance + 360) % 360;
+//         brightVal = Utils.constrain((baseBrightness.getValuef() + rippleDecayFactor * (100 - baseBrightness.getValuef()) + 80 * rippleDecayFactor * Utils.sin(timeDistanceCombination + Utils.TWO_PI / 8)), 0, 100);
 //       }
 //       else {
 //         hueVal = (lx.getBaseHuef() + heightHueVariance) % 360;

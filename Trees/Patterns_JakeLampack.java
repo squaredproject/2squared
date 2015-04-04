@@ -16,7 +16,7 @@ class AcidTrip extends TSPattern {
    
     for (Cube cube : model.cubes) {
       colors[cube.index] = lx.hsb(
-        Math.abs(model.cy - cube.transformedY) + Math.abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360,
+        Utils.abs(model.cy - cube.transformedY) + Utils.abs(model.cy - cube.transformedTheta) + trails.getValuef() % 360,
         100,
         100
       );

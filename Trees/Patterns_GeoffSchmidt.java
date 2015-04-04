@@ -5,8 +5,6 @@ import heronarts.lx.modulator.SawLFO;
 import heronarts.lx.modulator.SinLFO;
 import heronarts.lx.parameter.BasicParameter;
 
-import toxi.math.MathUtils;
-
 class PixelState {
   LX lx;
   double when; // time last triggered (possibly zero)
@@ -76,7 +74,7 @@ class Pixels extends TSPattern {
     float firesPerSec = minFiresPerSec + vSpeed * (maxFiresPerSec - minFiresPerSec);
     float timeBetween = 1000 / firesPerSec;
     while (lastFireTime + timeBetween < now) {
-      int which = (int)MathUtils.random(0, model.cubes.size());
+      int which = (int)Utils.random(0, model.cubes.size());
       pixelStates[which].fire(now, vLifetime * 1000 + 10, hueLFO.getValuef(), (1 - vSat));
       lastFireTime += timeBetween;
     } 
@@ -115,15 +113,15 @@ class Wedges extends TSPattern {
     float vSat = pSat.getValuef();
     float vHue = pHue.getValuef();
 
-    rotation += deltaMs/1000.0 * (2 * (vSpeed - .5) * 360.0 * 1.0);
-    rotation = rotation % 360.0;
+    rotation += deltaMs/1000.0f * (2 * (vSpeed - .5f) * 360.0f * 1.0f);
+    rotation = rotation % 360.0f;
 
-    double sections = MathUtils.floor(1.0 + vCount * 10.0);
-    double quant = 360.0/sections;
+    double sections = Math.floor(1.0f + vCount * 10.0f);
+    double quant = 360.0f/sections;
 
     for (Cube cube : model.cubes) {
       colors[cube.index] = LXColor.hsb(
-        MathUtils.floor((rotation - cube.transformedTheta) / quant) * quant + vHue * 360.0,
+        Math.floor((rotation - cube.transformedTheta) / quant) * quant + vHue * 360.0f,
         (1 - vSat) * 100,
         100);
     }     
@@ -140,19 +138,19 @@ class ColorBar {
   
   ColorBar(double now) {
     startTime = now;
-    velocity = LXUtils.random(6.0, 12.0*25.0); // upward velocity, inches per second
-    s = LXUtils.random(0.1, 1.0) * 100;
-    b = LXUtils.random(0.1, 1.0) * 100;
-    barHeight = LXUtils.random(12.0, 10.0*12.0);
+    velocity = Utils.random(6.0f, 12.0f*25.0f); // upward velocity, inches per second
+    s = Utils.random(0.1f, 1.0f) * 100;
+    b = Utils.random(0.1f, 1.0f) * 100;
+    barHeight = Utils.random(12.0f, 10.0f*12.0f);
   }
   
   public boolean intersects(double now, double y) {
-    y -= (now - startTime)/1000.0 * velocity;
+    y -= (now - startTime)/1000.0f * velocity;
     return y < 0 && y > -barHeight;
   }
   
   public boolean offscreen(double now) {
-    return (velocity * (now - startTime)/1000.0) - barHeight > 70*12;
+    return (velocity * (now - startTime)/1000.0f) - barHeight > 70*12;
   }
   
   public int getColor(double h) {
@@ -193,8 +191,8 @@ class Parallax extends TSPattern {
       colorBars = newColorBars;
     }
     
-    now += deltaMs * (pSpeed.getValuef() * 2.0 + .5);
-    double bouncedNow = now + bounceLFO.getValuef() * pBounceMag.getValuef() * 1000.0;
+    now += deltaMs * (pSpeed.getValuef() * 2.0f + .5f);
+    double bouncedNow = now + bounceLFO.getValuef() * pBounceMag.getValuef() * 1000.0f;
     
     for (int i = 0; i < colorBars.length; i++) {
       if (colorBars[i] == null || colorBars[i].offscreen(now))
