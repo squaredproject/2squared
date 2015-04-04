@@ -44,7 +44,7 @@ class MidiEngine {
   private final LXAutomationRecorder[] automation;
   private final BooleanParameter[] automationStop;
   
-  public MidiEngine(final LX lx, LXListenableNormalizedParameter[] effectKnobParameters, final TSDrumpad apc40Drumpad, final BasicParameter drumpadVelocity, final BooleanParameter[] previewChannels, final BPMTool bpmTool, final InterfaceController uiDeck, final BooleanParameter[][] nfcToggles, final LXDatagramOutput output, DiscreteParameter automationSlot, LXAutomationRecorder[] automation, BooleanParameter[] automationStop) {
+  public MidiEngine(final LX lx, LXListenableNormalizedParameter[] effectKnobParameters, final TSDrumpad apc40Drumpad, final BasicParameter drumpadVelocity, final BooleanParameter[] previewChannels, final BPMTool bpmTool, final InterfaceController uiDeck, final BooleanParameter[][] nfcToggles, final BasicParameter outputBrightness, DiscreteParameter automationSlot, LXAutomationRecorder[] automation, BooleanParameter[] automationStop) {
     this.lx = lx;
     this.automationSlot = automationSlot;
     this.automation = automation;
@@ -202,7 +202,7 @@ class MidiEngine {
       }
       
       // Master fader
-      apc40.bindController(output.brightness, 0, APC40.MASTER_FADER, LXMidiDevice.TakeoverMode.PICKUP);
+      apc40.bindController(outputBrightness, 0, APC40.MASTER_FADER, LXMidiDevice.TakeoverMode.PICKUP);
 
       apc40.bindController(drumpadVelocity, 0, APC40.CROSSFADER);
       

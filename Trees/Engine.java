@@ -73,6 +73,7 @@ abstract class Engine {
   final DiscreteParameter automationSlot = new DiscreteParameter("AUTO", Engine.NUM_AUTOMATION);
   final BooleanParameter[][] nfcToggles = new BooleanParameter[6][9];
   final BooleanParameter[] previewChannels = new BooleanParameter[Engine.NUM_CHANNELS];
+  final BasicParameterProxy outputBrightness = new BasicParameterProxy(1);
 
   Engine(String projectPath) {
     this.projectPath = projectPath;
@@ -490,16 +491,14 @@ abstract class Engine {
     //   "event": "MESSAGE",
     //   "millis": 0
     // },
-    if (enableOutputBigtree) {
-      lx.engine.addMessageListener(new LXEngine.MessageListener() {
-        public void onMessage(LXEngine engine, String message) {
-          if (message.length() > 8 && message.substring(0, 7).equals("master/")) {
-            double value = Double.parseDouble(message.substring(7));
-            output.brightness.setValue(value);
-          }
+    lx.engine.addMessageListener(new LXEngine.MessageListener() {
+      public void onMessage(LXEngine engine, String message) {
+        if (message.length() > 8 && message.substring(0, 7).equals("master/")) {
+          double value = Double.parseDouble(message.substring(7));
+          outputBrightness.setValue(value);
         }
-      });
-    }
+      }
+    });
 
     // Automation recorders
     for (int i = 0; i < automation.length; ++i) {
@@ -567,7 +566,7 @@ abstract class Engine {
     apc40Drumpad.triggerables = apc40DrumpadTriggerables;
 
     // MIDI control
-    midiEngine = new MidiEngine(lx, effectKnobParameters, apc40Drumpad, drumpadVelocity, previewChannels, bpmTool, uiDeck, nfcToggles, output, automationSlot, automation, automationStop);
+    midiEngine = new MidiEngine(lx, effectKnobParameters, apc40Drumpad, drumpadVelocity, previewChannels, bpmTool, uiDeck, nfcToggles, outputBrightness, automationSlot, automation, automationStop);
   }
 
   /* configureNFC */
@@ -596,6 +595,7 @@ abstract class Engine {
       for (Cluster cluster : model.clusters) {
         output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
       }
+      outputBrightness.parameters.add(output.brightness);
       output.enabled.setValue(false);
       lx.addOutput(output);
     } catch (Exception x) {
@@ -617,6 +617,7 @@ abstract class Engine {
     }
     try {
       FadecandyOutput fadecandyOutput = new FadecandyOutput(lx, "127.0.0.1", 7890, pixelOrder);
+      outputBrightness.parameters.add(fadecandyOutput.brightness);
       lx.addOutput(fadecandyOutput);
     } catch (Exception e) {
       System.out.println(e);
@@ -669,16 +670,32 @@ class TreesTransition extends LXTransition {
   }
 }
 
-class BooleanProxyParameter extends BooleanParameter {
+class BooleanParameterProxy extends BooleanParameter {
 
   final List<BooleanParameter> parameters = new ArrayList<BooleanParameter>();
 
-  BooleanProxyParameter() {
+  BooleanParameterProxy() {
     super("Proxy", true);
   }
 
   protected double updateValue(double value) {
     for (BooleanParameter parameter : parameters) {
+      parameter.setValue(value);
+    }
+    return value;
+  }
+}
+
+class BasicParameterProxy extends BasicParameter {
+
+  final List<BasicParameter> parameters = new ArrayList<BasicParameter>();
+
+  BasicParameterProxy(double value) {
+    super("Proxy", value);
+  }
+
+  protected double updateValue(double value) {
+    for (BasicParameter parameter : parameters) {
       parameter.setValue(value);
     }
     return value;

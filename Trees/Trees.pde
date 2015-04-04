@@ -46,6 +46,7 @@ Model model;
 P2LX lx;
 ProcessingEngine engine;
 LXDatagramOutput output;
+BasicParameter outputBrightness;
 LXDatagram[] datagrams;
 UIChannelFaders uiFaders;
 UIMultiDeck uiDeck;
@@ -86,6 +87,7 @@ class ProcessingEngine extends Engine {
     Trees.this.model = model;
     Trees.this.lx = getLX();
     Trees.this.output = output;
+    Trees.this.outputBrightness = outputBrightness;
     Trees.this.datagrams = datagrams;
     Trees.this.bpmTool = bpmTool;
     Trees.this.mappingTool = mappingTool;

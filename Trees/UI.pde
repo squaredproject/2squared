@@ -397,9 +397,7 @@ class UIChannelFaders extends UI2dContext {
     .setShowLabel(false)
     .addToContainer(this);
 
-    if (engine.enableOutputBigtree) {
-      masterSlider.setParameter(output.brightness);
-    }
+    masterSlider.setParameter(outputBrightness);
     
     LXParameterListener listener;
     lx.engine.focusedChannel.addListener(listener = new LXParameterListener() {
