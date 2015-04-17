@@ -4,6 +4,7 @@ import java.util.Iterator;
 import heronarts.lx.LX;
 import heronarts.lx.LXUtils;
 import heronarts.lx.color.LXColor;
+import heronarts.lx.effect.BlurEffect;
 import heronarts.lx.modulator.Accelerator;
 import heronarts.lx.modulator.LinearEnvelope;
 import heronarts.lx.modulator.LXModulator;
@@ -935,19 +936,22 @@ class GhostEffect extends Effect {
 
 class ScrambleEffect extends Effect {
   
-  final DiscreteParameter amount;
+  final BasicParameter amount = new BasicParameter("SCRA");
   final int offset;
   
   ScrambleEffect(LX lx) {
     super(lx);
     
-    amount = new DiscreteParameter("SCRA", lx.total / 2);
     offset = lx.total / 4 + 5;
+  }
+
+  int getAmount() {
+    return (int)(amount.getValue() * lx.total / 2);
   }
   
   protected void run(double deltaMs) {
     for (Tree tree : model.trees) {
-      for (int i = Utils.min(tree.cubes.size(), amount.getValuei()); i > 0; i--) {
+      for (int i = Utils.min(tree.cubes.size() - 1, getAmount()); i > 0; i--) {
         colors[tree.cubes.get(i).index] = colors[tree.cubes.get((i + offset) % tree.cubes.size()).index];
       }
     }
@@ -998,6 +1002,11 @@ class SpeedEffect extends Effect {
         lx.engine.setSpeed(speed.getValue());
       }
     });
+  }
+
+  protected void onEnable() {
+    super.onEnable();
+    lx.engine.setSpeed(speed.getValue());
   }
 
   public void run(double deltaMs) {}
@@ -1270,6 +1279,25 @@ class GalaxyCloud extends TSPattern {
 
       colors[cube.index] = lx.hsb(hue, 100, brightness);
     }
+  }
+}
+
+class TSBlurEffect extends BlurEffect {
+  TSBlurEffect(LX lx) {
+    super(lx);
+  }
+
+  @Override
+  public void loop(double deltaMs) {
+    if (isEnabled()) {
+      super.loop(deltaMs);
+    }
+  }
+}
+
+class TSBlurEffect2 extends TSBlurEffect {
+  TSBlurEffect2(LX lx) {
+    super(lx);
   }
 }
 

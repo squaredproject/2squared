@@ -38,7 +38,7 @@ import heronarts.lx.transition.LXTransition;
 
 abstract class Engine {
 
-  static final boolean enableIPad = false;
+  static final boolean enableIPad = true;
   static final boolean autoplayBMSet = true;
 
   static final boolean enableNFC = false;
@@ -51,6 +51,7 @@ abstract class Engine {
 
 
   static final int NUM_CHANNELS = 8;
+  static final int NUM_IPAD_CHANNELS = 3;
   static final int NUM_KNOBS = 8;
   static final int NUM_AUTOMATION = 4;
 
@@ -58,10 +59,10 @@ abstract class Engine {
   final List<TreeConfig> clusterConfig;
   final LX lx;
   final Model model;
+  EngineController engineController;
   LXDatagramOutput output;
   LXDatagram[] datagrams;
   BPMTool bpmTool;
-  MappingTool mappingTool;
   InterfaceController uiDeck;
   MidiEngine midiEngine;
   TSDrumpad apc40Drumpad;
@@ -69,7 +70,7 @@ abstract class Engine {
   LXListenableNormalizedParameter[] effectKnobParameters;
   final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
   final BasicParameter drumpadVelocity = new BasicParameter("DVEL", 1);
-  final LXAutomationRecorder[] automation = new LXAutomationRecorder[Engine.NUM_AUTOMATION];
+  final TSAutomationRecorder[] automation = new TSAutomationRecorder[Engine.NUM_AUTOMATION];
   final BooleanParameter[] automationStop = new BooleanParameter[Engine.NUM_AUTOMATION]; 
   final DiscreteParameter automationSlot = new DiscreteParameter("AUTO", Engine.NUM_AUTOMATION);
   final BooleanParameter[][] nfcToggles = new BooleanParameter[6][9];
@@ -85,22 +86,22 @@ abstract class Engine {
   
     lx.engine.addParameter(drumpadVelocity);
 
+    if (enableIPad) {
+      engineController = new EngineController(lx);
+    }
+
     configureChannels();
 
     if (enableNFC) {
       configureNFC();
-
-      // uncomment this to allow any nfc reader to read any cube
+      // this line to allow any nfc reader to read any cube
       nfcEngine.disableVisualTypeRestrictions = true;
     }
 
     configureTriggerables();
-
-    lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
     lx.engine.addLoopTask(new ModelTransformTask(model));
 
     configureBMPTool();
-
     configureAutomation();
 
     if (enableOutputBigtree) {
@@ -115,6 +116,10 @@ abstract class Engine {
 
     if (enableAPC40) {
       configureMIDI();
+    }
+    if (enableIPad) {
+      engineController.setAutoplay(autoplayBMSet);
+      configureServer();
     }
     
     // bad code I know
@@ -133,6 +138,78 @@ abstract class Engine {
   abstract LX createLX();
 
   void postCreateLX() { }
+
+  void registerIPadPatterns() {
+    registerPatternController("None", new NoPattern(lx));
+    registerPatternController("Twister", new Twister(lx));
+    registerPatternController("Lottor", new MarkLottor(lx));
+    registerPatternController("Ripple", new Ripple(lx));
+    registerPatternController("Stripes", new Stripes(lx));
+    registerPatternController("Lattice", new Lattice(lx));
+    registerPatternController("Fumes", new Fumes(lx));
+    registerPatternController("Voronoi", new Voronoi(lx));
+    registerPatternController("Candy Cloud", new CandyCloud(lx));
+    registerPatternController("Galaxy Cloud", new GalaxyCloud(lx));
+
+    registerPatternController("Color Strobe", new ColorStrobe(lx));
+    registerPatternController("Strobe", new Strobe(lx));
+    registerPatternController("Sparkle Takeover", new SparkleTakeOver(lx));
+    registerPatternController("Multi-Sine", new MultiSine(lx));
+    registerPatternController("Seesaw", new SeeSaw(lx));
+    registerPatternController("Cells", new Cells(lx));
+    registerPatternController("Fade", new Fade(lx));
+    
+    registerPatternController("Ice Crystals", new IceCrystals(lx));
+    registerPatternController("Fire", new Fire(lx));
+
+    registerPatternController("Acid Trip", new AcidTrip(lx));
+    registerPatternController("Rain", new Rain(lx));
+    registerPatternController("Bass Slam", new BassSlam(lx));
+
+    registerPatternController("Fireflies", new Fireflies(lx));
+    registerPatternController("Bubbles", new Bubbles(lx));
+    registerPatternController("Lightning", new Lightning(lx));
+    registerPatternController("Wisps", new Wisps(lx));
+    registerPatternController("Fireworks", new Explosions(lx));
+  }
+
+  void registerIPadEffects() {
+    ColorEffect colorEffect = new ColorEffect2(lx);
+    ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
+    FadeTextureEffect fadeTextureEffect = new FadeTextureEffect(lx);
+    AcidTripTextureEffect acidTripTextureEffect = new AcidTripTextureEffect(lx);
+    CandyTextureEffect candyTextureEffect = new CandyTextureEffect(lx);
+    CandyCloudTextureEffect candyCloudTextureEffect = new CandyCloudTextureEffect(lx);
+    // GhostEffect ghostEffect = new GhostEffect(lx);
+    // RotationEffect rotationEffect = new RotationEffect(lx);
+
+    SpeedEffect speedEffect = engineController.speedEffect = new SpeedEffect(lx);
+    SpinEffect spinEffect = engineController.spinEffect = new SpinEffect(lx);
+    BlurEffect blurEffect = engineController.blurEffect = new TSBlurEffect2(lx);
+    ScrambleEffect scrambleEffect = engineController.scrambleEffect = new ScrambleEffect(lx);
+    // StaticEffect staticEffect = engineController.staticEffect = new StaticEffect(lx);
+
+    lx.addEffect(blurEffect);
+    lx.addEffect(colorEffect);
+    // lx.addEffect(staticEffect);
+    lx.addEffect(spinEffect);
+    lx.addEffect(speedEffect);
+    lx.addEffect(colorStrobeTextureEffect);
+    lx.addEffect(fadeTextureEffect);
+    // lx.addEffect(acidTripTextureEffect);
+    lx.addEffect(candyTextureEffect);
+    lx.addEffect(candyCloudTextureEffect);
+    // lx.addEffect(ghostEffect);
+    lx.addEffect(scrambleEffect);
+    // lx.addEffect(rotationEffect);
+
+    registerEffectController("Rainbow", candyCloudTextureEffect, candyCloudTextureEffect.amount);
+    registerEffectController("Candy Chaos", candyTextureEffect, candyTextureEffect.amount);
+    registerEffectController("Color Strobe", colorStrobeTextureEffect, colorStrobeTextureEffect.amount);
+    registerEffectController("Fade", fadeTextureEffect, fadeTextureEffect.amount);
+    registerEffectController("Monochrome", colorEffect, colorEffect.mono);
+    registerEffectController("White", colorEffect, colorEffect.desaturation);
+  }
 
   void addPatterns(ArrayList<LXPattern> patterns) {
     // Add patterns here.
@@ -187,14 +264,11 @@ abstract class Engine {
 
   LXPattern[] getPatternListForChannels() {
     ArrayList<LXPattern> patterns = new ArrayList<LXPattern>();
-    
     addPatterns(patterns);
-
     for (LXPattern pattern : patterns) {
       LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
       pattern.setTransition(t);
     }
-
     return patterns.toArray(new LXPattern[patterns.size()]);
   }
 
@@ -254,7 +328,7 @@ abstract class Engine {
   }
 
   void registerEffectTriggerables() {
-    BlurEffect blurEffect = new BlurEffect(lx);
+    BlurEffect blurEffect = new TSBlurEffect(lx);
     ColorEffect colorEffect = new ColorEffect(lx);
     GhostEffect ghostEffect = new GhostEffect(lx);
     ScrambleEffect scrambleEffect = new ScrambleEffect(lx);
@@ -385,16 +459,34 @@ abstract class Engine {
     }
   }
 
+  ArrayList<TSPattern> patterns;
+
   void configureChannels() {
-    lx.setPatterns(getPatternListForChannels());
-    for (int i = 1; i < Engine.NUM_CHANNELS; ++i) {
-      lx.engine.addChannel(getPatternListForChannels());
-    }
-    
-    for (LXChannel channel : lx.engine.getChannels()) {
+    for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
+      LXChannel channel = lx.engine.addChannel(getPatternListForChannels());
       channel.goIndex(channel.getIndex());
       setupChannel(channel, true);
     }
+    engineController.baseChannelIndex = lx.engine.getChannels().size() - 1;
+
+    if (enableIPad) {
+      for (int i = 0; i < Engine.NUM_IPAD_CHANNELS; ++i) {
+        patterns = new ArrayList<TSPattern>();
+        registerIPadPatterns();
+
+        LXChannel channel = lx.engine.addChannel(patterns.toArray(new TSPattern[0]));
+        channel.getFader().setValue(1);
+        setupChannel(channel, true);
+
+        if (i == 0) {
+          channel.goIndex(1);
+        }
+      }
+      patterns = null;
+      engineController.numChannels = NUM_IPAD_CHANNELS;
+    }
+
+    lx.engine.removeChannel(lx.engine.getDefaultChannel());
   }
 
   void registerOneShot(TSPattern pattern, String nfcSerialNumber) {
@@ -436,6 +528,13 @@ abstract class Engine {
     return pattern.getTriggerable();
   }
 
+  void registerPatternController(String name, TSPattern pattern) {
+    LXTransition t = new DissolveTransition(lx).setDuration(dissolveTime);
+    pattern.setTransition(t);
+    pattern.readableName = name;
+    patterns.add(pattern);
+  }
+
   /* configureEffects */
 
   void registerEffect(LXEffect effect, String nfcSerialNumber) {
@@ -466,7 +565,7 @@ abstract class Engine {
 
   void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
     ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(lx, parameter, offValue, onValue);
-      BooleanParameter toggle = null;
+    BooleanParameter toggle = null;
     if (apc40Drumpad != null) {
       toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
       apc40DrumpadTriggerablesLists[row].add(triggerable);
@@ -474,6 +573,13 @@ abstract class Engine {
     if (nfcEngine != null) {
       nfcEngine.registerTriggerable(nfcSerialNumber, triggerable, VisualType.Effect, toggle);
     }
+  }
+
+  void registerEffectController(String name, LXEffect effect, LXListenableNormalizedParameter parameter) {
+    ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(lx, parameter);
+    TSEffectController effectController = new TSEffectController(name, effect, triggerable);
+
+    engineController.effectControllers.add(effectController);
   }
 
   /* configureBMPTool */
@@ -503,7 +609,7 @@ abstract class Engine {
     // Automation recorders
     for (int i = 0; i < automation.length; ++i) {
       final int ii = i;
-      automation[i] = new LXAutomationRecorder(lx.engine);
+      automation[i] = new TSAutomationRecorder(lx.engine);
       lx.engine.addLoopTask(automation[i]);
       automationStop[i] = new BooleanParameter("STOP", false);
       automationStop[i].addListener(new LXParameterListener() {
@@ -516,15 +622,17 @@ abstract class Engine {
       });
     }
 
-    if (autoplayBMSet) {
-      String filename = "data/Burning Man Playlist.json";
-      JsonArray jsonArr = loadSavedSetFile(filename);
-      automation[automationSlot.getValuei()].loadJson(jsonArr);
-      // slotLabel.setLabel(labels[automationSlot.getValuei()] = filename);
+    String filename = "data/Burning Man Playlist.json";
+    JsonArray jsonArr = loadSavedSetFile(filename);
+    automation[automationSlot.getValuei()].loadJson(jsonArr);
+    // slotLabel.setLabel(labels[automationSlot.getValuei()] = filename);
+    automation[automationSlot.getValuei()].looping.setValue(true);
 
-      automation[automationSlot.getValuei()].looping.setValue(true);
+    if (autoplayBMSet) {
       automation[automationSlot.getValuei()].start();
     }
+
+    engineController.automation = automation[automationSlot.getValuei()];
   }
 
   /* configureTriggerables */
@@ -548,6 +656,12 @@ abstract class Engine {
     registerPatternTriggerables();
     registerOneShotTriggerables();
     registerEffectTriggerables();
+
+    if (enableIPad) {
+      engineController.startEffectIndex = lx.engine.getEffects().size();
+      registerIPadEffects();
+      engineController.endEffectIndex = lx.engine.getEffects().size();
+    }
 
     if (apc40Drumpad != null) {
       apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
@@ -623,6 +737,127 @@ abstract class Engine {
       System.out.println(e);
     }
   }
+
+  /* configureServer */
+
+  void configureServer() {
+    new AppServer(lx, engineController).start();
+  }
+}
+
+class EngineController {
+  LX lx;
+
+  int baseChannelIndex;
+  int numChannels;
+
+  int startEffectIndex;
+  int endEffectIndex;
+
+  boolean isAutoplaying;
+  TSAutomationRecorder automation;
+  boolean[] previousChannelIsOn;
+
+  ArrayList<TSEffectController> effectControllers = new ArrayList<TSEffectController>();
+  int activeEffectControllerIndex = -1;
+
+  SpeedEffect speedEffect;
+  SpinEffect spinEffect;
+  BlurEffect blurEffect;
+  ScrambleEffect scrambleEffect;
+
+  EngineController(LX lx) {
+    this.lx = lx;
+  }
+
+  List<LXChannel> getChannels() {
+    return lx.engine.getChannels().subList(baseChannelIndex, baseChannelIndex + numChannels);
+  }
+
+  void setChannelPattern(int channelIndex, int patternIndex) {
+    if (patternIndex == -1) {
+      patternIndex = 0;
+    } else {
+      patternIndex++;
+    }
+    lx.engine.getChannel(channelIndex).goIndex(patternIndex);
+  }
+
+  void setChannelVisibility(int channelIndex, double visibility) {
+    lx.engine.getChannel(channelIndex).getFader().setValue(visibility);
+  }
+
+  void setActiveColorEffect(int effectIndex) {
+    if (activeEffectControllerIndex == effectIndex) {
+      return;
+    }
+    if (activeEffectControllerIndex != -1) {
+      TSEffectController effectController = effectControllers.get(activeEffectControllerIndex);
+      effectController.setEnabled(false);
+    }
+    activeEffectControllerIndex = effectIndex;
+    if (activeEffectControllerIndex != -1) {
+      TSEffectController effectController = effectControllers.get(activeEffectControllerIndex);
+      effectController.setEnabled(true);
+    }
+  }
+
+  void setSpeed(double amount) {
+    speedEffect.speed.setValue(amount);
+  }
+
+  void setSpin(double amount) {
+    spinEffect.spin.setValue(amount);
+  }
+
+  void setBlur(double amount) {
+    blurEffect.amount.setValue(amount);
+  }
+
+  void setScramble(double amount) {
+    scrambleEffect.amount.setValue(amount);
+  }
+
+  void setAutoplay(boolean autoplay) {
+    if (autoplay != isAutoplaying) {
+      isAutoplaying = autoplay;
+      automation.setPaused(!autoplay);
+
+      if (previousChannelIsOn == null) {
+        previousChannelIsOn = new boolean[lx.engine.getChannels().size()];
+        for (LXChannel channel : lx.engine.getChannels()) {
+          previousChannelIsOn[channel.getIndex()] = channel.enabled.isOn();
+        }
+      }
+
+      for (LXChannel channel : lx.engine.getChannels()) {
+        boolean toEnable;
+        if (channel.getIndex() < baseChannelIndex) {
+          toEnable = autoplay;
+        } else if (channel.getIndex() < baseChannelIndex + numChannels) {
+          toEnable = !autoplay;
+        } else {
+          toEnable = autoplay;
+        }
+
+        if (toEnable) {
+          channel.enabled.setValue(previousChannelIsOn[channel.getIndex()]);
+        } else {
+          previousChannelIsOn[channel.getIndex()] = channel.enabled.isOn();
+          channel.enabled.setValue(false);
+        }
+      }
+
+      for (int i = 0; i < lx.engine.getEffects().size(); i++) {
+        LXEffect effect = lx.engine.getEffects().get(i);
+        if (i < startEffectIndex) {
+          effect.enabled.setValue(autoplay);
+        } else if (i < endEffectIndex) {
+          effect.enabled.setValue(!autoplay);
+        }
+      }
+    }
+  }
 }
 
 class TreesTransition extends LXTransition {
@@ -666,6 +901,35 @@ class TreesTransition extends LXTransition {
         int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i];
         colors[i] = LXColor.lerp(c1[i], LXColor.blend(c1[i], color2, this.blendType), progress);
       }
+    }
+  }
+}
+
+class TSAutomationRecorder extends LXAutomationRecorder {
+
+  boolean isPaused;
+
+  TSAutomationRecorder(LXEngine engine) {
+    super(engine);
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    isPaused = false;
+  }
+
+  public void setPaused(boolean paused) {
+    if (!paused && !isRunning()) {
+      start();
+    }
+    isPaused = paused;
+  }
+
+  @Override
+  public void loop(double deltaMs) {
+    if (!isPaused) {
+      super.loop(deltaMs);
     }
   }
 }

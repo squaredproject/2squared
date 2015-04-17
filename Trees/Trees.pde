@@ -83,6 +83,8 @@ class ProcessingEngine extends Engine {
   void postCreateLX() {
     super.postCreateLX();
 
+    lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
+
     Trees.this.clusterConfig = clusterConfig;
     Trees.this.model = model;
     Trees.this.lx = getLX();
@@ -90,7 +92,6 @@ class ProcessingEngine extends Engine {
     Trees.this.outputBrightness = outputBrightness;
     Trees.this.datagrams = datagrams;
     Trees.this.bpmTool = bpmTool;
-    Trees.this.mappingTool = mappingTool;
     Trees.this.automation = automation;
     Trees.this.automationStop = automationStop; 
     Trees.this.automationSlot = automationSlot;

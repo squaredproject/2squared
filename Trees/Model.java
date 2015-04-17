@@ -11,7 +11,6 @@ import com.google.gson.JsonObject;
 import heronarts.lx.LX;
 import heronarts.lx.LXLayer;
 import heronarts.lx.LXLoopTask;
-import heronarts.lx.effect.LXEffect;
 import heronarts.lx.model.LXAbstractFixture;
 import heronarts.lx.model.LXModel;
 import heronarts.lx.model.LXPoint;
@@ -205,7 +204,9 @@ class Model extends LXModel {
       cube.resetTransform();
     }
     for (ModelTransform modelTransform : modelTransforms) {
-      modelTransform.transform(this);
+      if (modelTransform.isEnabled()) {
+        modelTransform.transform(this);
+      }
     }
     for (Cube cube : cubes) {
       cube.didTransform();
@@ -612,16 +613,6 @@ class Cube extends LXModel {
 
   void didTransform() {
     transformedCylinderPoint = new Vec2D(transformedTheta, transformedY);
-  }
-}
-
-abstract class Effect extends LXEffect {
-
-  protected final Model model;
-
-  Effect(LX lx) {
-    super(lx);
-    model = (Model)lx.model;
   }
 }
 

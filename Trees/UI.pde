@@ -605,11 +605,13 @@ class UIMultiDeck extends UIWindow implements InterfaceController {
     for (int i = 0; i < Engine.NUM_CHANNELS; i++) {
       LXChannel channel = lx.engine.getChannel(i); 
       lxListeners[channel.getIndex()] = new LXChannel.AbstractListener() {
+        @Override
         public void patternWillChange(LXChannel channel, LXPattern pattern,
             LXPattern nextPattern) {
           patternLists[channel.getIndex()].redraw();
         }
 
+        @Override
         public void patternDidChange(LXChannel channel, LXPattern pattern) {
           List<LXPattern> patterns = channel.getPatterns();
           for (int i = 0; i < patterns.size(); ++i) {
