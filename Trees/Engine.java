@@ -115,7 +115,7 @@ abstract class Engine {
       configureMIDI();
     }
     if (enableIPad) {
-      engineController.setAutoplay(autoplayBMSet);
+      engineController.setAutoplay(autoplayBMSet, true);
       configureServer();
     }
     
@@ -146,7 +146,7 @@ abstract class Engine {
     registerPatternController("Fumes", new Fumes(lx));
     registerPatternController("Voronoi", new Voronoi(lx));
     registerPatternController("Candy Cloud", new CandyCloud(lx));
-    registerPatternController("Galaxy Cloud", new GalaxyCloud(lx));
+    // registerPatternController("Galaxy Cloud", new GalaxyCloud(lx));
 
     registerPatternController("Color Strobe", new ColorStrobe(lx));
     registerPatternController("Strobe", new Strobe(lx));
@@ -256,7 +256,7 @@ abstract class Engine {
     patterns.add(new LowEQ(lx));
     patterns.add(new MidEQ(lx));
     patterns.add(new HighEQ(lx));
-    patterns.add(new GalaxyCloud(lx));
+    // patterns.add(new GalaxyCloud(lx));
   }
 
   LXPattern[] getPatternListForChannels() {
@@ -480,9 +480,10 @@ abstract class Engine {
     for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
       LXChannel channel = lx.engine.addChannel(getPatternListForChannels());
       setupChannel(channel, true);
-      if (!autoplayBMSet) {
-        channel.goIndex(i);
+      if (i == 0) {
+        channel.getFader().setValue(1);
       }
+      channel.goIndex(i);
     }
     engineController.baseChannelIndex = lx.engine.getChannels().size() - 1;
 
@@ -835,7 +836,11 @@ class EngineController {
   }
 
   void setAutoplay(boolean autoplay) {
-    if (autoplay != isAutoplaying) {
+    setAutoplay(autoplay, false);
+  }
+
+  void setAutoplay(boolean autoplay, boolean forceUpdate) {
+    if (autoplay != isAutoplaying || forceUpdate) {
       isAutoplaying = autoplay;
       automation.setPaused(!autoplay);
 

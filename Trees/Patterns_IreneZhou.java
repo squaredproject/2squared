@@ -213,7 +213,7 @@ class Fire extends TSTriggerablePattern {
   private LinearEnvelope fireHeight = new LinearEnvelope(0,0,500);
 
   private float height = 0;
-  private int numFlames = 75;
+  private int numFlames = 12;
   private List<Flame> flames;
   
   private class Flame {
@@ -222,10 +222,15 @@ class Fire extends TSTriggerablePattern {
     public LinearEnvelope decay = new LinearEnvelope(0,0,0);
   
     public Flame(float maxHeight, boolean groundStart){
-      float flameHeight = Utils.random(0, maxHeight);
-      decay.setRange(75, model.yMax * flameHeight, 1200 * flameHeight);
+      float flameHeight;
+      if (Utils.random(1) > .2f) {
+        flameHeight = Utils.pow(Utils.random(0, 1), 3) * maxHeight * 0.3f;
+      } else {
+        flameHeight = Utils.pow(Utils.random(0, 1), 3) * maxHeight;
+      }
+      decay.setRange(model.yMin, (model.yMax * 0.9f) * flameHeight, Utils.min(Utils.max(200, 900 * flameHeight), 800));
       if (!groundStart) {
-        decay.setBasis(Utils.random(0,1));
+        decay.setBasis(Utils.random(0,.8f));
       }
       addModulator(decay).start();
     }
@@ -263,7 +268,7 @@ class Fire extends TSTriggerablePattern {
 
     if (!triggerableModeEnabled) {
       height = maxHeight.getValuef();
-      numFlames = (int) flameCount.getValuef();
+      numFlames = (int) (flameCount.getValue() / 75 * 30); // Convert for backwards compatibility
     } else {
       height = fireHeight.getValuef();
     }
@@ -274,25 +279,30 @@ class Fire extends TSTriggerablePattern {
     for (int i = 0; i < flames.size(); ++i) {
       if (flames.get(i).decay.finished()) {
         removeModulator(flames.get(i).decay);
-        flames.set(i, new Flame(height, true));
+        if (flames.size() <= numFlames) {
+          flames.set(i, new Flame(height, true));
+        } else {
+          flames.remove(i);
+          i--;
+        }
       }
     }
 
     for (Cube cube: model.cubes) {
-      float yn = cube.transformedY / model.yMax;
+      float yn = (cube.transformedY - model.yMin) / model.yMax;
       float cBrt = 0;
       float cHue = 0;
-      float flameWidth = flameSize.getValuef();
+      float flameWidth = flameSize.getValuef() / 2;
       for (int i = 0; i < flames.size(); ++i) {
         if (Utils.abs(flames.get(i).theta - cube.transformedTheta) < (flameWidth * (1- yn))) {
-          cBrt = Utils.min(100, Utils.max(0, 100 + cBrt- 2 * Utils.abs(cube.transformedY - flames.get(i).decay.getValuef()) - flames.get(i).decay.getBasisf() * 25)) ;
+          cBrt = Utils.min(100, Utils.max(0, Utils.max(cBrt, (100 - 2 * Utils.abs(cube.transformedY - flames.get(i).decay.getValuef()) - flames.get(i).decay.getBasisf() * 25) * Utils.min(1, 2 * (1 - flames.get(i).decay.getBasisf())) )));
           cHue = Utils.max(0,  (cHue + cBrt * 0.7f) * 0.5f);
         }
       }
       colors[cube.index] = lx.hsb(
         (cHue + hue.getValuef()) % 360,
         100,
-        Utils.min(100, cBrt + (float) Math.pow(height, 0.25f) * (1 - yn)  * (1 - yn) * 75)
+        Utils.min(100, cBrt + Utils.pow(Utils.max(0, (height - 0.3f) / 0.7f), 0.5f) * Utils.pow(Utils.max(0, 0.8f - yn), 2) * 75)
       );
     }
   }
