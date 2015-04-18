@@ -126,7 +126,7 @@ class BassSlam extends TSTriggerablePattern {
     if (triggerableModeEnabled) {
       firedTimer += deltaMs / 800;
       if (firedTimer > 1) {
-        getChannel().enabled.setValue(false);
+        setCallRun(false);
         return;
       }
     }
@@ -631,7 +631,7 @@ class StrobeOneshot extends TSTriggerablePattern {
   public void run(double deltaMs) {
     firedTimer += deltaMs;
     if (firedTimer >= 80) {
-      getChannel().enabled.setValue(false);
+      setCallRun(false);
     }
   }
 }

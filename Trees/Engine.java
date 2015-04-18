@@ -83,12 +83,9 @@ abstract class Engine {
     clusterConfig = loadConfigFile(CLUSTER_CONFIG_FILE);
     model = new Model(clusterConfig);
     lx = createLX();
+    engineController = new EngineController(lx);
   
     lx.engine.addParameter(drumpadVelocity);
-
-    if (enableIPad) {
-      engineController = new EngineController(lx);
-    }
 
     configureChannels();
 
@@ -449,6 +446,24 @@ abstract class Engine {
   void setupChannel(final LXChannel channel, boolean noOpWhenNotRunning) {
     channel.setFaderTransition(new TreesTransition(lx, channel));
 
+    channel.addListener(new LXChannel.AbstractListener() {
+      LXTransition transition;
+
+      public void patternWillChange(LXChannel channel, LXPattern pattern, LXPattern nextPattern) {
+        if (!channel.enabled.isOn()) {
+          transition = nextPattern.getTransition();
+          nextPattern.setTransition(null);
+        }
+      }
+
+      public void patternDidChange(LXChannel channel, LXPattern pattern) {
+        if (transition != null) {
+          pattern.setTransition(transition);
+          transition = null;
+        }
+      }
+    });
+
     if (noOpWhenNotRunning) {
       channel.enabled.setValue(channel.getFader().getValue() != 0);
       channel.getFader().addListener(new LXParameterListener() {
@@ -464,8 +479,10 @@ abstract class Engine {
   void configureChannels() {
     for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
       LXChannel channel = lx.engine.addChannel(getPatternListForChannels());
-      channel.goIndex(channel.getIndex());
       setupChannel(channel, true);
+      if (!autoplayBMSet) {
+        channel.goIndex(i);
+      }
     }
     engineController.baseChannelIndex = lx.engine.getChannels().size() - 1;
 
@@ -475,8 +492,8 @@ abstract class Engine {
         registerIPadPatterns();
 
         LXChannel channel = lx.engine.addChannel(patterns.toArray(new TSPattern[0]));
-        channel.getFader().setValue(1);
         setupChannel(channel, true);
+        channel.getFader().setValue(1);
 
         if (i == 0) {
           channel.goIndex(1);
@@ -627,12 +644,11 @@ abstract class Engine {
     automation[automationSlot.getValuei()].loadJson(jsonArr);
     // slotLabel.setLabel(labels[automationSlot.getValuei()] = filename);
     automation[automationSlot.getValuei()].looping.setValue(true);
+    engineController.automation = automation[automationSlot.getValuei()];
 
     if (autoplayBMSet) {
       automation[automationSlot.getValuei()].start();
     }
-
-    engineController.automation = automation[automationSlot.getValuei()];
   }
 
   /* configureTriggerables */
