@@ -9,6 +9,7 @@ Big LED trees with blinky blinks
 ## Installation
 
 * Download [Processing](https://processing.org/download/?processing)
+  * You will need to download version 2 of Processing
 * Install [LibNFC](http://nfc-tools.org/index.php?title=Libnfc#Installation) (On Mac OS X, I recommend Homebrew; see below)
 * Clone this repo (or download the zip)
 * Open `Trees.pde` in Processing and run the sketch
