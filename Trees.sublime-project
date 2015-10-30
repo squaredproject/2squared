@@ -2,9 +2,18 @@
 	"folders":
 	[
 		{
-			"path": "Trees",
-			"folder_exclude_patterns": ["build-tmp", "javadoc", "code", "data"],
-			"file_exclude_patterns": ["*.sh"]
+			"file_exclude_patterns":
+			[
+				"*.sh"
+			],
+			"folder_exclude_patterns":
+			[
+				"build-tmp",
+				"javadoc",
+				"code",
+				"data"
+			],
+			"path": "Trees"
 		}
 	]
 }

@@ -8,9 +8,9 @@
 
     "devices": [
     {
-        "serial": "NBASVPZVHLUVMVEP",
+        "serial": "DZLDSWDZZLWXONON",
         "type": "fadecandy",
-        "map": [[ 0, 0, 0, 384, "grb" ]]
+        "map": [[ 0, 384, 0, 384, "grb" ]]
     },
     {
         "serial": "QANTWIVNBNODSLCZ",
