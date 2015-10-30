@@ -3,3 +3,4 @@ build-tmp/
 *.sublime-workspace
 
 Trees.sublime-project
+.DS_Store
