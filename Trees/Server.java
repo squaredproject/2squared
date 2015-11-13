@@ -52,13 +52,16 @@ class ParseClientTask implements LXLoopTask {
 
       System.out.print("Request: " + whatClientSaid);
 
-      Map<String, Object> message;
+      Map<String, Object> message = null;
       try {
         message = gson.fromJson(whatClientSaid.trim(), new TypeToken<Map<String, Object>>() {}.getType());
       } catch (Exception e) {
         System.out.println(e);
+        System.out.println("Got: " + message);
         return;
       }
+
+      if (message == null) return;
 
       String method = (String)message.get("method");
       @SuppressWarnings("unchecked")

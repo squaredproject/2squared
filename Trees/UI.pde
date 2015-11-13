@@ -188,7 +188,7 @@ class UITrees extends UI3dComponent {
   }
 }
 
-class UILoopRecorder extends UIWindow {
+public class UILoopRecorder extends UIWindow {
   
   private final UILabel slotLabel;
   private final String[] labels = new String[] { "-", "-", "-", "-" };
