@@ -1,0 +1,27 @@
+How to update the mapping on a working odroid:
+
+Setup:
+
+1. Make sure you have fadecandy server, 2squared github code, and Processing v2 installed.
+2. Plug Fadecandies into your laptop.
+3. Run fade candy server and pass the 2squared config file as the argument. You will need to modify the file "2squared/config.json” so that it contains the serial numbers for the Fadecandies you are connecting to. You can find them by running the fade candy server without any arguments and plugging and unplugging the fade candy USB from your laptop.
+On Mac: `./fcserver-osx /<<path-to-2squared-directory>>/config.json`
+on windows command line: `fcserver.exe \<<path-to-2squared-directory>>\config.json `
+
+Do the mapping:
+
+4. Run the Trees.pde file in Processing
+5. In the window that appears with the model of the tree, use the panel at the bottom left to adjust the position of the clusters in software so that they line up with the position on the real tree.
+Note: Processing will make backups of the cluster file as you go along, so as long as your laptop doesn’t die in the middle of this process (which happened to me once), you shouldn’t lose your data
+6. When you have repeated the previous step for every cluster, hit the save button in the panel. That will by default update the file `2squared/Trees/data/cluster_minitrees3.json`. This is the file that represents the mapping.
+
+Change file on ODroid
+
+7. Next, SSH to the odroid
+Connect to the mini-trees wifi network, password “thetrees!”
+IP of the odroid is 192.168.4.1
+ex for Mac/Linux: `ssh root@192.168.4.1`, password is “odroid”
+8. Type the command `sudo remountrw` and enter password “odroid”. This will make the /ro directory and all subdirectories writable until reboot.
+9. From your laptop, SCP or use Putty to transfer the mapping file from your laptop to the odroid
+on Mac, from 2squared/Trees/data directory: `scp cluster_minitrees3.json odroid@192.168.4.1:/ro/home/odroid/2squared/Trees/data`
+10. Reboot the ODroid and make sure that the mapping file updated correctly
