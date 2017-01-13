@@ -47,7 +47,7 @@ abstract class Engine {
   static final boolean enableOutputMinitree = true;
   static final boolean enableOutputBigtree = false;
 
-  static final String CLUSTER_CONFIG_FILE = "data/clusters_minitree3.json";
+  static final String CLUSTER_CONFIG_FILE = "data/clusters_hillary_tree.json";
 
 
   static final int NUM_CHANNELS = 8;
