@@ -14,10 +14,7 @@ cd /home/odroid
 # Note: you will be prompted several times while running these commands
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt-get update
-sudo apt-get install aufs-tools
-sudo apt-get install isc-dhcp-server
-sudo apt-get install oracle-java8-installer
-sudo apt-get install libnl-3-dev libnl-genl-3-dev libssl-dev hostapd iptables git-core
+sudo apt-get install libnl-3-dev libnl-genl-3-dev libssl-dev hostapd iptables git-core oracle-java8-installer isc-dhcp-server aufs-tools
 sudo apt-get install --reinstall pkg-config
 
 
@@ -47,8 +44,8 @@ tar xvzf processing.tgz
 #####################################
 ## Fadecandy and 2squared Services ##
 #####################################
-cp /home/odroid/2squared/odroid_setup/2squared.service /etc/systemd/system/
-cp /home/odroid/2squared/odroid_setup/fadecandy.service /etc/systemd/system/
+sudo cp /home/odroid/2squared/odroid_setup/2squared.service /etc/systemd/system/
+sudo cp /home/odroid/2squared/odroid_setup/fadecandy.service /etc/systemd/system/
 systemctl enable 2squared.service
 systemctl enable fadecandy.service
 
