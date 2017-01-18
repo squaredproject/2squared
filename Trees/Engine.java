@@ -253,10 +253,12 @@ abstract class Engine {
     patterns.add(new Pixels(lx));
     patterns.add(new Wedges(lx));
     patterns.add(new Parallax(lx));
-    patterns.add(new LowEQ(lx));
-    patterns.add(new MidEQ(lx));
-    patterns.add(new HighEQ(lx));
-    // patterns.add(new GalaxyCloud(lx));
+    if (lx.audioInput() != null) {
+      patterns.add(new LowEQ(lx));
+      patterns.add(new MidEQ(lx));
+      patterns.add(new HighEQ(lx));
+      // patterns.add(new GalaxyCloud(lx));
+    }
   }
 
   LXPattern[] getPatternListForChannels() {
