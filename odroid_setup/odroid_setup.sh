@@ -52,8 +52,8 @@ echo -e "\n\n\n*********** Setting up fadecand and squared services ************
 
 sudo cp /home/odroid/2squared/odroid_setup/2squared.service /etc/systemd/system/
 sudo cp /home/odroid/2squared/odroid_setup/fadecandy.service /etc/systemd/system/
-systemctl enable 2squared.service
-systemctl enable fadecandy.service
+systemctl reenable 2squared.service
+systemctl reenable fadecandy.service
 
 ######################
 ####### Hostapd ######
@@ -102,12 +102,17 @@ echo -e "\n\n\n*********** Done with isc-dhcp-server **************\n\n\n\n\n"
 ###############################
 ####### AUFS read-only  #######
 ###############################
+echo aufs >> /etc/initramfs-tools/modules
+# vi /etc/initramfs-tools/scripts/init-bottom/rootaufs
+sudo cp /home/odroid/2squared/odroid_setup/rootaufs /etc/initramfs-tools/scripts/init-bottom/rootaufs
+chmod 0755 /etc/initramfs-tools/scripts/init-bottom/rootaufs
+mv /etc/initramfs-tools/scripts/init-bottom/rootaufs /etc/initramfs-tools/scripts/init-bottom/__rootaufs
 
+update-initramfs -u
+mkimage -A arm64 -O linux -T ramdisk -C none -a 0 -e 0 -n "uInitrd $(uname -r)" -d /boot/initrd.img-$(uname -r) /boot/uInitrd-$(uname -r)
+cp /boot/uInitrd-$(uname -r) /media/boot/uInitrd
 
+# vi /media/boot/boot.ini
+# add aufs=tmpfs
 
-
-
-
-
-
-echo -e "\n\n\n*********** Done!!! **************\n\n\n\n\n"
+echo -e "\n\n\n*********** Done!!! Now add aufs=tmpfs to setenv bootargs line in /media/boot.ini **************\n\n\n\n\n"
