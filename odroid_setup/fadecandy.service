@@ -2,7 +2,7 @@
 Description=fadecandy
 
 [Service]
-ExecStart=/home/odroid/fadecandy/bin/fcserver-osx /home/odroid/2squared/config.json
+ExecStart=/usr/local/bin/fcserver /home/odroid/2squared/config.json
 Restart=always
 
 [Install]

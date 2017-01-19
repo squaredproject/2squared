@@ -23,11 +23,11 @@ echo -e "\n\n\n*********** Done installing packages **************\n\n\n\n\n"
 ## Install Fadecandy ##
 #######################
 echo -e "\n\n\n*********** Installing fadecandy **************\n\n\n\n\n"
-
-wget https://codeload.github.com/scanlime/fadecandy/zip/master -O fadecandy.zip
-unzip fadecandy.zip
-mv fadecandy-master fadecandy
-rm fadecandy.zip
+git clone git://github.com/scanlime/fadecandy
+cd fadecandy/server
+make submodules
+make
+sudo mv fcserver /usr/local/bin
 
 echo -e "\n\n\n*********** Done installing fadecandy **************\n\n\n\n\n"
 
@@ -36,25 +36,13 @@ echo -e "\n\n\n*********** Done installing fadecandy **************\n\n\n\n\n"
 ## Install 2squared ##
 ######################
 echo -e "\n\n\n*********** Installing 2squared **************\n\n\n\n\n"
-
-wget -O 2squared.zip https://github.com/squaredproject/2squared/archive/odroid_setup.zip
-unzip 2squared.zip
-mv 2squared-odroid_setup 2squared
-rm 2squared.zip
+git clone https://github.com/squaredproject/2squared.git
+git checkout odroid_setup # Comment this out before merge to master
 cd 2squared && sh compile.sh && cd /home/odroid
 
 echo -e "\n\n\n*********** Done installing 2squared **************\n\n\n\n\n"
 
 
-########################
-## Install Processing ##
-########################
-echo -e "\n\n\n*********** Installing processing **************\n\n\n\n\n"
-
-wget -O processing.tgz http://download.processing.org/processing-2.2.1-linux64.tgz
-tar xvzf processing.tgz
-
-echo -e "\n\n\n*********** Done installing processing **************\n\n\n\n\n"
 
 
 #####################################
@@ -104,7 +92,7 @@ echo -e "\n\n\n*********** configuring isc-dhcp-server **************\n\n\n\n\n"
 
 sudo cat <<EOT >> /etc/dhcp/dhcpd.conf
 subnet 192.168.4.0 netmask 255.255.255.0 {
-  range 192.168.4.2 192.168.4.10;
+  range 192.168.4.2 192.168.4.100;
 }
 EOT
 service isc-dhcp-server restart
