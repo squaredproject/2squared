@@ -11,10 +11,10 @@ import heronarts.lx.transition.*;
 import heronarts.lx.midi.*;
 import heronarts.lx.modulator.*;
 
-import heronarts.p2lx.*;
-import heronarts.p2lx.ui.*;
-import heronarts.p2lx.ui.component.*;
-import heronarts.p2lx.ui.control.*;
+import heronarts.p3lx.*;
+import heronarts.p3lx.ui.*;
+import heronarts.p3lx.ui.component.*;
+import heronarts.p3lx.ui.control.*;
 
 import ddf.minim.*;
 import processing.opengl.*;
@@ -43,7 +43,7 @@ final static float BOLT = 22*Geometry.INCHES;
 static List<TreeConfig> clusterConfig;
 
 Model model;
-P2LX lx;
+P3LX lx;
 ProcessingEngine engine;
 LXDatagramOutput output;
 BasicParameter outputBrightness;
@@ -62,7 +62,7 @@ void setup() {
   size(1148, 720, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
-  engine = new ProcessingEngine(sketchPath);
+  engine = new ProcessingEngine(sketchPath());
   engine.start();
 }
 
@@ -73,11 +73,11 @@ class ProcessingEngine extends Engine {
   }
 
   LX createLX() {
-    return new P2LX(Trees.this, model);
+    return new P3LX(Trees.this, model);
   }
 
-  P2LX getLX() {
-    return (P2LX)lx;
+  P3LX getLX() {
+    return (P3LX)lx;
   }
 
   void postCreateLX() {
