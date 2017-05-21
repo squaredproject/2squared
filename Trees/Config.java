@@ -10,6 +10,6 @@ final class Config {
   static final boolean enableOutputMinitree = false;
   static final boolean enableOutputBigtree = true;
 
-  static final String CLUSTER_CONFIG_FILE = "data/clusters_minitree3.json";
+  static final String CLUSTER_CONFIG_FILE = "data/clusters_bigtree.json";
 
 }
