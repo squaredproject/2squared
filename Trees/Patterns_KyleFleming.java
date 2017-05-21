@@ -67,6 +67,7 @@ class TurnOffDeadPixelsEffect extends Effect {
   
   TurnOffDeadPixelsEffect(LX lx) {
     super(lx);
+    enabled.setValue(true);
   }
   
   public void run(double deltaMs) {
