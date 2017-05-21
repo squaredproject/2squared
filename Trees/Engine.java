@@ -719,6 +719,7 @@ abstract class Engine {
       outputBrightness.parameters.add(output.brightness);
       // output.enabled.setValue(false);
       lx.addOutput(output);
+      output.start();
     } catch (Exception x) {
       System.out.println(x);
     }
