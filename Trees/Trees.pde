@@ -61,9 +61,6 @@ BooleanParameter[] previewChannels;
 void setup() {
   size(1148, 720, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
-  
-  engine = new ProcessingEngine(sketchPath());
-  engine.start();
 }
 
 class ProcessingEngine extends Engine {
@@ -145,6 +142,11 @@ void configureUI() {
 
 void draw() {
   background(#222222);
+  
+  if (engine == null) {
+    engine = new ProcessingEngine(sketchPath());
+    engine.start();
+  }
 }
 
 TreesTransition getFaderTransition(LXChannel channel) {
