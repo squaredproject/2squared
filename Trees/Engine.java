@@ -38,18 +38,6 @@ import heronarts.lx.transition.LXTransition;
 
 abstract class Engine {
 
-  static final boolean enableIPad = true;
-  static final boolean autoplayBMSet = true;
-
-  static final boolean enableNFC = false;
-  static final boolean enableAPC40 = false;
-
-  static final boolean enableOutputMinitree = false;
-  static final boolean enableOutputBigtree = true;
-
-  static final String CLUSTER_CONFIG_FILE = "data/clusters_minitree3.json";
-
-
   static final int NUM_CHANNELS = 8;
   static final int NUM_IPAD_CHANNELS = 3;
   static final int NUM_KNOBS = 8;
@@ -80,7 +68,7 @@ abstract class Engine {
   Engine(String projectPath) {
     this.projectPath = projectPath;
 
-    clusterConfig = loadConfigFile(CLUSTER_CONFIG_FILE);
+    clusterConfig = loadConfigFile(Config.CLUSTER_CONFIG_FILE);
     model = new Model(clusterConfig);
     lx = createLX();
     engineController = new EngineController(lx);
@@ -89,7 +77,7 @@ abstract class Engine {
 
     configureChannels();
 
-    if (enableNFC) {
+    if (Config.enableNFC) {
       configureNFC();
       // this line to allow any nfc reader to read any cube
       nfcEngine.disableVisualTypeRestrictions = true;
@@ -101,21 +89,21 @@ abstract class Engine {
     configureBMPTool();
     configureAutomation();
 
-    if (enableOutputBigtree) {
+    if (Config.enableOutputBigtree) {
       lx.addEffect(new TurnOffDeadPixelsEffect(lx));
       configureExternalOutput();
     }
-    if (enableOutputMinitree) {
+    if (Config.enableOutputMinitree) {
       configureFadeCandyOutput();
     }
 
     postCreateLX();
 
-    if (enableAPC40) {
+    if (Config.enableAPC40) {
       configureMIDI();
     }
-    if (enableIPad) {
-      engineController.setAutoplay(autoplayBMSet, true);
+    if (Config.enableIPad) {
+      engineController.setAutoplay(Config.autoplayBMSet, true);
       configureServer();
     }
     
@@ -489,7 +477,7 @@ abstract class Engine {
     }
     engineController.baseChannelIndex = lx.engine.getChannels().size() - 1;
 
-    if (enableIPad) {
+    if (Config.enableIPad) {
       for (int i = 0; i < Engine.NUM_IPAD_CHANNELS; ++i) {
         patterns = new ArrayList<TSPattern>();
         registerIPadPatterns();
@@ -649,7 +637,7 @@ abstract class Engine {
     automation[automationSlot.getValuei()].looping.setValue(true);
     engineController.automation = automation[automationSlot.getValuei()];
 
-    if (autoplayBMSet) {
+    if (Config.autoplayBMSet) {
       automation[automationSlot.getValuei()].start();
     }
   }
@@ -676,7 +664,7 @@ abstract class Engine {
     registerOneShotTriggerables();
     registerEffectTriggerables();
 
-    if (enableIPad) {
+    if (Config.enableIPad) {
       engineController.startEffectIndex = lx.engine.getEffects().size();
       registerIPadEffects();
       engineController.endEffectIndex = lx.engine.getEffects().size();
