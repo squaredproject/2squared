@@ -439,31 +439,57 @@ class Cluster extends LXModel {
       transform.push();
       transform.rotateX(rx * Utils.PI / 180);
       transform.rotateZ(skew * Utils.PI / 180);
-      this.cubes = Arrays.asList(new Cube[] {
-  // Cube(int clusterPosition, Vec2D treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz)
-        new Cube( 1, treeCenter, transform, Cube.SMALL,    10, -82, -13, 0,  0, 0),
-        new Cube( 2, treeCenter, transform, Cube.SMALL,    6, -74,  -12, 0,  0, 0),
-        new Cube( 3, treeCenter, transform, Cube.SMALL,   -2, -69,  -13, 0,  0, 0),
-        new Cube( 4, treeCenter, transform, Cube.MEDIUM,   9, -64, -10, 0,  0, 0),
-        new Cube( 5, treeCenter, transform, Cube.MEDIUM,  -5, -56, -10, 0,  0, 0),
-        new Cube( 6, treeCenter, transform, Cube.SMALL,   -8, -45, -13, 0,  0, 0),
-        new Cube( 7, treeCenter, transform, Cube.GIANT,    5, -47,  -9, 0,  0, 0),
-        new Cube( 8, treeCenter, transform, Cube.SMALL,   17, -40, -11, 0,  0, 0),
-        new Cube( 9, treeCenter, transform, Cube.MEDIUM,  10, -30,  -10, 0,  0, 0),
-        new Cube(10, treeCenter, transform, Cube.LARGE,   -8, -32,  -10, 0,  0, 0),
-        new Cube(11, treeCenter, transform, Cube.MEDIUM, -11, -17,  -11, 0,  0, 0),
-        new Cube(12, treeCenter, transform, Cube.LARGE,    4, -16,  -9, 0,  0, 0),
-        new Cube(13, treeCenter, transform, Cube.SMALL,   16, -20,  -11, 0,  0, 0),
-        new Cube(14, treeCenter, transform, Cube.SMALL,    3,  -3,  -14, 0,  0, 0),
-        new Cube(15, treeCenter, transform, Cube.SMALL,   -7,  -5,  -14, 0,  0, 0),
-        new Cube(16, treeCenter, transform, Cube.SMALL,   -5,   3, -14, 0,  0, 0),
-      });
+      this.cubes = cubeList(treeCenter, transform);
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
           this.points.add(p);
         }
       }
       transform.pop();
+    }
+
+    static List<Cube> cubeList(Vec3D treeCenter, LXTransform transform) {
+      if (Config.enableOutputBigtree) {
+        return Arrays.asList(new Cube[] {
+          // Cube(int clusterPosition, Vec2D treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz)
+          new Cube( 1, treeCenter, transform, Cube.SMALL,   -7, -98, -10,  -5,  18, -18),
+          new Cube( 2, treeCenter, transform, Cube.SMALL,   -4, -87,  -9,  -3,  20, -20),
+          new Cube( 3, treeCenter, transform, Cube.SMALL,    1, -78,  -8,  10,  30,   5),        
+          new Cube( 4, treeCenter, transform, Cube.MEDIUM,  -6, -70, -10,  -3,  20,   0),        
+          new Cube( 5, treeCenter, transform, Cube.MEDIUM,   8, -65, -10,   0, -20,  -5),
+          new Cube( 6, treeCenter, transform, Cube.GIANT,   -6, -51,  -9,   0,  -5, -30),
+          new Cube( 7, treeCenter, transform, Cube.SMALL,    3,   1, -16, -10,   0,  20),
+          new Cube( 8, treeCenter, transform, Cube.SMALL,  -22, -44, -11,  -5,   0,  15),
+          new Cube( 9, treeCenter, transform, Cube.SMALL,    8, -47, -13, -10,   0, -45),
+          new Cube(10, treeCenter, transform, Cube.MEDIUM, -12, -33,  -8, -10,   0,   8),
+          new Cube(11, treeCenter, transform, Cube.LARGE,    4, -33,  -8,   0,  10, -15),
+          new Cube(12, treeCenter, transform, Cube.SMALL,  -18, -22,  -7, -10,   0,  45),        
+          new Cube(13, treeCenter, transform, Cube.LARGE,   -4, -16,  -9,   0,   0,  -5),
+          new Cube(14, treeCenter, transform, Cube.MEDIUM,  12, -17,  -9,   5, -20,   0),
+          new Cube(15, treeCenter, transform, Cube.SMALL,    8,  -5,  -8,  -5,  10, -45),
+          new Cube(16, treeCenter, transform, Cube.SMALL,   -3,  -2,  -7, -10, -10, -50),
+        });
+      } else {
+        return Arrays.asList(new Cube[] {
+          // Cube(int clusterPosition, Vec2D treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz)
+          new Cube( 1, treeCenter, transform, Cube.SMALL,    10, -82, -13, 0,  0, 0),
+          new Cube( 2, treeCenter, transform, Cube.SMALL,    6, -74,  -12, 0,  0, 0),
+          new Cube( 3, treeCenter, transform, Cube.SMALL,   -2, -69,  -13, 0,  0, 0),
+          new Cube( 4, treeCenter, transform, Cube.MEDIUM,   9, -64, -10, 0,  0, 0),
+          new Cube( 5, treeCenter, transform, Cube.MEDIUM,  -5, -56, -10, 0,  0, 0),
+          new Cube( 6, treeCenter, transform, Cube.SMALL,   -8, -45, -13, 0,  0, 0),
+          new Cube( 7, treeCenter, transform, Cube.GIANT,    5, -47,  -9, 0,  0, 0),
+          new Cube( 8, treeCenter, transform, Cube.SMALL,   17, -40, -11, 0,  0, 0),
+          new Cube( 9, treeCenter, transform, Cube.MEDIUM,  10, -30,  -10, 0,  0, 0),
+          new Cube(10, treeCenter, transform, Cube.LARGE,   -8, -32,  -10, 0,  0, 0),
+          new Cube(11, treeCenter, transform, Cube.MEDIUM, -11, -17,  -11, 0,  0, 0),
+          new Cube(12, treeCenter, transform, Cube.LARGE,    4, -16,  -9, 0,  0, 0),
+          new Cube(13, treeCenter, transform, Cube.SMALL,   16, -20,  -11, 0,  0, 0),
+          new Cube(14, treeCenter, transform, Cube.SMALL,    3,  -3,  -14, 0,  0, 0),
+          new Cube(15, treeCenter, transform, Cube.SMALL,   -7,  -5,  -14, 0,  0, 0),
+          new Cube(16, treeCenter, transform, Cube.SMALL,   -5,   3, -14, 0,  0, 0),
+        });
+      }
     }
   }
 }
