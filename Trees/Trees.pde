@@ -105,7 +105,9 @@ class ProcessingEngine extends Engine {
 
   void addPatterns(ArrayList<LXPattern> patterns) {
     super.addPatterns(patterns);
-    try { patterns.add(new SyphonPattern(lx, Trees.this)); } catch (Throwable e) {}
+    if (Config.enableSoundSyphon) {
+      try { patterns.add(new SyphonPattern(lx, Trees.this)); } catch (Throwable e) {}
+    }
   }
 }
 
@@ -130,7 +132,7 @@ void configureUI() {
     .setPhi(10*Utils.PI/180)
     .addComponent(new UITrees())
   );
-  if (engine.enableOutputBigtree) {
+  if (Config.enableOutputBigtree) {
     lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   }
   lx.ui.addLayer(new UIMapping(lx.ui));
