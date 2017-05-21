@@ -44,8 +44,8 @@ abstract class Engine {
   static final boolean enableNFC = false;
   static final boolean enableAPC40 = false;
 
-  static final boolean enableOutputMinitree = true;
-  static final boolean enableOutputBigtree = false;
+  static final boolean enableOutputMinitree = false;
+  static final boolean enableOutputBigtree = true;
 
   static final String CLUSTER_CONFIG_FILE = "data/clusters_minitree3.json";
 
@@ -729,7 +729,7 @@ abstract class Engine {
         output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
       }
       outputBrightness.parameters.add(output.brightness);
-      output.enabled.setValue(false);
+      // output.enabled.setValue(false);
       lx.addOutput(output);
     } catch (Exception x) {
       System.out.println(x);
