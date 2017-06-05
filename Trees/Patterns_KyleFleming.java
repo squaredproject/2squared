@@ -62,8 +62,8 @@ class MappingPattern extends TSPattern {
 }
 
 class TurnOffDeadPixelsEffect extends Effect {
-  int[] deadPixelIndices = new int[] { 4 };
-  int[] deadPixelClusters = new int[] { 5 };
+  int[] deadPixelIndices = new int[] { };
+  int[] deadPixelClusters = new int[] { };
   
   TurnOffDeadPixelsEffect(LX lx) {
     super(lx);

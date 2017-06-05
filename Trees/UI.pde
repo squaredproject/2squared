@@ -943,9 +943,9 @@ class UIMapping extends UIWindow {
     new UIButton(4, yPos, this.width-8, 20) {
       void onToggle(boolean active) {
         if (active) {
-          String backupFileName = engine.CLUSTER_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
-          saveStream(backupFileName, engine.CLUSTER_CONFIG_FILE);
-          engine.saveJSONToFile(clusterConfig, engine.CLUSTER_CONFIG_FILE);
+          String backupFileName = Config.CLUSTER_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
+          saveStream(backupFileName, Config.CLUSTER_CONFIG_FILE);
+          engine.saveJSONToFile(clusterConfig, Config.CLUSTER_CONFIG_FILE);
           setLabel("Saved. Restart needed.");
         }
       }
