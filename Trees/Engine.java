@@ -451,7 +451,7 @@ abstract class Engine {
 		return null;
 	}
 
-	void saveJSONToFile(List<TreeConfig> config, String filename) {
+	void saveJSONToFile(List<CubeConfig> config, String filename) {
 		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(new BufferedWriter(new FileWriter(sketchPath(filename))));

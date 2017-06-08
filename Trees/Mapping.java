@@ -12,26 +12,30 @@ class MappingTool extends Effect {
 
   final SinLFO strobe = new SinLFO(20, 100, 1000);
   
-  final DiscreteParameter clusterIndex;
+  final DiscreteParameter ipIndex;
+  final DiscreteParameter ndbIndex;
   final BooleanParameter showBlanks = new BooleanParameter("BLANKS", false);
+  final Object[] ipList;
 
   MappingTool(LX lx, List<CubeConfig> cubeConfig) {
     super(lx);
     this.cubeConfig = cubeConfig;
-    clusterIndex = new DiscreteParameter("CLUSTER", 20);//clusterConfig.size());
+    this.ipList = model.ipMap.keySet().toArray();
+    ipIndex = new DiscreteParameter("IP", ipList.length);
+    ndbIndex = new DiscreteParameter("POS", 16);
     addModulator(strobe).start();
     addLayer(new MappingLayer());
   }
-  
-  CubeConfig getConfig() {
-    return cubeConfig.get(clusterIndex.getValuei());
-  }
-  
-  /*Cube getCluster() {
-    return model.clustersByIp.get(getConfig().ipAddress);
-  }*/
 
   public void run(double deltaMs) {
+  }
+
+  Cube getCube(){
+    return model.ipMap.get(this.ipList[ipIndex.getValuei()])[ndbIndex.getValuei()];
+  }
+
+  CubeConfig getConfig(){
+    return getCube().config;
   }
   
   class MappingLayer extends Layer {
@@ -42,9 +46,7 @@ class MappingTool extends Effect {
     
     public void run(double deltaMs) {
       if (isEnabled()) {
-        /*for (Cube cube : getCluster().cubes) {
-          blendColor(cube.index, lx.hsb(0, 0, strobe.getValuef()), LXColor.Blend.ADD);
-        }*/
+        blendColor(getCube().index, lx.hsb(0, 0, strobe.getValuef()), LXColor.Blend.ADD);
       }
     }
   }

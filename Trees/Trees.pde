@@ -85,7 +85,7 @@ class ProcessingEngine extends Engine {
   void postCreateLX() {
     super.postCreateLX();
 
-    //lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
+    lx.addEffect(mappingTool = new MappingTool(lx, cubeConfig));
 
     Trees.this.cubeConfig = cubeConfig;
     Trees.this.model = model;
@@ -135,7 +135,7 @@ void configureUI() {
   if (engine.enableOutputBigtree) {
     lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   }
-  //lx.ui.addLayer(new UIMapping(lx.ui));
+  lx.ui.addLayer(new UIMapping(lx.ui));
   UITreeFaders treeFaders = new UITreeFaders(lx.ui, channelTreeLevels, model.trees.size());
   lx.ui.addLayer(treeFaders);
   lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui, treeFaders));

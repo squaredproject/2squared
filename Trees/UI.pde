@@ -1,6 +1,7 @@
 import heronarts.lx.parameter.BasicParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.p2lx.ui.UI2dContext;
+import toxi.geom.Vec3D;
 
 int focusedChannel() {
         return lx.engine.focusedChannel.getValuei();
@@ -21,7 +22,7 @@ class UITrees extends UI3dComponent {
 
   protected void onDraw(UI ui, PGraphics pg) {
     lights();
-    pointLight(0, 0, 80, model.cx, 200, -10*12);
+    pointLight(0, 0, 80, model.cx, 700, -10*12);
 
     noStroke();
     fill(#191919);
@@ -49,43 +50,25 @@ class UITrees extends UI3dComponent {
   }
 
   private void drawTree(UI ui) {
-    /*for (int i = 0; i < 4; ++i) {
-      for (int y = 1; y < model.geometry.distances.length; ++y) {
-        float beamY = model.geometry.heights[y];
-        float prevY = model.geometry.heights[y-1];
-        float distance = model.geometry.distances[y];
-        float prevDistance = model.geometry.distances[y-1];
-
-        if (y <= model.geometry.NUM_BEAMS) {
-          beginShape();
-          vertex(-distance, beamY - model.geometry.BEAM_WIDTH/2, -distance);
-          vertex(-distance, beamY + model.geometry.BEAM_WIDTH/2, -distance);
-          vertex(distance, beamY + model.geometry.BEAM_WIDTH/2, -distance);
-          vertex(distance, beamY - model.geometry.BEAM_WIDTH/2, -distance);
-          endShape(CLOSE);
+    for (Tree tree : model.trees){
+      for (EntwinedLayer treeLayer: tree.treeLayers){
+        for (EntwinedBranch branch: treeLayer.branches){
+          for (Vec3D p: branch.availableMountingPoints){
+            beginShape();
+            vertex(p.x - 1, p.y, p.z);
+            vertex(p.x, p.y, p.z + 1);
+            vertex(p.x + 1, p.y, p.z);
+            vertex(p.x, p.y, p.z - 1);
+            endShape(CLOSE);
+          }
         }
-
-        beginShape();
-        vertex(-model.geometry.BEAM_WIDTH/2, prevY, -prevDistance);
-        vertex(model.geometry.BEAM_WIDTH/2, prevY, -prevDistance);
-        vertex(model.geometry.BEAM_WIDTH/2, beamY, -distance);
-        vertex(-model.geometry.BEAM_WIDTH/2, beamY, -distance);
-        endShape(CLOSE);
-
-        beginShape();
-        vertex(prevDistance-model.geometry.BEAM_WIDTH/2, prevY, -prevDistance-model.geometry.BEAM_WIDTH/2);
-        vertex(prevDistance+model.geometry.BEAM_WIDTH/2, prevY, -prevDistance+model.geometry.BEAM_WIDTH/2);
-        vertex(distance+model.geometry.BEAM_WIDTH/2, beamY, -distance+model.geometry.BEAM_WIDTH/2);
-        vertex(distance-model.geometry.BEAM_WIDTH/2, beamY, -distance-model.geometry.BEAM_WIDTH/2);
-        endShape(CLOSE);
       }
-      rotateY(Utils.PI/2);
-    }*/
+    }
   }
 
   private void drawLights(UI ui) {
 
-    /*int[] colors;
+    int[] colors;
     boolean isPreviewOn = false;
     for (BooleanParameter previewChannel : previewChannels) {
       isPreviewOn |= previewChannel.isOn();
@@ -110,86 +93,31 @@ class UITrees extends UI3dComponent {
     noFill();
 
     if (mappingTool.isEnabled()) {
-      Cluster cluster = mappingTool.getCluster();
-      TreeConfig config = mappingTool.getConfig();
-      Tree tree = model.trees.get(config.treeIndex);
+      Cube cube = mappingTool.getCube();
+      Tree tree = model.trees.get(cube.config.treeIndex);
+      drawCube(cube, colors);
 
-      pushMatrix();
-      translate(tree.x, 0, tree.z);
-      rotateY(-tree.ry * Utils.PI / 180);
-
-      // This is some bad duplicated code from Model, hack for now
-      int clusterLevel = config.level;
-      int clusterFace = config.face;
-      float clusterOffset = config.offset;
-      float clusterMountPoint = config.mountPoint;
-      float clusterSkew = config.skew;
-      float cry = 0;
-      switch (clusterFace) {
-        // Could be math, but this way it's readable!
-        case Geometry.FRONT: case Geometry.FRONT_RIGHT:                  break;
-        case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = Utils.HALF_PI;   break;
-        case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = Utils.PI;        break;
-        case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = 3*Utils.HALF_PI; break;
-      }
-      switch (clusterFace) {
-        case Geometry.FRONT_RIGHT:
-        case Geometry.REAR_RIGHT:
-        case Geometry.REAR_LEFT:
-        case Geometry.FRONT_LEFT:
-          clusterOffset = 0;
-          break;
-      }
-      rotateY(-cry);
-      translate(clusterOffset * model.geometry.distances[clusterLevel], model.geometry.heights[clusterLevel] + clusterMountPoint, -model.geometry.distances[clusterLevel]);
-
-      switch (clusterFace) {
-        case Geometry.FRONT_RIGHT:
-        case Geometry.REAR_RIGHT:
-        case Geometry.REAR_LEFT:
-        case Geometry.FRONT_LEFT:
-          translate(model.geometry.distances[clusterLevel], 0, 0);
-          rotateY(-Utils.QUARTER_PI);
-          cry += Utils.QUARTER_PI;
-          break;
-      }
-
-      rotateX(-model.geometry.angleFromAxis(model.geometry.heights[clusterLevel]));
-      rotateZ(-clusterSkew * Utils.PI / 180);
-      drawCubes(cluster, colors);
-
-      popMatrix();
     } else {
-      for (Cluster cluster : model.clusters) {
-        drawCluster(cluster, colors);
+      for (Cube cube : model.cubes) {
+        drawCube(cube, colors);
       }
     }
 
-    noLights();*/
+    noLights();
   }
 
-  /*void drawCluster(Cluster cluster, int[] colors) {
-    pushMatrix();
-    translate(cluster.x, cluster.y, cluster.z);
-    rotateY(-cluster.ry * Utils.PI / 180);
-    rotateX(-cluster.rx * Utils.PI / 180);
-    rotateZ(-cluster.skew * Utils.PI / 180);
-    drawCubes(cluster, colors);
-    popMatrix();
-  }
-
-  void drawCubes(Cluster cluster, int[] colors) {
-    for (Cube cube : cluster.cubes) {
+  void drawCube(Cube cube, int[] colors) {
+    if (cube.displayCube){
       pushMatrix();
       fill(colors[cube.index]);
-      translate(cube.lx, cube.ly, cube.lz);
+      translate(cube.x, cube.y, cube.z);
       rotateY(-cube.ry * Utils.PI / 180);
       rotateX(-cube.rx * Utils.PI / 180);
       rotateZ(-cube.rz * Utils.PI / 180);
       box(cube.size, cube.size, cube.size);
       popMatrix();
     }
-  }*/
+  }
 }
 
 public class UILoopRecorder extends UIWindow {
@@ -912,68 +840,65 @@ class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
   }
 }
 
-/*class UIMapping extends UIWindow {
+class UIMapping extends UIWindow {
 
   final UILabel ipAddress;
-  final UIToggleSet tree;
-  final UIIntegerBox level;
-  final UIToggleSet face;
-  final UISlider offset;
-  final UISlider mountPoint;
-  final UISlider skew;
+  final UIIntegerBox treeIndex;
+  final UIIntegerBox layerIndex;
+  final UIIntegerBox branchIndex;
+  final UIIntegerBox mountPointIndex;
+  final UIIntegerBox cubeSizeIndex;
 
   UIMapping(UI ui) {
-    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);/*
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);
 
-    final UIIntegerBox clusterIndex = new UIIntegerBox().setParameter(mappingTool.clusterIndex);
+    final UIIntegerBox ipIndex = new UIIntegerBox().setParameter(mappingTool.ipIndex);
+    final UIIntegerBox ndbIndex = new UIIntegerBox().setParameter(mappingTool.ndbIndex);
 
     (ipAddress = new UILabel()).setAlignment(CENTER, CENTER).setBorderColor(#666666).setBackgroundColor(#292929);
-    tree = new UIToggleSet() {
-      protected void onToggle(String value) {
-        mappingTool.getConfig().treeIndex =  (value == "L") ? 0 : 1;
-      }
-    }.setOptions(new String[] { "L", "R" });
-
-    level = new UIIntegerBox() {
+    treeIndex = new UIIntegerBox() {
       protected void onValueChange(int value) {
-        mappingTool.getConfig().level =  value;
+        mappingTool.getConfig().treeIndex = value;
+        layerIndex.setRange(0, model.trees.get(value).treeLayers.size());
       }
-    }.setRange(0, 14);
+    }.setRange(0, model.trees.size());
 
-    face = new UIToggleSet() {
-      protected void onToggle(String value) {
-        mappingTool.getConfig().face = face.getValueIndex();
+    layerIndex = new UIIntegerBox() {
+      protected void onValueChange(int value) {
+        mappingTool.getConfig().layerIndex =  value;
+        //layerIndex.setRange(model.trees.get(value).treeLayers.length);
       }
-    }.setOptions(new String[] { " ", " ", " ", " ", " ", " ", " ", " " });
+    }.setRange(0, 3);
 
-    BasicParameter offsetParameter;
-    (offset = new UISlider(0, 0, 0, 16)).setParameter(offsetParameter = new BasicParameter("OFFSET", 0, -1, 1)).setShowLabel(false);
-    offsetParameter.addListener(new LXParameterListener() {
+    branchIndex = new UIIntegerBox() {
+      protected void onValueChange(int value) {
+        mappingTool.getConfig().layerIndex =  value;
+      }
+    }.setRange(0, 3);
+
+    mountPointIndex = new UIIntegerBox() {
+      protected void onValueChange(int value) {
+        mappingTool.getConfig().mountPointIndex = value;
+      }
+    }.setRange(0, 3);
+
+    cubeSizeIndex = new UIIntegerBox() {
+      protected void onValueChange(int value) {
+        mappingTool.getConfig().cubeSizeIndex = value;
+      }
+    }.setRange(0, 1);
+
+
+
+    mappingTool.ipIndex.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        mappingTool.getConfig().offset = parameter.getValuef();
+        setIp();
       }
     });
 
-    BasicParameter mountPointParameter;
-    (mountPoint = new UISlider(0, 0, 0, 16))
-            .setParameter(mountPointParameter = new BasicParameter("MOUNT", CHAIN, CHAIN, BOLT)).setShowLabel(false);
-    mountPointParameter.addListener(new LXParameterListener() {
+    mappingTool.ndbIndex.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        mappingTool.getConfig().mountPoint = parameter.getValuef();
-      }
-    });
-
-    BasicParameter skewParameter;
-    (skew = new UISlider(0, 0, 0, 16)).setParameter(skewParameter = new BasicParameter("SKEW", 0, 30, -30)).setShowLabel(false);
-    skewParameter.addListener(new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        mappingTool.getConfig().skew = parameter.getValuef();
-      }
-    });
-
-    mappingTool.clusterIndex.addListener(new LXParameterListener() {
-      public void onParameterChanged(LXParameter parameter) {
-        setCluster();
+        setNdbIndex();
       }
     });
 
@@ -981,7 +906,7 @@ class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
     new UIButton(4, yPos, width-8, 20) {
       void onToggle(boolean enabled) {
         if (enabled) {
-          clusterIndex.focus();
+          //clusterIndex.focus();
         }
       }
     }
@@ -992,27 +917,27 @@ class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
     yPos += 24;
 
     // yPos = labelRow(yPos, "BLANKS", new UIButton().setParameter(mappingTool.showBlanks));
-    yPos = labelRow(yPos, "CLUSTER #", clusterIndex);
+    yPos = labelRow(yPos, "IPIndex", ipIndex);
+    yPos = labelRow(yPos, "NDBIndex", ndbIndex);
     yPos = labelRow(yPos, "IP", ipAddress);
-    // yPos = labelRow(yPos, "TREE", tree);
-    yPos = labelRow(yPos, "LEVEL", level);
-    yPos = labelRow(yPos, "FACE", face);
-    yPos = labelRow(yPos, "OFFSET", offset);
-    yPos = labelRow(yPos, "MOUNT", mountPoint);
-    yPos = labelRow(yPos, "SKEW", skew);
+    yPos = labelRow(yPos, "TREE", treeIndex);
+    yPos = labelRow(yPos, "LAYER", layerIndex);
+    yPos = labelRow(yPos, "BRANCH", branchIndex);
+    yPos = labelRow(yPos, "CUBE", cubeSizeIndex);
 
     new UIButton(4, yPos, this.width-8, 20) {
       void onToggle(boolean active) {
         if (active) {
           String backupFileName = engine.CLUSTER_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
           saveStream(backupFileName, engine.CLUSTER_CONFIG_FILE);
-          engine.saveJSONToFile(clusterConfig, engine.CLUSTER_CONFIG_FILE);
+          engine.saveJSONToFile(cubeConfig, engine.CLUSTER_CONFIG_FILE);
           setLabel("Saved. Restart needed.");
         }
       }
     }.setMomentary(true).setLabel("Save Changes").addToContainer(this);
 
-    setCluster();
+    setIp();
+    setNdbIndex();
   }
 
   float labelRow(float yPos, String label, UI2dComponent obj) {
@@ -1027,17 +952,11 @@ class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
     return yPos;
   }
 
-  /*void setCluster() {
-    TreeConfig cp = treeConfig.get(mappingTool.clusterIndex.getValuei());
-    ipAddress.setLabel(cp.ipAddress);
-    tree.setValue(cp.treeIndex);
-    level.setValue(cp.level);
-    face.setValue(cp.face);
-    offset.getParameter().setValue(cp.offset);
-    mountPoint.getParameter().setValue(cp.mountPoint);
-    skew.getParameter().setValue(cp.skew);
+  void setIp(){
   }
-}*/
+  void setNdbIndex(){
+  }
+}
 
 class UIOutput extends UIWindow {
   static final int LIST_NUM_ROWS = 3;

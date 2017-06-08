@@ -178,7 +178,7 @@ class Model extends LXModel {
 class CubeConfig {
   int treeIndex;
   int layerIndex;
-  int rotationalIndex;
+  int branchIndex;
   int mountPointIndex;
   String ipAddress;
   int ndbIndex;
@@ -204,6 +204,11 @@ class Tree extends LXModel {
    * Cubes in the tree
    */
   public final List<Cube> cubes;
+
+  /**
+   * Layers in the tree
+   */
+  public final List<EntwinedLayer> treeLayers;
   
   /**
    * index of the tree
@@ -230,10 +235,12 @@ class Tree extends LXModel {
     Fixture f = (Fixture)this.fixtures.get(0);
     this.index = treeIndex;
     this.cubes = Collections.unmodifiableList(f.cubes);
+    this.treeLayers = f.treeLayers;
     this.ipMap = f.ipMap;
     this.x = x;
     this.z = z;
     this.ry = ry;
+
   }
   
   private static class Fixture extends LXAbstractFixture {
@@ -252,7 +259,7 @@ class Tree extends LXModel {
         if (cp.treeIndex == treeIndex) {
           Vec3D p;
           try{
-            p = treeLayers.get(cp.layerIndex).branches.get(cp.rotationalIndex).availableMountingPoints.get(cp.mountPointIndex);
+            p = treeLayers.get(cp.layerIndex).branches.get(cp.branchIndex).availableMountingPoints.get(cp.mountPointIndex);
           }
           catch(Exception e){
             System.out.println("Error loading config point");
@@ -264,6 +271,7 @@ class Tree extends LXModel {
             t.translate(p.x, p.y, p.z);
             Cube cube = new Cube(new Vec3D(t.x(), t.y(), t.z()), p, cp.cubeSizeIndex);
             cubes.add(cube);
+            cube.config = cp;
             t.pop();
             if (!ipMap.containsKey(cp.ipAddress)){
               ipMap.put(cp.ipAddress, new Cube[16]);
@@ -395,6 +403,7 @@ class Cube extends LXModel {
   public float transformedTheta;
   public Vec2D transformedCylinderPoint;
   public boolean displayCube = true;
+  public CubeConfig config = null;
   Cube(Vec3D globalPosition, Vec3D treePosition, int sizeIndex) {
     super(Arrays.asList(new LXPoint[] {
       new LXPoint(globalPosition.x, globalPosition.y, globalPosition.z)
