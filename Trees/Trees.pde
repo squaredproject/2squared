@@ -40,7 +40,8 @@ final static int MINUTES = 60*SECONDS;
 final static float CHAIN = -12*Geometry.INCHES;
 final static float BOLT = 22*Geometry.INCHES;
 
-static List<TreeConfig> clusterConfig;
+static List<CubeConfig> cubeConfig;
+static List<TreeConfig> treeConfig;
 
 Model model;
 P2LX lx;
@@ -84,9 +85,9 @@ class ProcessingEngine extends Engine {
   void postCreateLX() {
     super.postCreateLX();
 
-    lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
+    //lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
 
-    Trees.this.clusterConfig = clusterConfig;
+    Trees.this.cubeConfig = cubeConfig;
     Trees.this.model = model;
     Trees.this.lx = getLX();
     Trees.this.output = output;
@@ -134,7 +135,7 @@ void configureUI() {
   if (engine.enableOutputBigtree) {
     lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   }
-  lx.ui.addLayer(new UIMapping(lx.ui));
+  //lx.ui.addLayer(new UIMapping(lx.ui));
   UITreeFaders treeFaders = new UITreeFaders(lx.ui, channelTreeLevels, model.trees.size());
   lx.ui.addLayer(treeFaders);
   lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui, treeFaders));

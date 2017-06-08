@@ -21,15 +21,15 @@ class UITrees extends UI3dComponent {
 
   protected void onDraw(UI ui, PGraphics pg) {
     lights();
-    pointLight(0, 0, 80, model.cx, model.geometry.HEIGHT/2, -10*Geometry.FEET);
+    pointLight(0, 0, 80, model.cx, 200, -10*12);
 
     noStroke();
     fill(#191919);
     beginShape();
     vertex(0, 0, 0);
-    vertex(30*Geometry.FEET, 0, 0);
-    vertex(30*Geometry.FEET, 0, 30*Geometry.FEET);
-    vertex(0, 0, 30*Geometry.FEET);
+    vertex(30*12, 0, 0);
+    vertex(30*12, 0, 30*12);
+    vertex(0, 0, 30*12);
     endShape(CLOSE);
 
     drawTrees(ui);
@@ -49,7 +49,7 @@ class UITrees extends UI3dComponent {
   }
 
   private void drawTree(UI ui) {
-    for (int i = 0; i < 4; ++i) {
+    /*for (int i = 0; i < 4; ++i) {
       for (int y = 1; y < model.geometry.distances.length; ++y) {
         float beamY = model.geometry.heights[y];
         float prevY = model.geometry.heights[y-1];
@@ -80,12 +80,12 @@ class UITrees extends UI3dComponent {
         endShape(CLOSE);
       }
       rotateY(Utils.PI/2);
-    }
+    }*/
   }
 
   private void drawLights(UI ui) {
 
-    int[] colors;
+    /*int[] colors;
     boolean isPreviewOn = false;
     for (BooleanParameter previewChannel : previewChannels) {
       isPreviewOn |= previewChannel.isOn();
@@ -165,10 +165,10 @@ class UITrees extends UI3dComponent {
       }
     }
 
-    noLights();
+    noLights();*/
   }
 
-  void drawCluster(Cluster cluster, int[] colors) {
+  /*void drawCluster(Cluster cluster, int[] colors) {
     pushMatrix();
     translate(cluster.x, cluster.y, cluster.z);
     rotateY(-cluster.ry * Utils.PI / 180);
@@ -189,7 +189,7 @@ class UITrees extends UI3dComponent {
       box(cube.size, cube.size, cube.size);
       popMatrix();
     }
-  }
+  }*/
 }
 
 public class UILoopRecorder extends UIWindow {
@@ -912,7 +912,7 @@ class UIBeatIndicator extends UI2dComponent implements LXParameterListener {
   }
 }
 
-class UIMapping extends UIWindow {
+/*class UIMapping extends UIWindow {
 
   final UILabel ipAddress;
   final UIToggleSet tree;
@@ -923,7 +923,7 @@ class UIMapping extends UIWindow {
   final UISlider skew;
 
   UIMapping(UI ui) {
-    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 244, 140, 240);/*
 
     final UIIntegerBox clusterIndex = new UIIntegerBox().setParameter(mappingTool.clusterIndex);
 
@@ -1027,8 +1027,8 @@ class UIMapping extends UIWindow {
     return yPos;
   }
 
-  void setCluster() {
-    TreeConfig cp = clusterConfig.get(mappingTool.clusterIndex.getValuei());
+  /*void setCluster() {
+    TreeConfig cp = treeConfig.get(mappingTool.clusterIndex.getValuei());
     ipAddress.setLabel(cp.ipAddress);
     tree.setValue(cp.treeIndex);
     level.setValue(cp.level);
@@ -1037,7 +1037,7 @@ class UIMapping extends UIWindow {
     mountPoint.getParameter().setValue(cp.mountPoint);
     skew.getParameter().setValue(cp.skew);
   }
-}
+}*/
 
 class UIOutput extends UIWindow {
   static final int LIST_NUM_ROWS = 3;

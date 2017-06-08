@@ -8,28 +8,28 @@ import heronarts.lx.parameter.DiscreteParameter;
 
 class MappingTool extends Effect {
 
-  final List<TreeConfig> clusterConfig;
+  final List<CubeConfig> cubeConfig;
 
   final SinLFO strobe = new SinLFO(20, 100, 1000);
   
   final DiscreteParameter clusterIndex;
   final BooleanParameter showBlanks = new BooleanParameter("BLANKS", false);
 
-  MappingTool(LX lx, List<TreeConfig> clusterConfig) {
+  MappingTool(LX lx, List<CubeConfig> cubeConfig) {
     super(lx);
-    this.clusterConfig = clusterConfig;
-    clusterIndex = new DiscreteParameter("CLUSTER", clusterConfig.size());
+    this.cubeConfig = cubeConfig;
+    clusterIndex = new DiscreteParameter("CLUSTER", 20);//clusterConfig.size());
     addModulator(strobe).start();
     addLayer(new MappingLayer());
   }
   
-  TreeConfig getConfig() {
-    return clusterConfig.get(clusterIndex.getValuei());
+  CubeConfig getConfig() {
+    return cubeConfig.get(clusterIndex.getValuei());
   }
   
-  Cluster getCluster() {
+  /*Cube getCluster() {
     return model.clustersByIp.get(getConfig().ipAddress);
-  }
+  }*/
 
   public void run(double deltaMs) {
   }
@@ -42,9 +42,9 @@ class MappingTool extends Effect {
     
     public void run(double deltaMs) {
       if (isEnabled()) {
-        for (Cube cube : getCluster().cubes) {
+        /*for (Cube cube : getCluster().cubes) {
           blendColor(cube.index, lx.hsb(0, 0, strobe.getValuef()), LXColor.Blend.ADD);
-        }
+        }*/
       }
     }
   }

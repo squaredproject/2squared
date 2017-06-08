@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -57,7 +58,8 @@ abstract class Engine {
 	static final int NUM_AUTOMATION = 4;
 
 	final String projectPath;
-	final List<TreeConfig> clusterConfig;
+	final List<CubeConfig> cubeConfig;
+	final List<TreeConfig> treeConfigs;
 	final LX lx;
 	final Model model;
 	EngineController engineController;
@@ -82,8 +84,17 @@ abstract class Engine {
 	Engine(String projectPath) {
 		this.projectPath = projectPath;
 
-		clusterConfig = loadConfigFile(CLUSTER_CONFIG_FILE);
-		model = new Model(clusterConfig);
+		cubeConfig = loadConfigFile(CLUSTER_CONFIG_FILE);
+		treeConfigs = new ArrayList<TreeConfig>();
+		TreeConfig tc = new TreeConfig();
+		tc.canopyMajorLengths = new int[] {240, 180, 120};
+		tc.layerBaseHeights = new int[] {100, 140, 160};
+		tc.ry = 0;
+		tc.x = 0;
+		tc.z = 0;
+		tc.treeIndex = 0;
+		treeConfigs.add(tc);
+		model = new Model(treeConfigs, cubeConfig);
 		lx = createLX();
 
 
@@ -412,8 +423,8 @@ abstract class Engine {
 		return projectPath + "/" + filename;
 	}
 
-	List<TreeConfig> loadConfigFile(String filename) {
-		return loadJSONFile(filename, new TypeToken<List<TreeConfig>>() {
+	List<CubeConfig> loadConfigFile(String filename) {
+		return loadJSONFile(filename, new TypeToken<List<CubeConfig>>() {
 		}.getType());
 	}
 
@@ -733,10 +744,12 @@ abstract class Engine {
 		// Output stage
 		try {
 			output = new LXDatagramOutput(lx);
-			datagrams = new LXDatagram[model.clusters.size()];
+			datagrams = new LXDatagram[model.ipMap.size()];
 			int ci = 0;
-			for (Cluster cluster : model.clusters) {
-				output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
+			for (Map.Entry<String, Cube[]> entry : model.ipMap.entrySet()) {
+				String ip = entry.getKey();
+				Cube[] cubes = entry.getValue();
+				output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cubes).setAddress(ip));
 			}
 			outputBrightness.parameters.add(output.brightness);
 			output.enabled.setValue(false);

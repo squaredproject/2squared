@@ -71,9 +71,9 @@ class TurnOffDeadPixelsEffect extends Effect {
   
   public void run(double deltaMs) {
     for (int i = 0; i < deadPixelIndices.length; i++) {
-      Cluster cluster = model.clusters.get(deadPixelClusters[i]);
-      Cube cube = cluster.cubes.get(deadPixelIndices[i]);
-      colors[cube.index] = LXColor.BLACK;
+      //Cluster cluster = model.clusters.get(deadPixelClusters[i]);
+      //Cube cube = cluster.cubes.get(deadPixelIndices[i]);
+      //colors[cube.index] = LXColor.BLACK;
     }
   }
 }
