@@ -57,6 +57,7 @@ BooleanParameter[] automationStop;
 DiscreteParameter automationSlot;
 LXListenableNormalizedParameter[] effectKnobParameters;
 BooleanParameter[] previewChannels;
+ChannelTreeLevels[] channelTreeLevels;
 
 void setup() {
   size(1148, 720, OPENGL);
@@ -97,9 +98,8 @@ class ProcessingEngine extends Engine {
     Trees.this.automationSlot = automationSlot;
     Trees.this.effectKnobParameters = effectKnobParameters;
     Trees.this.previewChannels = previewChannels;
-
+    Trees.this.channelTreeLevels = channelTreeLevels;
     uiDeck = Trees.this.uiDeck = new UIMultiDeck(Trees.this.lx.ui);
-
     configureUI();
   }
 
@@ -113,6 +113,7 @@ class ProcessingEngine extends Engine {
 
 void configureUI() {
   // UI initialization
+
   lx.ui.addLayer(new UI3dContext(lx.ui) {
       protected void beforeDraw(UI ui, PGraphics pg) {
         hint(ENABLE_DEPTH_TEST);
@@ -134,7 +135,9 @@ void configureUI() {
     lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   }
   lx.ui.addLayer(new UIMapping(lx.ui));
-  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
+  UITreeFaders treeFaders = new UITreeFaders(lx.ui, channelTreeLevels, model.trees.size());
+  lx.ui.addLayer(treeFaders);
+  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui, treeFaders));
   lx.ui.addLayer(new UIEffects(lx.ui, effectKnobParameters));
   lx.ui.addLayer(uiDeck);
   lx.ui.addLayer(new UILoopRecorder(lx.ui));

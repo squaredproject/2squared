@@ -31,7 +31,8 @@ class Geometry {
    */
   final static float[][] TREE_POSITIONS = {
     /*  X-pos    Y-pos    Rot  */
-    {  15*Geometry.FEET,  15*Geometry.FEET,   0  }
+    {  15*Geometry.FEET,  15*Geometry.FEET,   0  },
+    {  35*Geometry.FEET,  15*Geometry.FEET,   0  }
   };
 
   final static int FRONT = 0;
