@@ -85,15 +85,15 @@ abstract class Engine {
 		clusterConfig = loadConfigFile(CLUSTER_CONFIG_FILE);
 		model = new Model(clusterConfig);
 		lx = createLX();
-		int numTrees = model.trees.size();
-		for (int i=0; i<NUM_CHANNELS; i++){
-			channelTreeLevels[i] = new ChannelTreeLevels(numTrees);
-		}
 
 
 		engineController = new EngineController(lx);
 
 		lx.engine.addParameter(drumpadVelocity);
+
+		for (int i=0; i<NUM_CHANNELS; i++){
+			channelTreeLevels[i] = new ChannelTreeLevels(model.trees.size());
+		}
 
 		configureChannels();
 

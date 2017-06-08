@@ -19,6 +19,63 @@ import heronarts.lx.transform.LXTransform;
 import toxi.geom.Vec2D;
 import toxi.geom.Vec3D;
 
+
+class Branch{
+  /**
+   * This defines the available mounting points on a given branch variation. The variable names and
+   * ratios for the keypoints reflect what is in the CAD drawings for the branches
+   */
+  List<LXPoint> LavailableMountingPoints;
+  List<LXPoint> RavailableMountingPoints;
+  static final int HOLESPACING = 8;
+  static final int NUM_KEYPOINTS = 5;
+
+  double[] xKeyPoints = new double[NUM_KEYPOINTS];
+  double[] yKeyPoints = new double[NUM_KEYPOINTS];
+  double[] zKeyPoints = new double[NUM_KEYPOINTS];
+  double holeSpacing = 8;
+  Branch(int canopyMajorLength, int rotationIndex){
+    float canopyScaling = canopyMajorLength / 180;
+    double branchLengthRatios[] = {0.37, 0.41, 0.50, 0.56, 0.63};
+    double heightAdjustmentFactors[] = {1.0,  0.96, 0.92, 0.88, 0.85};
+    double branchLength = canopyMajorLength * branchLengthRatios[rotationIndex];
+    xKeyPoints[4] = branchLength;
+    xKeyPoints[3] = branchLength * 0.917;
+    xKeyPoints[2] = branchLength * 0.623;
+    xKeyPoints[1] = branchLength * 0.315;
+    xKeyPoints[0] = canopyScaling * 12;
+    yKeyPoints[4] = 72 * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[3] = 72 * 0.914 * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[2] = 72 * 0.793 * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[1] = (72 * 0.671 + 6) * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[0] = (72 * 0.455 + 8) * heightAdjustmentFactors[rotationIndex];
+    zKeyPoints[4] = branchLength * 0.199;
+    zKeyPoints[3] = branchLength * 0.13;
+    zKeyPoints[2] = 0;
+    zKeyPoints[1] = branchLength * (- 0.19);
+    zKeyPoints[0] = branchLength * (- 0.05);
+    List<LXPoint> _LavailableMountingPoints = new ArrayList<LXPoint>();
+    List<LXPoint> _RavailableMountingPoints = new ArrayList<LXPoint>();
+    double newX = xKeyPoints[0] + 2;
+    while (newX < xKeyPoints[NUM_KEYPOINTS - 1]){
+      int keyPointIndex = 0;
+      while (xKeyPoints[keyPointIndex] < newX && keyPointIndex <  NUM_KEYPOINTS){
+        keyPointIndex ++;
+      }
+      if (keyPointIndex < NUM_KEYPOINTS){
+        double ratio = (newX - xKeyPoints[keyPointIndex-1]) / (xKeyPoints[keyPointIndex] - xKeyPoints[keyPointIndex-1]);
+        double newY = yKeyPoints[keyPointIndex-1] + ratio * (yKeyPoints[keyPointIndex] - yKeyPoints[keyPointIndex-1]);
+        double newZ = zKeyPoints[keyPointIndex-1] + ratio * (zKeyPoints[keyPointIndex] - zKeyPoints[keyPointIndex-1]);
+        _LavailableMountingPoints.add(new LXPoint(newX, newY, newZ));
+        _RavailableMountingPoints.add(new LXPoint(newX, newY, -newZ));
+      }
+      newX += HOLESPACING;
+    }
+    this.LavailableMountingPoints = Collections.unmodifiableList(_LavailableMountingPoints);
+    this.RavailableMountingPoints = Collections.unmodifiableList(_RavailableMountingPoints);
+  }
+
+}
 class Geometry {
 
   final static int INCHES = 1;
@@ -167,6 +224,7 @@ class Model extends LXModel {
         _clustersByIp.put(cluster.ipAddress, cluster);
       }
     }
+    Branch foo = new Branch(120, 0);
     this.clusters = Collections.unmodifiableList(_clusters);
     this.clustersByIp = Collections.unmodifiableMap(_clustersByIp);
     
