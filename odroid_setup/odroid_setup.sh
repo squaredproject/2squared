@@ -13,9 +13,9 @@ cd /home/odroid
 echo -e "\n\n\n*********** Installing packages **************\n\n\n\n\n"
 # Note: you will be prompted several times while running these commands
 sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install libnl-3-dev libnl-genl-3-dev libssl-dev hostapd iptables git-core oracle-java8-installer isc-dhcp-server aufs-tools
-sudo apt-get install --reinstall pkg-config
+sudo apt-get -y update
+sudo apt-get -y install libnl-3-dev libnl-genl-3-dev libssl-dev hostapd iptables git-core oracle-java8-installer isc-dhcp-server aufs-tools
+sudo apt-get -y install --reinstall pkg-config
 echo -e "\n\n\n*********** Done installing packages **************\n\n\n\n\n"
 
 
@@ -37,7 +37,7 @@ echo -e "\n\n\n*********** Done installing fadecandy **************\n\n\n\n\n"
 ######################
 echo -e "\n\n\n*********** Installing 2squared **************\n\n\n\n\n"
 git clone https://github.com/squaredproject/2squared.git
-git checkout odroid_setup # Comment this out before merge to master
+git checkout minitree-norfolk # Comment this out before merge to master
 cd 2squared && sh compile.sh && cd /home/odroid
 
 echo -e "\n\n\n*********** Done installing 2squared **************\n\n\n\n\n"
