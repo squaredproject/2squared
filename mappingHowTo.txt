@@ -17,11 +17,23 @@ Note: Processing will make backups of the cluster file as you go along, so as lo
 
 Change file on ODroid
 
-7. Next, SSH to the odroid
-Connect to the mini-trees wifi network, password “thetrees!”
-IP of the odroid is 192.168.4.1
-ex for Mac/Linux: `ssh root@192.168.4.1`, password is “odroid”
-8. Type the command `sudo remountrw` and enter password “odroid”. This will make the /ro directory and all subdirectories writable until reboot.
+7. Connect to the mini-trees wifi network, password “thetrees!”
+SSH to the ODroid. IP of the odroid is 192.168.4.1
+ex for Mac/Linux: `ssh root@192.168.4.1`, password is “odroid” (password for odroid user is also “odroid”)
+(if you connect to the mini tree wifi, you can use that that IP address to ssh to the odroid)
+
+8. Type the command `sudo remountrw` (and enter password “odroid” if prompted). This will make the /ro directory and all subdirectories writable until reboot.
 9. From your laptop, SCP or use Putty to transfer the mapping file from your laptop to the odroid
-on Mac, from 2squared/Trees/data directory: `scp cluster_minitrees3.json odroid@192.168.4.1:/ro/home/odroid/2squared/Trees/data`
-10. Reboot the ODroid and make sure that the mapping file updated correctly
+on Mac, from 2squared/Trees/data directory: `scp cluster_minitrees3.json root@192.168.4.1:/ro/home/odroid/2squared/Trees/data`
+
+10. Reboot the ODroid and make sure that the mapping file updated correctly.
+You can reboot by going back to the odroid ssh window and type in “sudo reboot”
+Or you can just power cycle the odroid
+
+
+Accounts
+ 
+odroid:  root/odroid  and odroid/odroid
+mini tree wifinetwork/thetrees!
+
+
