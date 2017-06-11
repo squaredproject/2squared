@@ -245,7 +245,6 @@ class Tree extends LXModel {
    */
   public final float ry;
 
-  public final List<CubeConfig> inactiveCubeConfigs;
 
 
   Tree(List<CubeConfig> cubeConfig, int treeIndex, float x, float z, float ry, int[] canopyMajorLengths, int[] layerBaseHeights) {
@@ -258,7 +257,6 @@ class Tree extends LXModel {
     this.x = x;
     this.z = z;
     this.ry = ry;
-    this.inactiveCubeConfigs = f.inactiveCubeConfigs;
 
   }
   public Vec3D transformPoint(Vec3D point){
@@ -320,7 +318,6 @@ class Tree extends LXModel {
             Cube cube = new Cube(new Vec3D(0, 0, 0), new Vec3D(0, 0, 0), cc);
             cubes.add(cube);
             ndbCubes[i] = cube;
-            inactiveCubeConfigs.add(cc);
           }
         }
       }
@@ -350,11 +347,6 @@ class Cube extends LXModel {
    */
   public final int index;
 
-  /**
-   * Index of this cube in cluster, from 1-16
-   */
-  public final int clusterPosition;
-  
   /**
    * Size of this cube, one of SMALL/MEDIUM/LARGE/GIANT
    */
@@ -436,7 +428,6 @@ class Cube extends LXModel {
   /**
    * Point of the cube in the form (theta, y) relative to center of tree base
    */
-  public final Vec2D cylinderPoint;
 
   public float transformedY;
   public float transformedTheta;
@@ -447,7 +438,6 @@ class Cube extends LXModel {
       new LXPoint(globalPosition.x, globalPosition.y, globalPosition.z)
     }));
     this.index = this.points.get(0).index;
-    this.clusterPosition = 0;
     this.size = CUBE_SIZES[config.cubeSizeIndex];
     this.pixels = PIXELS_PER_CUBE[config.cubeSizeIndex];
     this.rx = 0;
@@ -464,7 +454,6 @@ class Cube extends LXModel {
     this.tz = treePosition.z;
     this.r = (float)Point2D.distance(treePosition.x, treePosition.z, 0, 0);
     this.theta = 180 + 180/Utils.PI*Utils.atan2(treePosition.z, treePosition.x);
-    this.cylinderPoint = new Vec2D(this.theta, this.ty);
     this.config = config;
   }
   void resetTransform() {

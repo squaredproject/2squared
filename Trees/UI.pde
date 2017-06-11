@@ -859,14 +859,10 @@ class UIMapping extends UIWindow {
   final UIIntegerBox isActive;
 
   UIMapping(UI ui) {
-    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 284, 140, 280);
+    super(ui, "CLUSTER TOOL", 4, Trees.this.height - 294, 140, 290);
 
-    final UIIntegerBox ipIndex = new UIIntegerBox(){
-      protected void onValueChange(int value) {
-        ipAddress.setLabel((String)mappingTool.ipList[value]);
-      }
-    }.setParameter(mappingTool.ipIndex);
-    final UIIntegerBox ndbIndex = new UIIntegerBox().setParameter(mappingTool.ndbIndex);
+    final UIIntegerBox ipIndex = new UIIntegerBox().setParameter(mappingTool.ipIndex);
+    final UIIntegerBox outputIndex = new UIIntegerBox().setParameter(mappingTool.outputIndex);
 
     (ipAddress = new UILabel()).setAlignment(CENTER, CENTER).setBorderColor(#666666).setBackgroundColor(#292929);
     treeIndex = new UIIntegerBox() {
@@ -915,7 +911,7 @@ class UIMapping extends UIWindow {
       }
     });
 
-    mappingTool.ndbIndex.addListener(new LXParameterListener() {
+    mappingTool.outputIndex.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         updateParams();
       }
@@ -935,8 +931,8 @@ class UIMapping extends UIWindow {
             .addToContainer(this);
     yPos += 24;
 
-    yPos = labelRow(yPos, "IPIndex", ipIndex);
-    yPos = labelRow(yPos, "NDBIndex", ndbIndex);
+    yPos = labelRow(yPos, "NDB", ipIndex);
+    yPos = labelRow(yPos, "OUTPUT", outputIndex);
     yPos = labelRow(yPos, "IP", ipAddress);
     yPos = labelRow(yPos, "TREE", treeIndex);
     yPos = labelRow(yPos, "LAYER", layerIndex);
@@ -973,6 +969,7 @@ class UIMapping extends UIWindow {
 
   void updateParams(){
     CubeConfig c = mappingTool.getConfig();
+    ipAddress.setLabel(c.ipAddress);
     treeIndex.setValue(c.treeIndex);
     layerIndex.setValue(c.layerIndex);
     branchIndex.setValue(c.branchIndex);

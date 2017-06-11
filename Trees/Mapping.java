@@ -13,7 +13,7 @@ class MappingTool extends Effect {
   final SinLFO strobe = new SinLFO(20, 100, 1000);
   
   final DiscreteParameter ipIndex;
-  final DiscreteParameter ndbIndex;
+  final DiscreteParameter outputIndex;
   final BooleanParameter showBlanks = new BooleanParameter("BLANKS", false);
   final Object[] ipList;
 
@@ -22,7 +22,7 @@ class MappingTool extends Effect {
     this.cubeConfig = cubeConfig;
     this.ipList = model.ipMap.keySet().toArray();
     ipIndex = new DiscreteParameter("IP", ipList.length);
-    ndbIndex = new DiscreteParameter("POS", 16);
+    outputIndex = new DiscreteParameter("POS", 16);
     addModulator(strobe).start();
     addLayer(new MappingLayer());
   }
@@ -31,7 +31,7 @@ class MappingTool extends Effect {
   }
 
   Cube getCube(){
-    return model.ipMap.get(this.ipList[ipIndex.getValuei()])[ndbIndex.getValuei()];
+    return model.ipMap.get(this.ipList[ipIndex.getValuei()])[outputIndex.getValuei()];
   }
 
   CubeConfig getConfig(){
