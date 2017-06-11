@@ -49,7 +49,8 @@ abstract class Engine {
 	static final boolean enableOutputMinitree = false;
 	static final boolean enableOutputBigtree = true;
 
-	static final String CLUSTER_CONFIG_FILE = "data/clusters_minitree3.json";
+	static final String CUBE_CONFIG_FILE = "data/entwinedCubes.json";
+	static final String TREE_CONFIG_FILE = "data/entwinedTrees.json";
 
 
 	static final int NUM_CHANNELS = 8;
@@ -84,16 +85,8 @@ abstract class Engine {
 	Engine(String projectPath) {
 		this.projectPath = projectPath;
 
-		cubeConfig = loadConfigFile(CLUSTER_CONFIG_FILE);
-		treeConfigs = new ArrayList<TreeConfig>();
-		TreeConfig tc = new TreeConfig();
-		tc.canopyMajorLengths = new int[] {240, 180, 120};
-		tc.layerBaseHeights = new int[] {100, 140, 160};
-		tc.ry = 0;
-		tc.x = 0;
-		tc.z = 0;
-		tc.treeIndex = 0;
-		treeConfigs.add(tc);
+		cubeConfig = loadCubeConfigFile();
+		treeConfigs = loadTreeConfigFile();
 		model = new Model(treeConfigs, cubeConfig);
 		lx = createLX();
 
@@ -423,8 +416,12 @@ abstract class Engine {
 		return projectPath + "/" + filename;
 	}
 
-	List<CubeConfig> loadConfigFile(String filename) {
-		return loadJSONFile(filename, new TypeToken<List<CubeConfig>>() {
+	List<CubeConfig> loadCubeConfigFile() {
+		return loadJSONFile(CUBE_CONFIG_FILE, new TypeToken<List<CubeConfig>>() {
+		}.getType());
+	}
+	List<TreeConfig> loadTreeConfigFile() {
+		return loadJSONFile(TREE_CONFIG_FILE, new TypeToken<List<TreeConfig>>() {
 		}.getType());
 	}
 
@@ -451,11 +448,22 @@ abstract class Engine {
 		return null;
 	}
 
-	void saveJSONToFile(List<CubeConfig> config, String filename) {
+	void saveCubeConfigs(){
+		List<CubeConfig> cubeConfigs = new ArrayList();
+		for (Cube cube: model.cubes){
+			if (cube.config.isActive){
+				cubeConfigs.add(cube.config);
+			}
+		}
+		String data = new Gson().toJson(cubeConfigs);
+		saveJSONToFile(data, CUBE_CONFIG_FILE);
+	}
+
+	void saveJSONToFile(String data, String filename) {
 		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(new BufferedWriter(new FileWriter(sketchPath(filename))));
-			writer.write(new Gson().toJson(config));
+			writer.write(data);
 		} catch (IOException ioe) {
 			System.out.println("Error writing json file.");
 		} finally {

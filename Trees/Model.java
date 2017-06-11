@@ -121,38 +121,52 @@ class Model extends LXModel {
    * Cubes in the model
    */
   public final List<Cube> cubes;
-  public final Map<String, Cube[]> ipMap;
+  public final Map<String, Cube[]> ipMap = new HashMap();
 
   private final ArrayList<ModelTransform> modelTransforms = new ArrayList<ModelTransform>();
-
+  private final List<TreeConfig> treeConfigs;
 
   Model(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfig) {
     super(new Fixture(treeConfigs, cubeConfig));
+    this.treeConfigs = treeConfigs;
     Fixture f = (Fixture) this.fixtures.get(0);
     List<Cube> _cubes = new ArrayList<Cube>();
+    List<CubeConfig> _inactiveCubeConfigs = new ArrayList();
     this.trees = Collections.unmodifiableList(f.trees);
-    Map<String, Cube[]> _ipMap = new HashMap();
     for (Tree tree : this.trees) {
-        _ipMap.putAll(tree.ipMap);
+        ipMap.putAll(tree.ipMap);
         _cubes.addAll(tree.cubes);
     }
     this.cubes = Collections.unmodifiableList(_cubes);
-    this.ipMap =_ipMap;
   }
   
   private static class Fixture extends LXAbstractFixture {
     
     final List<Tree> trees = new ArrayList<Tree>();
     
-    private Fixture(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfig) {
+    private Fixture(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfigs) {
       for (TreeConfig tc : treeConfigs){
-        trees.add(new Tree(cubeConfig, tc.treeIndex, tc.x, tc.x, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
+        trees.add(new Tree(cubeConfigs, tc.treeIndex, tc.x, tc.x, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
       }
       for (Tree tree : trees) {
         for (LXPoint p : tree.points) {
           points.add(p);
         }
       }
+    }
+  }
+
+  public Vec3D getMountPoint(CubeConfig c) {
+    Vec3D p = null;
+    Tree tree;
+    try {
+      tree = this.trees.get(c.treeIndex);
+      p = tree.treeLayers.get(c.layerIndex).branches.get(c.branchIndex).availableMountingPoints.get(c.mountPointIndex);
+      return tree.transformPoint(p);
+    } catch (Exception e) {
+      System.out.println("Error resolving mount point");
+      System.out.println(e);
+      return null;
     }
   }
 
@@ -183,6 +197,7 @@ class CubeConfig {
   String ipAddress;
   int ndbIndex;
   int cubeSizeIndex;
+  boolean isActive;
 }
 class TreeConfig {
   int treeIndex;
@@ -229,7 +244,10 @@ class Tree extends LXModel {
    * Rotation in degrees of tree about vertical y-axis
    */
   public final float ry;
-  
+
+  public final List<CubeConfig> inactiveCubeConfigs;
+
+
   Tree(List<CubeConfig> cubeConfig, int treeIndex, float x, float z, float ry, int[] canopyMajorLengths, int[] layerBaseHeights) {
     super(new Fixture(cubeConfig, treeIndex, x, z, ry, canopyMajorLengths, layerBaseHeights));
     Fixture f = (Fixture)this.fixtures.get(0);
@@ -240,26 +258,33 @@ class Tree extends LXModel {
     this.x = x;
     this.z = z;
     this.ry = ry;
+    this.inactiveCubeConfigs = f.inactiveCubeConfigs;
 
   }
-  
+  public Vec3D transformPoint(Vec3D point){
+    return ((Fixture)this.fixtures.get(0)).transformPoint(point);
+  }
+
+
   private static class Fixture extends LXAbstractFixture {
     
     final List<Cube> cubes = new ArrayList<Cube>();
     final List<EntwinedLayer> treeLayers= new ArrayList<EntwinedLayer>();
     public final Map<String, Cube[]> ipMap = new HashMap();
+    public final LXTransform transform;
+    public final List<CubeConfig> inactiveCubeConfigs= new ArrayList();
     Fixture(List<CubeConfig> cubeConfig, int treeIndex, float x, float z, float ry, int[] canopyMajorLengths, int[] layerBaseHeights) {
-      LXTransform t = new LXTransform();
-      t.translate(x, 0, z);
-      t.rotateY(ry * Utils.PI / 180);
+      transform = new LXTransform();
+      transform.translate(x, 0, z);
+      transform.rotateY(ry * Utils.PI / 180);
       for (int i=0; i<canopyMajorLengths.length; i++){
         treeLayers.add(new EntwinedLayer(canopyMajorLengths[i], i, layerBaseHeights[i]));
       }
-      for (CubeConfig cp : cubeConfig) {
-        if (cp.treeIndex == treeIndex) {
+      for (CubeConfig cc : cubeConfig) {
+        if (cc.treeIndex == treeIndex) {
           Vec3D p;
           try{
-            p = treeLayers.get(cp.layerIndex).branches.get(cp.branchIndex).availableMountingPoints.get(cp.mountPointIndex);
+            p = treeLayers.get(cc.layerIndex).branches.get(cc.branchIndex).availableMountingPoints.get(cc.mountPointIndex);
           }
           catch(Exception e){
             System.out.println("Error loading config point");
@@ -267,28 +292,35 @@ class Tree extends LXModel {
             p = null;
           }
           if (p != null){
-            t.push();
-            t.translate(p.x, p.y, p.z);
-            Cube cube = new Cube(new Vec3D(t.x(), t.y(), t.z()), p, cp.cubeSizeIndex);
+            cc.isActive = true;
+            Cube cube = new Cube(this.transformPoint(p), p, cc);
             cubes.add(cube);
-            cube.config = cp;
-            t.pop();
-            if (!ipMap.containsKey(cp.ipAddress)){
-              ipMap.put(cp.ipAddress, new Cube[16]);
+            if (!ipMap.containsKey(cc.ipAddress)){
+              ipMap.put(cc.ipAddress, new Cube[16]);
             }
-            Cube[] ndbCubes = ipMap.get(cp.ipAddress);
-
-            ndbCubes[cp.ndbIndex] = cube;
+            Cube[] ndbCubes = ipMap.get(cc.ipAddress);
+            ndbCubes[cc.ndbIndex] = cube;
           }
         }
       }
-      for (Cube[] ndbCubes : ipMap.values()) {
+      for (Map.Entry<String, Cube[]> entry : ipMap.entrySet()) {
+        String ip = entry.getKey();
+        Cube[] ndbCubes = entry.getValue();
         for (int i=0; i<16; i++){
-          if (ndbCubes[i] == null){ //make sure all outputs have a cube to avoid mucked up mapping by adding a fake cube that won't show up in the gui
-            Cube cube = new Cube(new Vec3D(0, 0, 0), new Vec3D(0, 0, 0), 0);
+          if (ndbCubes[i] == null){ //fill all empty outputs with an inactive cube. Maybe this would be nicer to do at the model level in the future.
+            CubeConfig cc = new CubeConfig();
+            cc.treeIndex = treeIndex;
+            cc.branchIndex = 0;
+            cc.cubeSizeIndex = 0;
+            cc.mountPointIndex = 0;
+            cc.ndbIndex = i;
+            cc.layerIndex = 0;
+            cc.ipAddress = ip;
+            cc.isActive = false;
+            Cube cube = new Cube(new Vec3D(0, 0, 0), new Vec3D(0, 0, 0), cc);
             cubes.add(cube);
-            cube.displayCube = false;
             ndbCubes[i] = cube;
+            inactiveCubeConfigs.add(cc);
           }
         }
       }
@@ -297,6 +329,13 @@ class Tree extends LXModel {
           this.points.add(p);
         }
       }
+    }
+    public Vec3D transformPoint(Vec3D point){
+      this.transform.push();
+      this.transform.translate(point.x, point.y, point.z);
+      Vec3D result = new Vec3D(this.transform.x(), this.transform.y(), this.transform.z());
+      this.transform.pop();
+      return result;
     }
   }
 }
@@ -402,16 +441,15 @@ class Cube extends LXModel {
   public float transformedY;
   public float transformedTheta;
   public Vec2D transformedCylinderPoint;
-  public boolean displayCube = true;
   public CubeConfig config = null;
-  Cube(Vec3D globalPosition, Vec3D treePosition, int sizeIndex) {
+  Cube(Vec3D globalPosition, Vec3D treePosition, CubeConfig config) {
     super(Arrays.asList(new LXPoint[] {
       new LXPoint(globalPosition.x, globalPosition.y, globalPosition.z)
     }));
     this.index = this.points.get(0).index;
     this.clusterPosition = 0;
-    this.size = CUBE_SIZES[sizeIndex];
-    this.pixels = PIXELS_PER_CUBE[sizeIndex];
+    this.size = CUBE_SIZES[config.cubeSizeIndex];
+    this.pixels = PIXELS_PER_CUBE[config.cubeSizeIndex];
     this.rx = 0;
     this.ry = 0;
     this.rz = 0;
@@ -427,9 +465,10 @@ class Cube extends LXModel {
     this.r = (float)Point2D.distance(treePosition.x, treePosition.z, 0, 0);
     this.theta = 180 + 180/Utils.PI*Utils.atan2(treePosition.z, treePosition.x);
     this.cylinderPoint = new Vec2D(this.theta, this.ty);
+    this.config = config;
   }
-
   void resetTransform() {
+
     transformedTheta = theta;
     transformedY = y;
   }
