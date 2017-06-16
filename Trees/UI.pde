@@ -1,6 +1,7 @@
 import heronarts.lx.parameter.BasicParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.p2lx.ui.UI2dContext;
+import heronarts.p2lx.ui.component.UISwitch;
 import toxi.geom.Vec3D;
 
 int focusedChannel() {
@@ -44,24 +45,22 @@ class UITrees extends UI3dComponent {
       pushMatrix();
       translate(tree.x, 0, tree.z);
       rotateY(-tree.ry * Utils.PI / 180);
-      drawTree(ui);
+      drawTree(ui, tree);
       popMatrix();
     }
   }
 
-  private void drawTree(UI ui) {
+  private void drawTree(UI ui, Tree tree) {
     int squareHalfSize = 2;
-    for (Tree tree : model.trees){ // drew diamonds at every mount point. Crude, but does the job for now!
-      for (EntwinedLayer treeLayer: tree.treeLayers){
-        for (EntwinedBranch branch: treeLayer.branches){
-          for (Vec3D p: branch.availableMountingPoints){
-            beginShape();
-            vertex(p.x - squareHalfSize, p.y, p.z);
-            vertex(p.x, p.y, p.z + squareHalfSize);
-            vertex(p.x + squareHalfSize, p.y, p.z);
-            vertex(p.x, p.y, p.z - squareHalfSize);
-            endShape(CLOSE);
-          }
+    for (EntwinedLayer treeLayer: tree.treeLayers){ // drew diamonds at every mount point. Crude, but does the job for now!
+      for (EntwinedBranch branch: treeLayer.branches){
+        for (Vec3D p: branch.availableMountingPoints){
+          beginShape();
+          vertex(p.x - squareHalfSize, p.y, p.z);
+          vertex(p.x, p.y, p.z + squareHalfSize);
+          vertex(p.x + squareHalfSize, p.y, p.z);
+          vertex(p.x, p.y, p.z - squareHalfSize);
+          endShape(CLOSE);
         }
       }
     }
@@ -856,7 +855,7 @@ class UIMapping extends UIWindow {
   final UIIntegerBox branchIndex;
   final UIIntegerBox mountPointIndex;
   final UIIntegerBox cubeSizeIndex;
-  final UIIntegerBox isActive;
+  final UIButton isActive;
 
   UIMapping(UI ui) {
     super(ui, "CLUSTER TOOL", 4, Trees.this.height - 294, 140, 290);
@@ -883,7 +882,7 @@ class UIMapping extends UIWindow {
         mappingTool.getConfig().branchIndex =  value;
         mountPointIndex.setRange(0, model.trees.get(treeIndex.getValue()).treeLayers.get(layerIndex.getValue()).branches.get(value).availableMountingPoints.size() - 1);
       }
-    }.setRange(0, 3);
+    }.setRange(0, 7);
 
     mountPointIndex = new UIIntegerBox() {
       protected void onValueChange(int value) {
@@ -897,23 +896,16 @@ class UIMapping extends UIWindow {
       }
     }.setRange(0, 1);
 
-    isActive = new UIIntegerBox() {
-      protected void onValueChange(int value) {
-        mappingTool.getConfig().isActive = value == 1;
-      }
-    }.setRange(0, 1);
-
-
 
     mappingTool.ipIndex.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        updateParams();
+        updateParameters(true);
       }
     });
 
     mappingTool.outputIndex.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
-        updateParams();
+        updateParameters(false);
       }
     });
 
@@ -939,7 +931,23 @@ class UIMapping extends UIWindow {
     yPos = labelRow(yPos, "BRANCH", branchIndex);
     yPos = labelRow(yPos, "POINT", mountPointIndex);
     yPos = labelRow(yPos, "SIZE", cubeSizeIndex);
-    yPos = labelRow(yPos, "ACTIVE", isActive);
+
+
+    isActive = (UIButton) new UIButton(4, yPos, width-8, 20) {
+      void onToggle(boolean enabled) {
+        CubeConfig c = mappingTool.getConfig();
+        c.isActive = enabled;
+        if (enabled) {
+          c.layerIndex = layerIndex.getValue();
+          c.branchIndex = branchIndex.getValue();
+          c.mountPointIndex = mountPointIndex.getValue();
+        }
+      }
+    }
+    .setInactiveLabel("Cube inactive")
+    .setActiveLabel("Cube active")
+    .addToContainer(this);
+    yPos += 24;
 
     new UIButton(4, yPos, this.width-8, 20) {
       void onToggle(boolean active) {
@@ -952,7 +960,7 @@ class UIMapping extends UIWindow {
       }
     }.setMomentary(true).setLabel("Save Changes").addToContainer(this);
 
-    updateParams();
+    updateParameters(true);
   }
 
   float labelRow(float yPos, String label, UI2dComponent obj) {
@@ -967,15 +975,17 @@ class UIMapping extends UIWindow {
     return yPos;
   }
 
-  void updateParams(){
+  void updateParameters(boolean resetAll){
     CubeConfig c = mappingTool.getConfig();
     ipAddress.setLabel(c.ipAddress);
     treeIndex.setValue(c.treeIndex);
-    layerIndex.setValue(c.layerIndex);
-    branchIndex.setValue(c.branchIndex);
-    mountPointIndex.setValue(c.mountPointIndex);
+    if (resetAll || c.isActive) {
+      layerIndex.setValue(c.layerIndex);
+      branchIndex.setValue(c.branchIndex);
+      mountPointIndex.setValue(c.mountPointIndex);
+    }
     cubeSizeIndex.setValue(c.cubeSizeIndex);
-    isActive.setValue(c.isActive ? 1 : 0);
+    isActive.setActive(c.isActive);
   }
 }
 

@@ -50,7 +50,7 @@ class EntwinedBranch{
     zKeyPoints[4] = branchLength * 0.199;
     zKeyPoints[3] = branchLength * 0.13;
     zKeyPoints[2] = 0;
-    zKeyPoints[1] = branchLength * (- 0.19);
+    zKeyPoints[1] = branchLength * (- 0.08);
     zKeyPoints[0] = branchLength * (- 0.05);
     List<Vec3D> _availableMountingPoints = new ArrayList<Vec3D>();
     LXTransform transform = new LXTransform();
@@ -146,7 +146,7 @@ class Model extends LXModel {
     
     private Fixture(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfigs) {
       for (TreeConfig tc : treeConfigs){
-        trees.add(new Tree(cubeConfigs, tc.treeIndex, tc.x, tc.x, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
+        trees.add(new Tree(cubeConfigs, tc.treeIndex, tc.x, tc.z, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
       }
       for (Tree tree : trees) {
         for (LXPoint p : tree.points) {

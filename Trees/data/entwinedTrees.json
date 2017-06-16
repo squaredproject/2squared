@@ -1,18 +1,42 @@
 [
 	{
-		"canopyMajorLengths" : [240, 180, 120],
-		"layerBaseHeights" : [100, 140, 160],
+		"canopyMajorLengths" : [300, 200, 120],
+		"layerBaseHeights" : [40, 113, 169],
 		"ry" : 0,
 		"x" : 0,
 		"z" : 0,
 		"treeIndex" : 0
 	},
 	{
-		"canopyMajorLengths" : [180, 120, 96],
-		"layerBaseHeights" : [100, 140, 160],
+		"canopyMajorLengths" : [240, 160, 96],
+		"layerBaseHeights" : [20, 71, 112],
 		"ry" : 0,
 		"x" : 300,
 		"z" : 0,
 		"treeIndex" : 1
+	},
+	{
+		"canopyMajorLengths" : [180, 120],
+		"layerBaseHeights" : [43, 95],
+		"ry" : 0,
+		"x" : 300,
+		"z" : 300,
+		"treeIndex" : 2
+	},
+	{
+		"canopyMajorLengths" : [72],
+		"layerBaseHeights" : [24],
+		"ry" : 0,
+		"x" : 150,
+		"z" : -150,
+		"treeIndex" : 3
+	},
+	{
+		"canopyMajorLengths" : [72],
+		"layerBaseHeights" : [24],
+		"ry" : 0,
+		"x" : 150,
+		"z" : -300,
+		"treeIndex" : 4
 	}
 ]

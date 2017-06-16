@@ -245,14 +245,14 @@ class SparkleTakeOver extends TSPattern {
 }
 
 class Lightning extends TSTriggerablePattern {
-  private LightningLine[] bolts = new LightningLine[2];
+  private LightningLine[] bolts = new LightningLine[5];
   final BasicParameter boltAngle = new BasicParameter("Angle", 35, 0, 55);
   final BasicParameter propagationSpeed = new BasicParameter("Speed", 10, 0.5, 20);
   final BasicParameter maxBoltWidth = new BasicParameter("Width", 60, 20, 150);
   final BasicParameter lightningChance = new BasicParameter("Chance", 5, 1, 10);
   final BasicParameter forkingChance = new BasicParameter("Fork", 3, 1, 10);
   final BooleanParameter firesOnBeat = new BooleanParameter("Beat");
-  int[] randomCheckTimeOuts = {0, 0};
+  int[] randomCheckTimeOuts = {0, 0, 0, 0, 0};
 
   Lightning(LX lx) {
     super(lx);
@@ -261,6 +261,9 @@ class Lightning extends TSTriggerablePattern {
 
     bolts[0] = makeBolt();
     bolts[1] = makeBolt();
+    bolts[2] = makeBolt();
+    bolts[3] = makeBolt();
+    bolts[4] = makeBolt();
     addParameter(boltAngle);
     addParameter(propagationSpeed);
     addParameter(maxBoltWidth);
