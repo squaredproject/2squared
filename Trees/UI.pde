@@ -93,11 +93,8 @@ class UITrees extends UI3dComponent {
     noFill();
 
     if (mappingTool.isEnabled()) {
-      System.out.println("mapping");
       Cube cube = mappingTool.getCube();
-      System.out.println("got cube");
       drawCube(cube, colors);
-
     }
     else {
       for (Cube cube : model.cubes) {
