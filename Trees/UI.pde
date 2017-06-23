@@ -1,7 +1,7 @@
 import heronarts.lx.parameter.BasicParameter;
 import heronarts.lx.parameter.LXParameter;
-import heronarts.p2lx.ui.UI2dContext;
-import heronarts.p2lx.ui.component.UISwitch;
+import heronarts.p3lx.ui.UI2dContext;
+import heronarts.p3lx.ui.component.UISwitch;
 import toxi.geom.Vec3D;
 
 int focusedChannel() {
@@ -952,8 +952,8 @@ class UIMapping extends UIWindow {
     new UIButton(4, yPos, this.width-8, 20) {
       void onToggle(boolean active) {
         if (active) {
-          String backupFileName = engine.CUBE_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
-          saveStream(backupFileName, engine.CUBE_CONFIG_FILE);
+          String backupFileName = Config.CUBE_CONFIG_FILE + ".backup." + month() + "." + day() + "." + hour() + "." + minute() + "." + second();
+          saveStream(backupFileName, Config.CUBE_CONFIG_FILE);
           engine.saveCubeConfigs();
           setLabel("Saved. Restart needed.");
         }

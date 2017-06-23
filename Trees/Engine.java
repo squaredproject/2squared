@@ -40,19 +40,6 @@ import heronarts.lx.transition.LXTransition;
 
 abstract class Engine {
 
-  static final boolean enableIPad = false;
-  static final boolean autoplayBMSet = false;
-
-  static final boolean enableNFC = false;
-  static final boolean enableAPC40 = false;
-
-  static final boolean enableOutputMinitree = false;
-  static final boolean enableOutputBigtree = true;
-
-  static final String CUBE_CONFIG_FILE = "data/entwinedCubes.json";
-  static final String TREE_CONFIG_FILE = "data/entwinedTrees.json";
-
-
   static final int NUM_CHANNELS = 8;
   static final int NUM_IPAD_CHANNELS = 3;
   static final int NUM_KNOBS = 8;
@@ -88,6 +75,7 @@ abstract class Engine {
     cubeConfig = loadCubeConfigFile();
     treeConfigs = loadTreeConfigFile();
     model = new Model(treeConfigs, cubeConfig);
+
     lx = createLX();
 
 
@@ -101,7 +89,7 @@ abstract class Engine {
 
     configureChannels();
 
-    if (enableNFC) {
+    if (Config.enableNFC) {
       configureNFC();
       // this line to allow any nfc reader to read any cube
       nfcEngine.disableVisualTypeRestrictions = true;
@@ -113,21 +101,21 @@ abstract class Engine {
     configureBMPTool();
     configureAutomation();
 
-    if (enableOutputBigtree) {
+    if (Config.enableOutputBigtree) {
       lx.addEffect(new TurnOffDeadPixelsEffect(lx));
       configureExternalOutput();
     }
-    if (enableOutputMinitree) {
+    if (Config.enableOutputMinitree) {
       configureFadeCandyOutput();
     }
 
     postCreateLX();
 
-    if (enableAPC40) {
+    if (Config.enableAPC40) {
       configureMIDI();
     }
-    if (enableIPad) {
-      engineController.setAutoplay(autoplayBMSet, true);
+    if (Config.enableIPad) {
+      engineController.setAutoplay(Config.autoplayBMSet, true);
       configureServer();
     }
 
@@ -417,11 +405,11 @@ abstract class Engine {
   }
 
   List<CubeConfig> loadCubeConfigFile() {
-    return loadJSONFile(CUBE_CONFIG_FILE, new TypeToken<List<CubeConfig>>() {
+    return loadJSONFile(Config.CUBE_CONFIG_FILE, new TypeToken<List<CubeConfig>>() {
     }.getType());
   }
   List<TreeConfig> loadTreeConfigFile() {
-    return loadJSONFile(TREE_CONFIG_FILE, new TypeToken<List<TreeConfig>>() {
+    return loadJSONFile(Config.TREE_CONFIG_FILE, new TypeToken<List<TreeConfig>>() {
     }.getType());
   }
 
@@ -456,7 +444,7 @@ abstract class Engine {
       }
     }
     String data = new Gson().toJson(cubeConfigs);
-    saveJSONToFile(data, CUBE_CONFIG_FILE);
+    saveJSONToFile(data, Config.CUBE_CONFIG_FILE);
   }
 
   void saveJSONToFile(String data, String filename) {
@@ -518,7 +506,7 @@ abstract class Engine {
     }
     engineController.baseChannelIndex = lx.engine.getChannels().size() - 1;
 
-    if (enableIPad) {
+    if (Config.enableIPad) {
       for (int i = 0; i < Engine.NUM_IPAD_CHANNELS; ++i) {
         patterns = new ArrayList<TSPattern>();
         registerIPadPatterns();
@@ -678,7 +666,7 @@ abstract class Engine {
     automation[automationSlot.getValuei()].looping.setValue(true);
     engineController.automation = automation[automationSlot.getValuei()];
 
-    if (autoplayBMSet) {
+    if (Config.autoplayBMSet) {
       automation[automationSlot.getValuei()].start();
     }
   }
@@ -705,7 +693,7 @@ abstract class Engine {
     registerOneShotTriggerables();
     registerEffectTriggerables();
 
-    if (enableIPad) {
+    if (Config.enableIPad) {
       engineController.startEffectIndex = lx.engine.getEffects().size();
       registerIPadEffects();
       engineController.endEffectIndex = lx.engine.getEffects().size();

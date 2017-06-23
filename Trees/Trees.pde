@@ -11,10 +11,10 @@ import heronarts.lx.transition.*;
 import heronarts.lx.midi.*;
 import heronarts.lx.modulator.*;
 
-import heronarts.p2lx.*;
-import heronarts.p2lx.ui.*;
-import heronarts.p2lx.ui.component.*;
-import heronarts.p2lx.ui.control.*;
+import heronarts.p3lx.*;
+import heronarts.p3lx.ui.*;
+import heronarts.p3lx.ui.component.*;
+import heronarts.p3lx.ui.control.*;
 
 import ddf.minim.*;
 import processing.opengl.*;
@@ -44,7 +44,7 @@ static List<CubeConfig> cubeConfig;
 static List<TreeConfig> treeConfig;
 
 Model model;
-P2LX lx;
+P3LX lx;
 ProcessingEngine engine;
 LXDatagramOutput output;
 BasicParameter outputBrightness;
@@ -64,7 +64,7 @@ void setup() {
   size(1148, 720, OPENGL);
   frameRate(90); // this will get processing 2 to actually hit around 60
   
-  engine = new ProcessingEngine(sketchPath);
+  engine = new ProcessingEngine(sketchPath());
   engine.start();
 }
 
@@ -75,11 +75,11 @@ class ProcessingEngine extends Engine {
   }
 
   LX createLX() {
-    return new P2LX(Trees.this, model);
+    return new P3LX(Trees.this, model);
   }
 
-  P2LX getLX() {
-    return (P2LX)lx;
+  P3LX getLX() {
+    return (P3LX)lx;
   }
 
   void postCreateLX() {
@@ -106,7 +106,9 @@ class ProcessingEngine extends Engine {
 
   void addPatterns(ArrayList<LXPattern> patterns) {
     super.addPatterns(patterns);
-    try { patterns.add(new SyphonPattern(lx, Trees.this)); } catch (Throwable e) {}
+    if (Config.enableSoundSyphon) {
+      try { patterns.add(new SyphonPattern(lx, Trees.this)); } catch (Throwable e) {}
+    }
   }
 }
 
@@ -132,7 +134,7 @@ void configureUI() {
     .setPhi(10*Utils.PI/180)
     .addComponent(new UITrees())
   );
-  if (engine.enableOutputBigtree) {
+  if (Config.enableOutputBigtree) {
     lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   }
   lx.ui.addLayer(new UIMapping(lx.ui));
