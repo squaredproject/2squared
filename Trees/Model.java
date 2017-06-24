@@ -145,8 +145,9 @@ class Model extends LXModel {
     final List<Tree> trees = new ArrayList<Tree>();
     
     private Fixture(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfigs) {
-      for (TreeConfig tc : treeConfigs){
-        trees.add(new Tree(cubeConfigs, tc.treeIndex, tc.x, tc.z, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
+      for (int i = 0; i < treeConfigs.size(); i++){
+        TreeConfig tc = treeConfigs.get(i);
+        trees.add(new Tree(cubeConfigs, i, tc.x, tc.z, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
       }
       for (Tree tree : trees) {
         for (LXPoint p : tree.points) {
@@ -195,12 +196,11 @@ class CubeConfig {
   int branchIndex;
   int mountPointIndex;
   String ipAddress;
-  int ndbIndex;
+  int outputIndex;
   int cubeSizeIndex;
   boolean isActive;
 }
 class TreeConfig {
-  int treeIndex;
   float x;
   float z;
   float ry;
@@ -297,7 +297,7 @@ class Tree extends LXModel {
               ipMap.put(cc.ipAddress, new Cube[16]);
             }
             Cube[] ndbCubes = ipMap.get(cc.ipAddress);
-            ndbCubes[cc.ndbIndex] = cube;
+            ndbCubes[cc.outputIndex] = cube;
           }
         }
       }
@@ -311,7 +311,7 @@ class Tree extends LXModel {
             cc.branchIndex = 0;
             cc.cubeSizeIndex = 0;
             cc.mountPointIndex = 0;
-            cc.ndbIndex = i;
+            cc.outputIndex = i;
             cc.layerIndex = 0;
             cc.ipAddress = ip;
             cc.isActive = false;
