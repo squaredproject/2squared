@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -19,6 +20,7 @@ import heronarts.lx.LX;
 import heronarts.lx.LXAutomationRecorder;
 import heronarts.lx.LXChannel;
 import heronarts.lx.LXEngine;
+import heronarts.lx.model.LXPoint;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.effect.BlurEffect;
 import heronarts.lx.effect.LXEffect;
@@ -44,7 +46,8 @@ abstract class Engine {
   static final int NUM_AUTOMATION = 4;
 
   final String projectPath;
-  final List<TreeConfig> clusterConfig;
+  final List<CubeConfig> cubeConfig;
+  final List<TreeConfig> treeConfigs;
   final LX lx;
   final Model model;
   EngineController engineController;
@@ -56,10 +59,11 @@ abstract class Engine {
   TSDrumpad apc40Drumpad;
   NFCEngine nfcEngine;
   LXListenableNormalizedParameter[] effectKnobParameters;
+  final ChannelTreeLevels[] channelTreeLevels = new ChannelTreeLevels[NUM_CHANNELS];
   final BasicParameter dissolveTime = new BasicParameter("DSLV", 400, 50, 1000);
   final BasicParameter drumpadVelocity = new BasicParameter("DVEL", 1);
   final TSAutomationRecorder[] automation = new TSAutomationRecorder[Engine.NUM_AUTOMATION];
-  final BooleanParameter[] automationStop = new BooleanParameter[Engine.NUM_AUTOMATION]; 
+  final BooleanParameter[] automationStop = new BooleanParameter[Engine.NUM_AUTOMATION];
   final DiscreteParameter automationSlot = new DiscreteParameter("AUTO", Engine.NUM_AUTOMATION);
   final BooleanParameter[][] nfcToggles = new BooleanParameter[6][9];
   final BooleanParameter[] previewChannels = new BooleanParameter[Engine.NUM_CHANNELS];
@@ -68,12 +72,20 @@ abstract class Engine {
   Engine(String projectPath) {
     this.projectPath = projectPath;
 
-    clusterConfig = loadConfigFile(Config.CLUSTER_CONFIG_FILE);
-    model = new Model(clusterConfig);
+    cubeConfig = loadCubeConfigFile();
+    treeConfigs = loadTreeConfigFile();
+    model = new Model(treeConfigs, cubeConfig);
+
     lx = createLX();
+
+
     engineController = new EngineController(lx);
-  
+
     lx.engine.addParameter(drumpadVelocity);
+
+    for (int i=0; i<NUM_CHANNELS; i++){
+      channelTreeLevels[i] = new ChannelTreeLevels(model.trees.size());
+    }
 
     configureChannels();
 
@@ -106,7 +118,7 @@ abstract class Engine {
       engineController.setAutoplay(Config.autoplayBMSet, true);
       configureServer();
     }
-    
+
     // bad code I know
     // (shouldn't mess with engine internals)
     // maybe need a way to specify a deck shouldn't be focused?
@@ -122,7 +134,8 @@ abstract class Engine {
 
   abstract LX createLX();
 
-  void postCreateLX() { }
+  void postCreateLX() {
+  }
 
   void registerIPadPatterns() {
     registerPatternController("None", new NoPattern(lx));
@@ -143,7 +156,7 @@ abstract class Engine {
     registerPatternController("Seesaw", new SeeSaw(lx));
     registerPatternController("Cells", new Cells(lx));
     registerPatternController("Fade", new Fade(lx));
-    
+
     registerPatternController("Ice Crystals", new IceCrystals(lx));
     registerPatternController("Fire", new Fire(lx));
 
@@ -285,10 +298,10 @@ abstract class Engine {
     registerPattern(new Cells(lx), "3707000050abca", 3);
     registerPattern(new Fade(lx), "3707000050a8b0", 3);
     registerPattern(new Pixels(lx), "3707000050ab38", 3);
-    
+
     registerPattern(new IceCrystals(lx), "3707000050a89b", 5);
     registerPattern(new Fire(lx), "-", 5); // Make red
-    
+
     // registerPattern(new DoubleHelix(lx), "");
     registerPattern(new AcidTrip(lx), "3707000050a914");
     registerPattern(new Rain(lx), "3707000050a937");
@@ -360,30 +373,30 @@ abstract class Engine {
     registerEffectControlParameter(staticEffect.amount, "3707000050a8b3", 0, .3, 1);
     registerEffectControlParameter(candyTextureEffect.amount, "3707000050aafc", 0, 1, 5);
 
-    effectKnobParameters = new LXListenableNormalizedParameter[] {
-      colorEffect.hueShift,
-      colorEffect.mono,
-      colorEffect.desaturation,
-      colorEffect.sharp,
-      blurEffect.amount,
-      speedEffect.speed,
-      spinEffect.spin,
-      candyCloudTextureEffect.amount
+    effectKnobParameters = new LXListenableNormalizedParameter[]{
+        colorEffect.hueShift,
+        colorEffect.mono,
+        colorEffect.desaturation,
+        colorEffect.sharp,
+        blurEffect.amount,
+        speedEffect.speed,
+        spinEffect.spin,
+        candyCloudTextureEffect.amount
     };
   }
 
   VisualType[] readerPatternTypeRestrictions() {
-    return new VisualType[] {
-      VisualType.Pattern,
-      VisualType.Pattern,
-      VisualType.Pattern,
-      VisualType.OneShot,
-      VisualType.OneShot,
-      VisualType.OneShot,
-      VisualType.Effect,
-      VisualType.Effect,
-      VisualType.Effect,
-      VisualType.Pattern,
+    return new VisualType[]{
+        VisualType.Pattern,
+        VisualType.Pattern,
+        VisualType.Pattern,
+        VisualType.OneShot,
+        VisualType.OneShot,
+        VisualType.OneShot,
+        VisualType.Effect,
+        VisualType.Effect,
+        VisualType.Effect,
+        VisualType.Pattern,
     };
   }
 
@@ -391,8 +404,13 @@ abstract class Engine {
     return projectPath + "/" + filename;
   }
 
-  List<TreeConfig> loadConfigFile(String filename) {
-    return loadJSONFile(filename, new TypeToken<List<TreeConfig>>() {}.getType());
+  List<CubeConfig> loadCubeConfigFile() {
+    return loadJSONFile(Config.CUBE_CONFIG_FILE, new TypeToken<List<CubeConfig>>() {
+    }.getType());
+  }
+  List<TreeConfig> loadTreeConfigFile() {
+    return loadJSONFile(Config.TREE_CONFIG_FILE, new TypeToken<List<TreeConfig>>() {
+    }.getType());
   }
 
   JsonArray loadSavedSetFile(String filename) {
@@ -404,24 +422,36 @@ abstract class Engine {
     try {
       reader = new BufferedReader(new FileReader(sketchPath(filename)));
       return new Gson().fromJson(reader, typeToken);
-    } catch (IOException ioe) { 
+    } catch (IOException ioe) {
       System.out.println("Error reading json file: ");
       System.out.println(ioe);
     } finally {
       if (reader != null) {
         try {
           reader.close();
-        } catch (IOException ioe) { }
+        } catch (IOException ioe) {
+        }
       }
     }
     return null;
   }
 
-  void saveJSONToFile(List<TreeConfig> config, String filename) {
+  void saveCubeConfigs(){
+    List<CubeConfig> cubeConfigs = new ArrayList();
+    for (Cube cube: model.cubes){
+      if (cube.config.isActive){
+        cubeConfigs.add(cube.config);
+      }
+    }
+    String data = new Gson().toJson(cubeConfigs);
+    saveJSONToFile(data, Config.CUBE_CONFIG_FILE);
+  }
+
+  void saveJSONToFile(String data, String filename) {
     PrintWriter writer = null;
     try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(sketchPath(filename))));
-      writer.write(new Gson().toJson(config));
+      writer.write(data);
     } catch (IOException ioe) {
       System.out.println("Error writing json file.");
     } finally {
@@ -434,8 +464,7 @@ abstract class Engine {
   /* configureChannels */
 
   void setupChannel(final LXChannel channel, boolean noOpWhenNotRunning) {
-    channel.setFaderTransition(new TreesTransition(lx, channel));
-
+    channel.setFaderTransition(new TreesTransition(lx, channel, model, channelTreeLevels));
     channel.addListener(new LXChannel.AbstractListener() {
       LXTransition transition;
 
@@ -529,7 +558,7 @@ abstract class Engine {
   }
 
   Triggerable configurePatternAsTriggerable(TSPattern pattern) {
-    LXChannel channel = lx.engine.addChannel(new TSPattern[] { pattern });
+    LXChannel channel = lx.engine.addChannel(new TSPattern[]{pattern});
     setupChannel(channel, false);
 
     pattern.onTriggerableModeEnabled();
@@ -547,7 +576,7 @@ abstract class Engine {
 
   void registerEffect(LXEffect effect, String nfcSerialNumber) {
     if (effect instanceof Triggerable) {
-      Triggerable triggerable = (Triggerable)effect;
+      Triggerable triggerable = (Triggerable) effect;
       BooleanParameter toggle = null;
       if (apc40Drumpad != null) {
         toggle = apc40DrumpadTriggerablesLists[0].size() < 9 ? nfcToggles[0][apc40DrumpadTriggerablesLists[0].size()] : null;
@@ -643,20 +672,20 @@ abstract class Engine {
   }
 
   /* configureTriggerables */
-  
+
   ArrayList<Triggerable>[] apc40DrumpadTriggerablesLists;
   Triggerable[][] apc40DrumpadTriggerables;
 
   @SuppressWarnings("unchecked")
   void configureTriggerables() {
     if (apc40Drumpad != null) {
-      apc40DrumpadTriggerablesLists = new ArrayList[] {
-        new ArrayList<Triggerable>(),
-        new ArrayList<Triggerable>(),
-        new ArrayList<Triggerable>(),
-        new ArrayList<Triggerable>(),
-        new ArrayList<Triggerable>(),
-        new ArrayList<Triggerable>()
+      apc40DrumpadTriggerablesLists = new ArrayList[]{
+          new ArrayList<Triggerable>(),
+          new ArrayList<Triggerable>(),
+          new ArrayList<Triggerable>(),
+          new ArrayList<Triggerable>(),
+          new ArrayList<Triggerable>(),
+          new ArrayList<Triggerable>()
       };
     }
 
@@ -673,7 +702,7 @@ abstract class Engine {
     if (apc40Drumpad != null) {
       apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
       for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
-        ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
+        ArrayList<Triggerable> triggerablesList = apc40DrumpadTriggerablesLists[i];
         apc40DrumpadTriggerables[i] = triggerablesList.toArray(new Triggerable[triggerablesList.size()]);
       }
       apc40DrumpadTriggerablesLists = null;
@@ -695,7 +724,7 @@ abstract class Engine {
   void configureNFC() {
     nfcEngine = new NFCEngine(lx);
     nfcEngine.start();
-    
+
     for (int i = 0; i < 6; i++) {
       for (int j = 0; j < 9; j++) {
         nfcToggles[i][j] = new BooleanParameter("toggle");
@@ -711,10 +740,12 @@ abstract class Engine {
     // Output stage
     try {
       output = new LXDatagramOutput(lx);
-      datagrams = new LXDatagram[model.clusters.size()];
+      datagrams = new LXDatagram[model.ipMap.size()];
       int ci = 0;
-      for (Cluster cluster : model.clusters) {
-        output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
+      for (Map.Entry<String, Cube[]> entry : model.ipMap.entrySet()) {
+        String ip = entry.getKey();
+        Cube[] cubes = entry.getValue();
+        output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cubes).setAddress(ip));
       }
       outputBrightness.parameters.add(output.brightness);
       output.enabled.setValue(false);
@@ -727,7 +758,7 @@ abstract class Engine {
   /* configureFadeCandyOutput */
 
   void configureFadeCandyOutput() {
-    int[] clusterOrdering = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    int[] clusterOrdering = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     int numCubesInCluster = clusterOrdering.length;
     int numClusters = 48;
     int[] pixelOrder = new int[numClusters * numCubesInCluster];
@@ -872,47 +903,79 @@ class EngineController {
 }
 
 class TreesTransition extends LXTransition {
-  
+
   private final LXChannel channel;
-  
+  private final Model model;
   public final DiscreteParameter blendMode = new DiscreteParameter("MODE", 4);
   private LXColor.Blend blendType = LXColor.Blend.ADD;
-
+  final ChannelTreeLevels[] channelTreeLevels;
   final BasicParameter fade = new BasicParameter("FADE", 1);
-    
-  TreesTransition(LX lx, LXChannel channel) {
+
+  TreesTransition(LX lx, LXChannel channel, Model model, ChannelTreeLevels[] channelTreeLevels) {
     super(lx);
+    this.model = model;
     addParameter(blendMode);
-    
     this.channel = channel;
+    this.channelTreeLevels = channelTreeLevels;
     blendMode.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         switch (blendMode.getValuei()) {
-        case 0: blendType = LXColor.Blend.ADD; break;
-        case 1: blendType = LXColor.Blend.MULTIPLY; break;
-        case 2: blendType = LXColor.Blend.LIGHTEST; break;
-        case 3: blendType = LXColor.Blend.SUBTRACT; break;
+          case 0:
+            blendType = LXColor.Blend.ADD;
+            break;
+          case 1:
+            blendType = LXColor.Blend.MULTIPLY;
+            break;
+          case 2:
+            blendType = LXColor.Blend.LIGHTEST;
+            break;
+          case 3:
+            blendType = LXColor.Blend.SUBTRACT;
+            break;
         }
       }
     });
   }
-  
+
   protected void computeBlend(int[] c1, int[] c2, double progress) {
-    if (progress == 0) {
-      for (int i = 0; i < colors.length; ++i) {
-        colors[i] = c1[i];
+    int treeIndex = 0;
+    double treeLevel;
+    for (Tree tree : model.trees) {
+      treeLevel = this.channelTreeLevels[this.channel.getIndex()].getValue(treeIndex);
+      float amount = (float) (progress * treeLevel);
+      if (amount == 0) {
+        for (LXPoint p : tree.points) {
+          colors[p.index] = c1[p.index];
+        }
+      } else if (amount == 1) {
+        for (LXPoint p : tree.points) {
+          int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[p.index])) : c2[p.index];
+          colors[p.index] = LXColor.blend(c1[p.index], color2, this.blendType);
+        }
+      } else {
+        for (LXPoint p : tree.points) {
+          int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[p.index])) : c2[p.index];
+          colors[p.index] = LXColor.lerp(c1[p.index], LXColor.blend(c1[p.index], color2, this.blendType), amount);
+        }
       }
-    } else if (progress == 1) {
-      for (int i = 0; i < colors.length; ++i) {
-        int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i]; 
-        colors[i] = LXColor.blend(c1[i], color2, this.blendType);
-      }
-    } else {
-      for (int i = 0; i < colors.length; ++i) {
-        int color2 = (blendType == LXColor.Blend.SUBTRACT) ? LX.hsb(0, 0, LXColor.b(c2[i])) : c2[i];
-        colors[i] = LXColor.lerp(c1[i], LXColor.blend(c1[i], color2, this.blendType), progress);
-      }
+      treeIndex++;
     }
+  }
+}
+
+class ChannelTreeLevels{
+  private BasicParameter[] levels;
+  ChannelTreeLevels(int numTrees){
+    levels = new BasicParameter[numTrees];
+    for (int i=0; i<numTrees; i++){
+      this.levels[i] = new BasicParameter("tree" + i, 1);
+    }
+  }
+  public BasicParameter getParameter(int i){
+    return this.levels[i];
+  }
+  public double getValue(int i){
+    return this.levels[i].getValue();
   }
 }
 

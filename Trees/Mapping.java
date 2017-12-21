@@ -8,30 +8,34 @@ import heronarts.lx.parameter.DiscreteParameter;
 
 class MappingTool extends Effect {
 
-  final List<TreeConfig> clusterConfig;
+  final List<CubeConfig> cubeConfig;
 
   final SinLFO strobe = new SinLFO(20, 100, 1000);
   
-  final DiscreteParameter clusterIndex;
+  final DiscreteParameter ipIndex;
+  final DiscreteParameter outputIndex;
   final BooleanParameter showBlanks = new BooleanParameter("BLANKS", false);
+  final Object[] ipList;
 
-  MappingTool(LX lx, List<TreeConfig> clusterConfig) {
+  MappingTool(LX lx, List<CubeConfig> cubeConfig) {
     super(lx);
-    this.clusterConfig = clusterConfig;
-    clusterIndex = new DiscreteParameter("CLUSTER", clusterConfig.size());
+    this.cubeConfig = cubeConfig;
+    this.ipList = model.ipMap.keySet().toArray();
+    ipIndex = new DiscreteParameter("IP", ipList.length);
+    outputIndex = new DiscreteParameter("POS", 16);
     addModulator(strobe).start();
     addLayer(new MappingLayer());
   }
-  
-  TreeConfig getConfig() {
-    return clusterConfig.get(clusterIndex.getValuei());
-  }
-  
-  Cluster getCluster() {
-    return model.clustersByIp.get(getConfig().ipAddress);
-  }
 
   public void run(double deltaMs) {
+  }
+
+  Cube getCube(){
+    return model.ipMap.get(this.ipList[ipIndex.getValuei()])[outputIndex.getValuei()];
+  }
+
+  CubeConfig getConfig(){
+    return getCube().config;
   }
   
   class MappingLayer extends Layer {
@@ -42,9 +46,7 @@ class MappingTool extends Effect {
     
     public void run(double deltaMs) {
       if (isEnabled()) {
-        for (Cube cube : getCluster().cubes) {
-          blendColor(cube.index, lx.hsb(0, 0, strobe.getValuef()), LXColor.Blend.ADD);
-        }
+        blendColor(getCube().index, lx.hsb(0, 0, strobe.getValuef()), LXColor.Blend.ADD);
       }
     }
   }

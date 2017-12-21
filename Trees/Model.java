@@ -19,113 +19,96 @@ import heronarts.lx.transform.LXTransform;
 import toxi.geom.Vec2D;
 import toxi.geom.Vec3D;
 
-class Geometry {
 
-  final static int INCHES = 1;
-  final static int FEET = 12 * INCHES;
-
+class EntwinedBranch{
   /**
-   * This defines the positions of the trees, which are
-   * x (left to right), z (front to back), and rotation
-   * in degrees.
+   * This defines the available mounting points on a given branch variation. The variable names and
+   * ratios for the keypoints reflect what is in the CAD drawings for the branches
    */
-  final static float[][] TREE_POSITIONS = {
-    /*  X-pos    Y-pos    Rot  */
-    {  15*Geometry.FEET,  15*Geometry.FEET,   0  }
-  };
-
-  final static int FRONT = 0;
-  final static int RIGHT = 1;
-  final static int REAR = 2;
-  final static int LEFT = 3;
-  final static int FRONT_RIGHT = 4;
-  final static int REAR_RIGHT = 5;
-  final static int REAR_LEFT = 6;
-  final static int FRONT_LEFT = 7;
-
-  final static float CORNER_RADIUS = 62 * FEET;
-  final static float CORNER_DISTANCE = 786;
-
-  /**
-   * Height of the trees.
-   */
-  public final static float HEIGHT = 570;  
-  
-  /**
-   * Radius of the curved arches
-   */
-  public final static float MIDDLE_RADIUS = 85 * FEET;
-  
-  /**
-   * Distance from the center of the tree to the center
-   * point of the curve radials.
-   */
-  public final static float MIDDLE_DISTANCE = 1050; 
-  
-  /**
-   * Height of the center point of the radial curve
-   */
-  public final static float VERTICAL_MIDPOINT = 156;
- 
-  /**
-   * Spacing between horizontal cross-beams
-   */
-  public final static float BEAM_SPACING = 42;
-  
-  /**
-   * Number of cross-beams
-   */
-  public final static int NUM_BEAMS = 11;
-  
-  /**
-   * Width of cross-beam inches
-   */
-  public final static float BEAM_WIDTH = 6;
-
-  
-  /**
-   * The heights of each cross-support on the arched beams
-   */
-  public final float[] heights;
-  
-  /**
-   * At each cross-support point, the distance the support
-   * is from the center of the tree.
-   */
-  public final float[] distances;
-
-  Geometry() {
-    distances = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
-    heights = new float[(int) (HEIGHT/BEAM_SPACING + 2)];
-    for (int i = 0; i < heights.length; ++i) {
-      heights[i] = Utils.min(HEIGHT, i * BEAM_SPACING);
-      distances[i] = distanceFromCenter(heights[i]);
+  public List<Vec3D> availableMountingPoints;
+  static final private int NUM_KEYPOINTS = 5;
+  private double[] xKeyPoints = new double[NUM_KEYPOINTS];
+  private double[] yKeyPoints = new double[NUM_KEYPOINTS];
+  private double[] zKeyPoints = new double[NUM_KEYPOINTS];
+  private static final double holeSpacing = 8;
+  EntwinedBranch(int canopyMajorLength, int rotationalPosition, int layerBaseHeight){
+    int rotationIndex = rotationalPosition > 4 ? 4 - rotationalPosition % 4 : rotationalPosition;
+    float canopyScaling = canopyMajorLength / 180;
+    double branchLengthRatios[] = {0.37, 0.41, 0.50, 0.56, 0.63};
+    double heightAdjustmentFactors[] = {1.0,  0.96, 0.92, 0.88, 0.85};
+    double branchLength = canopyMajorLength * branchLengthRatios[rotationIndex];
+    xKeyPoints[4] = branchLength;
+    xKeyPoints[3] = branchLength * 0.917;
+    xKeyPoints[2] = branchLength * 0.623;
+    xKeyPoints[1] = branchLength * 0.315;
+    xKeyPoints[0] = canopyScaling * 12;
+    yKeyPoints[4] = 72 * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[3] = 72 * 0.914 * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[2] = 72 * 0.793 * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[1] = (72 * 0.671 + 6) * heightAdjustmentFactors[rotationIndex];
+    yKeyPoints[0] = (72 * 0.455 + 8) * heightAdjustmentFactors[rotationIndex];
+    zKeyPoints[4] = branchLength * 0.199;
+    zKeyPoints[3] = branchLength * 0.13;
+    zKeyPoints[2] = 0;
+    zKeyPoints[1] = branchLength * (- 0.08);
+    zKeyPoints[0] = branchLength * (- 0.05);
+    List<Vec3D> _availableMountingPoints = new ArrayList<Vec3D>();
+    LXTransform transform = new LXTransform();
+    transform.rotateY(rotationalPosition * 45 * (Utils.PI / 180));
+    double newX = xKeyPoints[0] + 2;
+    while (newX < xKeyPoints[NUM_KEYPOINTS - 1]){
+      int keyPointIndex = 0;
+      while (xKeyPoints[keyPointIndex] < newX && keyPointIndex <  NUM_KEYPOINTS){
+        keyPointIndex ++;
+      }
+      if (keyPointIndex < NUM_KEYPOINTS){
+        double ratio = (newX - xKeyPoints[keyPointIndex-1]) / (xKeyPoints[keyPointIndex] - xKeyPoints[keyPointIndex-1]);
+        double newY = yKeyPoints[keyPointIndex-1] + ratio * (yKeyPoints[keyPointIndex] - yKeyPoints[keyPointIndex-1])+ layerBaseHeight;
+        double newZ = zKeyPoints[keyPointIndex-1] + ratio * (zKeyPoints[keyPointIndex] - zKeyPoints[keyPointIndex-1]);
+        transform.push();
+        transform.translate((float)newX, (float)newY, (float)newZ);
+        _availableMountingPoints.add(new Vec3D(transform.x(), transform.y(), transform.z()));
+        transform.pop();
+        transform.push();
+        transform.translate((float)newX, (float)newY, (float)(-newZ));
+        _availableMountingPoints.add(new Vec3D(transform.x(), transform.y(), transform.z()));
+        transform.pop();
+      }
+      newX += holeSpacing;
     }
+    this.availableMountingPoints = Collections.unmodifiableList(_availableMountingPoints);
   }
-  
-  float distanceFromCenter(float atHeight) {
-    float oppositeLeg = VERTICAL_MIDPOINT - atHeight;
-    float angle = Utils.asin(oppositeLeg / MIDDLE_RADIUS);
-    float adjacentLeg = MIDDLE_RADIUS * Utils.cos(angle);
-    return MIDDLE_DISTANCE - adjacentLeg;  
-  }
-  
-  float angleFromAxis(float atHeight) {
-    // This is some shitty trig. I am sure there
-    // is a simpler way but it wasn't occuring to me.
-    float x1 = MIDDLE_DISTANCE - distanceFromCenter(atHeight);
-    float a1 = Utils.acos(x1 / MIDDLE_RADIUS); 
-    
-    float r = MIDDLE_RADIUS;
-    float y = Cluster.BRACE_LENGTH / 2;
-    float a = Utils.asin(y/r);
-    float a2 = a1 - 2*a;
-    
-    float x2 = Utils.cos(a2) * MIDDLE_RADIUS;
-    
-    return Utils.asin((x2-x1) /Cluster.BRACE_LENGTH); 
+
+}
+
+class EntwinedLayer{
+  List<EntwinedBranch> branches;
+  EntwinedLayer(int canopyMajorLength, int layerType, int layerBaseHeight){
+    List<EntwinedBranch> _branches = new ArrayList<EntwinedBranch>();
+    int rotationalPositions[];
+    switch (layerType){
+      case 0:
+        rotationalPositions = new int[] {0, 1, 2, 3, 4, 5, 6, 7};
+        break;
+      case 1:
+        rotationalPositions = new int[] {0, 2, 4, 6};
+        break;
+      case 2:
+        rotationalPositions = new int[] {1, 3, 5, 7};
+        break;
+      default:
+        rotationalPositions = new int[] {};
+    }
+    for (int i=0; i <rotationalPositions.length; i++){
+      EntwinedBranch b = new EntwinedBranch(canopyMajorLength, rotationalPositions[i], layerBaseHeight);
+      _branches.add(b);
+    }
+    this.branches = Collections.unmodifiableList(_branches);
   }
 }
+
+
+
 
 class Model extends LXModel {
   
@@ -133,47 +116,26 @@ class Model extends LXModel {
    * Trees in the model
    */
   public final List<Tree> trees;
-  
-  /**
-   * Clusters in the model
-   */
-  public final List<Cluster> clusters;
-  
-  /**
-   * Lookup table from cluster UID to cluster object.
-   */
-  public final Map<String, Cluster> clustersByIp;
-  
+
   /**
    * Cubes in the model
    */
   public final List<Cube> cubes;
-
-  public final static Geometry geometry = new Geometry();
+  public final Map<String, Cube[]> ipMap = new HashMap();
 
   private final ArrayList<ModelTransform> modelTransforms = new ArrayList<ModelTransform>();
-    
-  Model(List<TreeConfig> clusterConfig) {
-    super(new Fixture(geometry, clusterConfig));
+  private final List<TreeConfig> treeConfigs;
+
+  Model(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfig) {
+    super(new Fixture(treeConfigs, cubeConfig));
+    this.treeConfigs = treeConfigs;
     Fixture f = (Fixture) this.fixtures.get(0);
-    this.trees = Collections.unmodifiableList(f.trees);
-    
-    List<Cluster> _clusters = new ArrayList<Cluster>();
-    Map<String, Cluster> _clustersByIp = new HashMap<String, Cluster>();
-    for (Tree tree : this.trees) {
-      for (Cluster cluster : tree.clusters) {
-        _clusters.add(cluster);
-        _clustersByIp.put(cluster.ipAddress, cluster);
-      }
-    }
-    this.clusters = Collections.unmodifiableList(_clusters);
-    this.clustersByIp = Collections.unmodifiableMap(_clustersByIp);
-    
     List<Cube> _cubes = new ArrayList<Cube>();
-    for (Cluster cluster : this.clusters) {
-      for (Cube cube : cluster.cubes) {
-        _cubes.add(cube);
-      }
+    List<CubeConfig> _inactiveCubeConfigs = new ArrayList();
+    this.trees = Collections.unmodifiableList(f.trees);
+    for (Tree tree : this.trees) {
+        ipMap.putAll(tree.ipMap);
+        _cubes.addAll(tree.cubes);
     }
     this.cubes = Collections.unmodifiableList(_cubes);
   }
@@ -182,16 +144,30 @@ class Model extends LXModel {
     
     final List<Tree> trees = new ArrayList<Tree>();
     
-    private Fixture(Geometry geometry, List<TreeConfig> clusterConfig) {
-      int treeIndex = 0;
-      for (float[] treePosition : Geometry.TREE_POSITIONS) {
-        trees.add(new Tree(geometry, clusterConfig, treeIndex++, treePosition[0], treePosition[1], treePosition[2]));
+    private Fixture(List<TreeConfig> treeConfigs, List<CubeConfig> cubeConfigs) {
+      for (int i = 0; i < treeConfigs.size(); i++){
+        TreeConfig tc = treeConfigs.get(i);
+        trees.add(new Tree(cubeConfigs, i, tc.x, tc.z, tc.ry, tc.canopyMajorLengths, tc.layerBaseHeights));
       }
       for (Tree tree : trees) {
         for (LXPoint p : tree.points) {
           points.add(p);
         }
       }
+    }
+  }
+
+  public Vec3D getMountPoint(CubeConfig c) {
+    Vec3D p = null;
+    Tree tree;
+    try {
+      tree = this.trees.get(c.treeIndex);
+      p = tree.treeLayers.get(c.layerIndex).branches.get(c.branchIndex).availableMountingPoints.get(c.mountPointIndex);
+      return tree.transformPoint(p);
+    } catch (Exception e) {
+      System.out.println("Error resolving mount point");
+      System.out.println(e);
+      return null;
     }
   }
 
@@ -214,27 +190,40 @@ class Model extends LXModel {
   }
 }
 
-class TreeConfig {
+class CubeConfig {
   int treeIndex;
+  int layerIndex;
+  int branchIndex;
+  int mountPointIndex;
   String ipAddress;
-  int face;
-  int level;
-  float offset;
-  float mountPoint;
-  float skew;
+  int outputIndex;
+  int cubeSizeIndex;
+  boolean isActive;
+}
+class TreeConfig {
+  float x;
+  float z;
+  float ry;
+  int[] canopyMajorLengths;
+  int[] layerBaseHeights;
 }
 
 class Tree extends LXModel {
   
   /**
-   * Clusters in the tree
+   * NDBs in the tree
    */
-  public final List<Cluster> clusters;
+  public final Map<String, Cube[]> ipMap;
   
   /**
    * Cubes in the tree
    */
   public final List<Cube> cubes;
+
+  /**
+   * Layers in the tree
+   */
+  public final List<EntwinedLayer> treeLayers;
   
   /**
    * index of the tree
@@ -255,243 +244,116 @@ class Tree extends LXModel {
    * Rotation in degrees of tree about vertical y-axis
    */
   public final float ry;
-  
-  Tree(Geometry geometry, List<TreeConfig> clusterConfig, int treeIndex, float x, float z, float ry) {
-    super(new Fixture(geometry, clusterConfig, treeIndex, x, z, ry));
+
+
+
+  Tree(List<CubeConfig> cubeConfig, int treeIndex, float x, float z, float ry, int[] canopyMajorLengths, int[] layerBaseHeights) {
+    super(new Fixture(cubeConfig, treeIndex, x, z, ry, canopyMajorLengths, layerBaseHeights));
     Fixture f = (Fixture)this.fixtures.get(0);
     this.index = treeIndex;
-    this.clusters = Collections.unmodifiableList(f.clusters);
-    List<Cube> _cubes = new ArrayList<Cube>();
-    for (Cluster cluster : clusters) {
-      for (Cube cube : cluster.cubes) {
-        _cubes.add(cube);
-      }
-    }
-    this.cubes = Collections.unmodifiableList(_cubes);
+    this.cubes = Collections.unmodifiableList(f.cubes);
+    this.treeLayers = f.treeLayers;
+    this.ipMap = f.ipMap;
     this.x = x;
     this.z = z;
     this.ry = ry;
+
   }
-  
+  public Vec3D transformPoint(Vec3D point){
+    return ((Fixture)this.fixtures.get(0)).transformPoint(point);
+  }
+
+
   private static class Fixture extends LXAbstractFixture {
     
-    final List<Cluster> clusters = new ArrayList<Cluster>();
-    
-    Fixture(Geometry geometry, List<TreeConfig> clusterConfig, int treeIndex, float x, float z, float ry) {
-      Vec3D treeCenter = new Vec3D(x, 0, z);
-      LXTransform t = new LXTransform();
-      t.translate(x, 0, z);
-      t.rotateY(ry * Utils.PI / 180);
-      
-      for (TreeConfig cp : clusterConfig) {
-        if (cp.treeIndex == treeIndex) {
-          String ipAddress = cp.ipAddress;
-          int clusterLevel = cp.level;
-          int clusterFace = cp.face;
-          float clusterOffset = cp.offset;
-          float clusterMountPoint = cp.mountPoint;
-          float clusterSkew = cp.skew;
-          
-          t.push();
-          float cry = 0;
-          switch (clusterFace) {
-            // Could be math, but this way it's readable!
-            case Geometry.FRONT: case Geometry.FRONT_RIGHT:                  break;
-            case Geometry.RIGHT: case Geometry.REAR_RIGHT:  cry = Utils.HALF_PI;   break;
-            case Geometry.REAR:  case Geometry.REAR_LEFT:   cry = Utils.PI;        break;
-            case Geometry.LEFT:  case Geometry.FRONT_LEFT:  cry = 3*Utils.HALF_PI; break;
+    final List<Cube> cubes = new ArrayList<Cube>();
+    final List<EntwinedLayer> treeLayers= new ArrayList<EntwinedLayer>();
+    public final Map<String, Cube[]> ipMap = new HashMap();
+    public final LXTransform transform;
+    public final List<CubeConfig> inactiveCubeConfigs= new ArrayList();
+    Fixture(List<CubeConfig> cubeConfig, int treeIndex, float x, float z, float ry, int[] canopyMajorLengths, int[] layerBaseHeights) {
+      transform = new LXTransform();
+      transform.translate(x, 0, z);
+      transform.rotateY(ry * Utils.PI / 180);
+      for (int i=0; i<canopyMajorLengths.length; i++){
+        treeLayers.add(new EntwinedLayer(canopyMajorLengths[i], i, layerBaseHeights[i]));
+      }
+      for (CubeConfig cc : cubeConfig) {
+        if (cc.treeIndex == treeIndex) {
+          Vec3D p;
+          try{
+            p = treeLayers.get(cc.layerIndex).branches.get(cc.branchIndex).availableMountingPoints.get(cc.mountPointIndex);
           }
-          switch (clusterFace) {
-            case Geometry.FRONT_RIGHT:
-            case Geometry.REAR_RIGHT:
-            case Geometry.REAR_LEFT:
-            case Geometry.FRONT_LEFT:
-              clusterOffset = 0;
-              break;
+          catch(Exception e){
+            System.out.println("Error loading config point");
+            System.out.println(e);
+            p = null;
           }
-          t.rotateY(cry);
-          t.translate(clusterOffset * geometry.distances[clusterLevel], geometry.heights[clusterLevel] + clusterMountPoint, -geometry.distances[clusterLevel]);
-          
-          switch (clusterFace) {
-            case Geometry.FRONT_RIGHT:
-            case Geometry.REAR_RIGHT:
-            case Geometry.REAR_LEFT:
-            case Geometry.FRONT_LEFT:
-              t.translate(geometry.distances[clusterLevel], 0, 0);
-              t.rotateY(Utils.QUARTER_PI);
-              cry += Utils.QUARTER_PI;
-              break;
+          if (p != null){
+            cc.isActive = true;
+            Cube cube = new Cube(this.transformPoint(p), p, cc);
+            cubes.add(cube);
+            if (!ipMap.containsKey(cc.ipAddress)){
+              ipMap.put(cc.ipAddress, new Cube[16]);
+            }
+            Cube[] ndbCubes = ipMap.get(cc.ipAddress);
+            ndbCubes[cc.outputIndex] = cube;
           }
-          clusters.add(new Cluster(ipAddress, treeCenter, t, ry + cry*180/Utils.PI, 180/Utils.PI*geometry.angleFromAxis(t.y()), clusterSkew));
-          t.pop();
         }
       }
-
-      for (Cluster cluster : this.clusters) {
-        for (LXPoint p : cluster.points) {
-          this.points.add(p);
+      for (Map.Entry<String, Cube[]> entry : ipMap.entrySet()) {
+        String ip = entry.getKey();
+        Cube[] ndbCubes = entry.getValue();
+        for (int i=0; i<16; i++){
+          if (ndbCubes[i] == null){ //fill all empty outputs with an inactive cube. Maybe this would be nicer to do at the model level in the future.
+            CubeConfig cc = new CubeConfig();
+            cc.treeIndex = treeIndex;
+            cc.branchIndex = 0;
+            cc.cubeSizeIndex = 0;
+            cc.mountPointIndex = 0;
+            cc.outputIndex = i;
+            cc.layerIndex = 0;
+            cc.ipAddress = ip;
+            cc.isActive = false;
+            Cube cube = new Cube(new Vec3D(0, 0, 0), new Vec3D(0, 0, 0), cc);
+            cubes.add(cube);
+            ndbCubes[i] = cube;
+          }
         }
       }
-    }
-  }
-}
-
-class Cluster extends LXModel {
-  
-  /**
-   * Length of the metal brace on the back of the cluster
-   */
-  public final static float BRACE_LENGTH = 62;
-  
-  /**
-   * Number of large 12-LED cubes in cluster
-   */
-  public final static int LARGE_CUBES_PER_CLUSTER = 3;
-  
-  /**
-   * Number of smaller 6-LED cubes in cluster
-   */
-  public final static int SMALL_CUBES_PER_CLUSTER = 13;
-  
-  /**
-   * Total number of LED pixels in cluster
-   */
-  public final static int PIXELS_PER_CLUSTER =
-    LARGE_CUBES_PER_CLUSTER * Cube.PIXELS_PER_LARGE_CUBE +
-    SMALL_CUBES_PER_CLUSTER * Cube.PIXELS_PER_SMALL_CUBE;
-  
-  /**
-   * Cubes in the cluster
-   */
-  public final List<Cube> cubes;
-  
-  /**
-   * Global x-position of cluster mount
-   */
-  public final float x;
-  
-  /**
-   * Global y-position of cluster mount
-   */
-  public final float y;
-  
-  /**
-   * Global z-position of cluster mount
-   */
-  public final float z;
-  
-  /**
-   * x-position of cluster, relative to tree
-   */
-  public final float tx;
-  
-  /**
-   * y-position of cluster, relative to tree
-   */
-  public final float ty;
-  
-  /**
-   * z-position of cluster, relative to tree
-   */
-  public final float tz;
-  
-  /**
-   * Rotation of cluster about vertical axis, in degrees relative to tree (not including tree rotation)
-   */
-  public final float ry;
-  
-  /**
-   * Pitch of the cluster, in degrees (how much it tilts based on angle of supports
-   */ 
-  public final float rx;
-  
-  /**
-   * Skew about the mount point.
-   */
-  public final float skew;
-  
-  /**
-   * IP address of the cluster NDB
-   */
-  public final String ipAddress;
-  
-  Cluster(String ipAddress, Vec3D treeCenter, LXTransform transform, float ry, float rx, float skew) {
-    super(new Fixture(treeCenter, transform, ry, rx, skew));
-    Fixture f = (Fixture) this.fixtures.get(0);
-    this.ipAddress = ipAddress;
-    this.cubes = Collections.unmodifiableList(f.cubes);
-    this.x = transform.x();
-    this.y = transform.y();
-    this.z = transform.z();
-    this.tx = this.x - treeCenter.x;
-    this.ty = this.y - treeCenter.y;
-    this.tz = this.z - treeCenter.z;
-    this.ry = ry;
-    this.rx = rx;
-    this.skew = skew;
-  }
-  
-  private static class Fixture extends LXAbstractFixture {
-
-    final List<Cube> cubes;
-    
-    Fixture(Vec3D treeCenter, LXTransform transform, float ry, float rx, float skew) {
-      transform.push();
-      transform.rotateX(rx * Utils.PI / 180);
-      transform.rotateZ(skew * Utils.PI / 180);
-      this.cubes = Arrays.asList(new Cube[] {
-  // Cube(int clusterPosition, Vec2D treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz)
-        new Cube( 1, treeCenter, transform, Cube.SMALL,    10, -82, -13, 0,  0, 0),
-        new Cube( 2, treeCenter, transform, Cube.SMALL,    6, -74,  -12, 0,  0, 0),
-        new Cube( 3, treeCenter, transform, Cube.SMALL,   -2, -69,  -13, 0,  0, 0),
-        new Cube( 4, treeCenter, transform, Cube.MEDIUM,   9, -64, -10, 0,  0, 0),
-        new Cube( 5, treeCenter, transform, Cube.MEDIUM,  -5, -56, -10, 0,  0, 0),
-        new Cube( 6, treeCenter, transform, Cube.SMALL,   -8, -45, -13, 0,  0, 0),
-        new Cube( 7, treeCenter, transform, Cube.GIANT,    5, -47,  -9, 0,  0, 0),
-        new Cube( 8, treeCenter, transform, Cube.SMALL,   17, -40, -11, 0,  0, 0),
-        new Cube( 9, treeCenter, transform, Cube.MEDIUM,  10, -30,  -10, 0,  0, 0),
-        new Cube(10, treeCenter, transform, Cube.LARGE,   -8, -32,  -10, 0,  0, 0),
-        new Cube(11, treeCenter, transform, Cube.MEDIUM, -11, -17,  -11, 0,  0, 0),
-        new Cube(12, treeCenter, transform, Cube.LARGE,    4, -16,  -9, 0,  0, 0),
-        new Cube(13, treeCenter, transform, Cube.SMALL,   16, -20,  -11, 0,  0, 0),
-        new Cube(14, treeCenter, transform, Cube.SMALL,    3,  -3,  -14, 0,  0, 0),
-        new Cube(15, treeCenter, transform, Cube.SMALL,   -7,  -5,  -14, 0,  0, 0),
-        new Cube(16, treeCenter, transform, Cube.SMALL,   -5,   3, -14, 0,  0, 0),
-      });
       for (Cube cube : this.cubes) {
         for (LXPoint p : cube.points) {
           this.points.add(p);
         }
       }
-      transform.pop();
+    }
+    public Vec3D transformPoint(Vec3D point){
+      this.transform.push();
+      this.transform.translate(point.x, point.y, point.z);
+      Vec3D result = new Vec3D(this.transform.x(), this.transform.y(), this.transform.z());
+      this.transform.pop();
+      return result;
     }
   }
 }
 
 class Cube extends LXModel {
 
-  public static final int PIXELS_PER_SMALL_CUBE = 6;
-  public static final int PIXELS_PER_LARGE_CUBE = 12;
-  
-  public static final float SMALL = 7.5f;
-  public static final float MEDIUM = 11.25f;
-  public static final float LARGE = 15;
-  public static final float GIANT = 16.5f;
-  
+  public static final int[] PIXELS_PER_CUBE = {6, 6, 6, 12, 12}; // Tiny cubes actually have less, but for Entwined we want to tell the NDB that everything is 6
+  public static final float[] CUBE_SIZES = {4f, 7.5f, 11.25f, 15f, 16.5f};
+
   /**
    * Index of this cube in color buffer, colors[cube.index]
    */
   public final int index;
-  
-  /**
-   * Index of this cube in cluster, from 1-16
-   */
-  public final int clusterPosition;
-  
+
   /**
    * Size of this cube, one of SMALL/MEDIUM/LARGE/GIANT
    */
   public final float size;
+
+
+  public final int pixels;
   
   /**
    * Global x-position of center of cube
@@ -566,47 +428,36 @@ class Cube extends LXModel {
   /**
    * Point of the cube in the form (theta, y) relative to center of tree base
    */
-  public final Vec2D cylinderPoint;
 
   public float transformedY;
   public float transformedTheta;
   public Vec2D transformedCylinderPoint;
-
-  Cube(int clusterPosition, Vec3D treeCenter, LXTransform transform, float size, float x, float y, float z, float rx, float ry, float rz) {
+  public CubeConfig config = null;
+  Cube(Vec3D globalPosition, Vec3D treePosition, CubeConfig config) {
     super(Arrays.asList(new LXPoint[] {
-      new LXPoint(transform.x() + x, transform.y() + y, transform.z() + z)
+      new LXPoint(globalPosition.x, globalPosition.y, globalPosition.z)
     }));
-    
-    transform.push();
-    transform.translate(x, y, z);
-    transform.rotateX(rx);
-    transform.rotateY(ry);
-    transform.rotateZ(rz);
-    
     this.index = this.points.get(0).index;
-    this.clusterPosition = clusterPosition;
-    this.size = size;
-    this.rx = rx;
-    this.ry = ry;
-    this.rz = rz;
-    this.lx = x;
-    this.ly = y;
-    this.lz = z;
-    this.x = transform.x();
-    this.y = transform.y();
-    this.z = transform.z();
-    this.tx = this.x - treeCenter.x;
-    this.ty = this.y - treeCenter.y;
-    this.tz = this.z - treeCenter.z;
-
-    this.r = (float)Point2D.distance(treeCenter.x, treeCenter.z, this.x, this.z);
-    this.theta = 180 + 180/Utils.PI*Utils.atan2(this.z - treeCenter.z, this.x - treeCenter.x);
-    this.cylinderPoint = new Vec2D(this.theta, this.ty);
-    
-    transform.pop();
+    this.size = CUBE_SIZES[config.cubeSizeIndex];
+    this.pixels = PIXELS_PER_CUBE[config.cubeSizeIndex];
+    this.rx = 0;
+    this.ry = 0;
+    this.rz = 0;
+    this.lx = 0;
+    this.ly = 0;
+    this.lz = 0;
+    this.x = globalPosition.x;
+    this.y = globalPosition.y;
+    this.z = globalPosition.z;
+    this.tx = treePosition.x;
+    this.ty = treePosition.y;
+    this.tz = treePosition.z;
+    this.r = (float)Point2D.distance(treePosition.x, treePosition.z, 0, 0);
+    this.theta = 180 + 180/Utils.PI*Utils.atan2(treePosition.z, treePosition.x);
+    this.config = config;
   }
-
   void resetTransform() {
+
     transformedTheta = theta;
     transformedY = y;
   }
@@ -615,6 +466,8 @@ class Cube extends LXModel {
     transformedCylinderPoint = new Vec2D(transformedTheta, transformedY);
   }
 }
+
+
 
 abstract class Layer extends LXLayer {
 
@@ -650,4 +503,7 @@ class ModelTransformTask implements LXLoopTask {
     model.runTransforms();
   }
 }
-
+class Geometry{
+  final static int INCHES = 1;
+  final static int FEET = 12 * INCHES;
+}

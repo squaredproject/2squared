@@ -40,7 +40,8 @@ final static int MINUTES = 60*SECONDS;
 final static float CHAIN = -12*Geometry.INCHES;
 final static float BOLT = 22*Geometry.INCHES;
 
-static List<TreeConfig> clusterConfig;
+static List<CubeConfig> cubeConfig;
+static List<TreeConfig> treeConfig;
 
 Model model;
 P3LX lx;
@@ -57,6 +58,7 @@ BooleanParameter[] automationStop;
 DiscreteParameter automationSlot;
 LXListenableNormalizedParameter[] effectKnobParameters;
 BooleanParameter[] previewChannels;
+ChannelTreeLevels[] channelTreeLevels;
 
 void setup() {
   size(1148, 720, OPENGL);
@@ -83,9 +85,9 @@ class ProcessingEngine extends Engine {
   void postCreateLX() {
     super.postCreateLX();
 
-    lx.addEffect(mappingTool = new MappingTool(lx, clusterConfig));
+    lx.addEffect(mappingTool = new MappingTool(lx, cubeConfig));
 
-    Trees.this.clusterConfig = clusterConfig;
+    Trees.this.cubeConfig = cubeConfig;
     Trees.this.model = model;
     Trees.this.lx = getLX();
     Trees.this.output = output;
@@ -97,9 +99,8 @@ class ProcessingEngine extends Engine {
     Trees.this.automationSlot = automationSlot;
     Trees.this.effectKnobParameters = effectKnobParameters;
     Trees.this.previewChannels = previewChannels;
-
+    Trees.this.channelTreeLevels = channelTreeLevels;
     uiDeck = Trees.this.uiDeck = new UIMultiDeck(Trees.this.lx.ui);
-
     configureUI();
   }
 
@@ -115,6 +116,7 @@ class ProcessingEngine extends Engine {
 
 void configureUI() {
   // UI initialization
+
   lx.ui.addLayer(new UI3dContext(lx.ui) {
       protected void beforeDraw(UI ui, PGraphics pg) {
         hint(ENABLE_DEPTH_TEST);
@@ -136,7 +138,9 @@ void configureUI() {
     lx.ui.addLayer(new UIOutput(lx.ui, 4, 4));
   }
   lx.ui.addLayer(new UIMapping(lx.ui));
-  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui));
+  UITreeFaders treeFaders = new UITreeFaders(lx.ui, channelTreeLevels, model.trees.size());
+  lx.ui.addLayer(treeFaders);
+  lx.ui.addLayer(uiFaders = new UIChannelFaders(lx.ui, treeFaders));
   lx.ui.addLayer(new UIEffects(lx.ui, effectKnobParameters));
   lx.ui.addLayer(uiDeck);
   lx.ui.addLayer(new UILoopRecorder(lx.ui));

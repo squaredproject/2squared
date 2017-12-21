@@ -71,9 +71,9 @@ class TurnOffDeadPixelsEffect extends Effect {
   
   public void run(double deltaMs) {
     for (int i = 0; i < deadPixelIndices.length; i++) {
-      Cluster cluster = model.clusters.get(deadPixelClusters[i]);
-      Cube cube = cluster.cubes.get(deadPixelIndices[i]);
-      colors[cube.index] = LXColor.BLACK;
+      //Cluster cluster = model.clusters.get(deadPixelClusters[i]);
+      //Cube cube = cluster.cubes.get(deadPixelIndices[i]);
+      //colors[cube.index] = LXColor.BLACK;
     }
   }
 }
@@ -758,28 +758,6 @@ class Fade extends TSPattern {
   }
 }
 
-class OrderTest extends TSPattern {
-  
-  SawLFO sweep = new SawLFO(0, 15.999, 8000);
-  int[] order = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
-  
-  OrderTest(LX lx) {
-    super(lx);
-    addModulator(sweep).start();
-  }
-  
-  public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
-    for (Cube cube : model.cubes) {
-      colors[cube.index] = lx.hsb(
-        240,
-        100,
-        cube.clusterPosition == order[Utils.floor(sweep.getValuef())] ? 100 : 0
-      );
-    }
-  }
-}
 
 class Palette extends TSPattern {
   

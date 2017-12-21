@@ -245,44 +245,6 @@ class TestPattern extends TSPattern {
   }
 }
 
-class TestCluster extends TSPattern {
-  final DiscreteParameter lightNo = new DiscreteParameter("LIGHT", 0, 19);
-  final BasicParameter pos = new BasicParameter("POS", 0); 
-  
-  TestCluster(LX lx) {
-    super(lx);
-    addParameter(lightNo);
-    addParameter(pos);
-  }
-  
-  public void run(double deltaMs) {
-    if (getChannel().getFader().getNormalized() == 0) return;
-
-    for (Cluster cluster : model.clusters) {
-      for (Cube cube : cluster.cubes) {
-        if (lightNo.getValuei() >= 17) {
-          float d = (lightNo.getValuei() == 17) ?
-            ((cube.transformedY - cluster.yMin) / cluster.yRange) :
-            ((cube.x - cluster.xMin) / cluster.xRange); 
-          setColor(cube, lx.hsb(
-            lx.getBaseHuef(),
-            100,
-            Utils.max(0, 100 - 400*Utils.abs(d - pos.getValuef()))
-          ));
-        } else if ((cube.clusterPosition == lightNo.getValuei()) ||
-            (0 == lightNo.getValuei())) {
-          setColor(cube, lx.hsb(
-            lx.getBaseHuef(),
-            100,
-            100
-          )); 
-        } else {
-          setColor(cube, 0);
-        }
-      }
-    }
-  }
-}
 
 class ColorEffect extends Effect {
   
