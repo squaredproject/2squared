@@ -748,7 +748,7 @@ abstract class Engine {
         output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cubes).setAddress(ip));
       }
       outputBrightness.parameters.add(output.brightness);
-      output.enabled.setValue(false);
+      output.enabled.setValue(true);
       lx.addOutput(output);
     } catch (Exception x) {
       System.out.println(x);
