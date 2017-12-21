@@ -1,37 +1,17 @@
 [
+	
 	{
-		"canopyMajorLengths" : [300, 200, 120],
-		"layerBaseHeights" : [40, 113, 169],
+		"canopyMajorLengths" : [72],
+		"layerBaseHeights" : [24],
 		"ry" : 180,
-		"x" : 150,
-		"z" : 300
-	},
-	{
-		"canopyMajorLengths" : [240, 160, 96],
-		"layerBaseHeights" : [20, 71, 112],
-		"ry" : 180,
-		"x" : 0,
-		"z" : 0
-	},
-	{
-		"canopyMajorLengths" : [180, 120],
-		"layerBaseHeights" : [43, 95],
-		"ry" : 180,
-		"x" : 400,
+		"x" : 100,
 		"z" : 0
 	},
 	{
 		"canopyMajorLengths" : [72],
 		"layerBaseHeights" : [24],
-		"ry" : 180,
-		"x" : 350,
-		"z" : -100
-	},
-	{
-		"canopyMajorLengths" : [72],
-		"layerBaseHeights" : [24],
-		"ry" : 180,
-		"x" : 450,
-		"z" : -100
+		"ry" : 0,
+		"x" : -100,
+		"z" : 0
 	}
 ]
