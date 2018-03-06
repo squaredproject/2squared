@@ -64,6 +64,7 @@ abstract class Engine {
   final BooleanParameter[][] nfcToggles = new BooleanParameter[6][9];
   final BooleanParameter[] previewChannels = new BooleanParameter[Engine.NUM_CHANNELS];
   final BasicParameterProxy outputBrightness = new BasicParameterProxy(1);
+  final BrightnessScaleEffect masterBrightnessEffect;
 
   Engine(String projectPath) {
     this.projectPath = projectPath;
@@ -72,6 +73,7 @@ abstract class Engine {
     model = new Model(clusterConfig);
     lx = createLX();
     engineController = new EngineController(lx);
+    masterBrightnessEffect = new BrightnessScaleEffect(lx);
   
     lx.engine.addParameter(drumpadVelocity);
 
@@ -98,6 +100,8 @@ abstract class Engine {
     }
 
     postCreateLX();
+
+    lx.addEffect(masterBrightnessEffect);
 
     if (Config.enableAPC40) {
       configureMIDI();
@@ -173,6 +177,7 @@ abstract class Engine {
     BlurEffect blurEffect = engineController.blurEffect = new TSBlurEffect2(lx);
     ScrambleEffect scrambleEffect = engineController.scrambleEffect = new ScrambleEffect(lx);
     // StaticEffect staticEffect = engineController.staticEffect = new StaticEffect(lx);
+    engineController.masterBrightnessEffect = masterBrightnessEffect;
 
     lx.addEffect(blurEffect);
     lx.addEffect(colorEffect);
@@ -241,12 +246,6 @@ abstract class Engine {
     patterns.add(new Pixels(lx));
     patterns.add(new Wedges(lx));
     patterns.add(new Parallax(lx));
-    if (lx.audioInput() != null) {
-      patterns.add(new LowEQ(lx));
-      patterns.add(new MidEQ(lx));
-      patterns.add(new HighEQ(lx));
-      // patterns.add(new GalaxyCloud(lx));
-    }
   }
 
   LXPattern[] getPatternListForChannels() {
@@ -773,6 +772,7 @@ class EngineController {
   SpinEffect spinEffect;
   BlurEffect blurEffect;
   ScrambleEffect scrambleEffect;
+  BrightnessScaleEffect masterBrightnessEffect;
 
   EngineController(LX lx) {
     this.lx = lx;
@@ -824,6 +824,10 @@ class EngineController {
 
   void setScramble(double amount) {
     scrambleEffect.amount.setValue(amount);
+  }
+
+  void setMasterBrightness(double amount) {
+    masterBrightnessEffect.amount.setValue(amount);
   }
 
   void setAutoplay(boolean autoplay) {
