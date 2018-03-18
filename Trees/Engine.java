@@ -518,7 +518,7 @@ abstract class Engine {
 
     Triggerable triggerable = configurePatternAsTriggerable(pattern);
     BooleanParameter toggle = null;
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       toggle = apc40DrumpadTriggerablesLists[apc40DrumpadRow].size() < 9 ? nfcToggles[apc40DrumpadRow][apc40DrumpadTriggerablesLists[apc40DrumpadRow].size()] : null;
       apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
     }
@@ -548,7 +548,7 @@ abstract class Engine {
     if (effect instanceof Triggerable) {
       Triggerable triggerable = (Triggerable)effect;
       BooleanParameter toggle = null;
-      if (apc40Drumpad != null) {
+      if (Config.enableAPC40) {
         toggle = apc40DrumpadTriggerablesLists[0].size() < 9 ? nfcToggles[0][apc40DrumpadTriggerablesLists[0].size()] : null;
         apc40DrumpadTriggerablesLists[0].add(triggerable);
       }
@@ -573,7 +573,7 @@ abstract class Engine {
   void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
     ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(lx, parameter, offValue, onValue);
     BooleanParameter toggle = null;
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
       apc40DrumpadTriggerablesLists[row].add(triggerable);
     }
@@ -648,7 +648,7 @@ abstract class Engine {
 
   @SuppressWarnings("unchecked")
   void configureTriggerables() {
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       apc40DrumpadTriggerablesLists = new ArrayList[] {
         new ArrayList<Triggerable>(),
         new ArrayList<Triggerable>(),
@@ -669,7 +669,7 @@ abstract class Engine {
       engineController.endEffectIndex = lx.engine.getEffects().size();
     }
 
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
       for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
         ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
