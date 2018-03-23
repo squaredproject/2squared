@@ -8,17 +8,7 @@
 
     "devices": [
     {
-        "serial": "DZLDSWDZZLWXONON",
-        "type": "fadecandy",
-        "map": [[ 0, 384, 0, 384, "grb" ]]
-    },
-    {
-        "serial": "QANTWIVNBNODSLCZ",
-        "type": "fadecandy",
-        "map": [[ 0, 384, 0, 384, "grb" ]]
-    },
-    {
-        "serial": "GKNFIOLHTHMPMLOL",
+        "serial": "LRIMLTASRBURMLCZ",
         "type": "fadecandy",
         "map": [[ 0, 384, 0, 384, "grb" ]]
     },
