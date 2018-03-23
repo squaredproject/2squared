@@ -724,7 +724,7 @@ abstract class Engine {
         output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
       }
       outputBrightness.parameters.add(output.brightness);
-      // output.enabled.setValue(false);
+      output.enabled.setValue(false);
       lx.addOutput(output);
       output.start();
     } catch (Exception x) {
