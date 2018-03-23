@@ -273,7 +273,7 @@ abstract class Engine {
     registerPattern(new Fumes(lx), "3707000050a9b1");
     registerPattern(new Voronoi(lx), "3707000050a952");
     registerPattern(new CandyCloud(lx), "3707000050aab4");
-    registerPattern(new GalaxyCloud(lx), "3707000050a91d");
+    // registerPattern(new GalaxyCloud(lx), "3707000050a91d");
 
     registerPattern(new ColorStrobe(lx), "3707000050a975", 3);
     registerPattern(new Explosions(lx, 20), "3707000050a8bf", 3);
@@ -289,8 +289,8 @@ abstract class Engine {
     registerPattern(new Fire(lx), "-", 5); // Make red
     
     // registerPattern(new DoubleHelix(lx), "");
-    registerPattern(new AcidTrip(lx), "3707000050a914");
     registerPattern(new Rain(lx), "3707000050a937");
+    registerPattern(new AcidTrip(lx), "3707000050a914");
 
     registerPattern(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), "3707000050a905"); // downward yellow wisp
     registerPattern(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), "3707000050ab1a"); // colorful wisp storm
