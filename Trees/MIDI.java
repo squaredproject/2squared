@@ -1,13 +1,7 @@
 import heronarts.lx.LX;
 import heronarts.lx.LXAutomationRecorder;
 import heronarts.lx.LXChannel;
-import heronarts.lx.midi.LXAbstractMidiListener;
-import heronarts.lx.midi.LXMidiControlChange;
-import heronarts.lx.midi.LXMidiDevice;
-import heronarts.lx.midi.LXMidiInput;
-import heronarts.lx.midi.LXMidiNoteOff;
-import heronarts.lx.midi.LXMidiNoteOn;
-import heronarts.lx.midi.LXMidiOutput;
+import heronarts.lx.midi.*;
 import heronarts.lx.midi.device.APC40;
 import heronarts.lx.output.LXDatagramOutput;
 import heronarts.lx.parameter.BasicParameter;
@@ -89,7 +83,7 @@ class MidiEngine {
           }
         }
         
-        public void noteOffReceived(LXMidiNoteOff note) {
+        public void noteOffReceived(LXMidiNote note) {
           int channel = note.getChannel();
           int pitch = note.getPitch();
           switch (pitch) {
