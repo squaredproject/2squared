@@ -866,7 +866,6 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
 
 
   private boolean isRising = false; //are the pulleys rising or falling
-  boolean triggered = true; //has the trigger to rise/fall been pulled
   boolean autoMode = true; //triggerMode vs autoMode.
   private int numPulleys = 0;
   private List<Pulley> pulleys = new ArrayList<Pulley>(numPulleys);
@@ -988,40 +987,38 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
       }
     }
     
-    if(triggered) {
-      if (!isRising) {
-        for (int j = 0; j < pulleys.size(); ++j) {
-          if (pulleys.get(j).delay.click()) {
-            pulleys.get(j).gravity.start();
-            pulleys.get(j).delay.stop();
-          }
-          if (pulleys.get(j).gravity.getValuef() < 0) { //bouncebounce
-            pulleys.get(j).gravity.setValue(-pulleys.get(j).gravity.getValuef());
-            pulleys.get(j).gravity.setVelocity(-pulleys.get(j).gravity.getVelocityf() * Utils.random(0.74f,0.84f));
-          }
+    if (!isRising) {
+      for (int j = 0; j < pulleys.size(); ++j) {
+        if (pulleys.get(j).delay.click()) {
+          pulleys.get(j).gravity.start();
+          pulleys.get(j).delay.stop();
+        }
+        if (pulleys.get(j).gravity.getValuef() < 0) { //bouncebounce
+          pulleys.get(j).gravity.setValue(-pulleys.get(j).gravity.getValuef());
+          pulleys.get(j).gravity.setVelocity(-pulleys.get(j).gravity.getVelocityf() * Utils.random(0.74f,0.84f));
         }
       }
-  
-      float fPos = 1 -lx.tempo.rampf();
-      if (fPos < .2f) {
-        fPos = .2f + 4 * (.2f - fPos);
+    }
+
+    float fPos = 1 -lx.tempo.rampf();
+    if (fPos < .2f) {
+      fPos = .2f + 4 * (.2f - fPos);
+    }
+
+    float falloff = 100.f / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
+    for (Cube cube : model.cubes) {
+      float cBrt = 0;
+      float cHue = 0;
+      for (int j = 0; j < pulleys.size(); ++j) {
+        cHue = (lx.getBaseHuef() + Utils.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f + pulleys.get(j).baseHue) % 360;
+        cBrt += Utils.max(0, pulleys.get(j).maxBrt.getValuef() * (100 - Utils.abs(cube.transformedY/2 - 50 - pulleys.get(j).gravity.getValuef())*falloff));
       }
-  
-      float falloff = 100.f / (3 + sz.getValuef() * 36 + fPos * beatAmount.getValuef()*48);
-      for (Cube cube : model.cubes) {
-        float cBrt = 0;
-        float cHue = 0;
-        for (int j = 0; j < pulleys.size(); ++j) {
-          cHue = (lx.getBaseHuef() + Utils.abs(cube.x - model.cx)*.8f + cube.transformedY*.4f + pulleys.get(j).baseHue) % 360;
-          cBrt += Utils.max(0, pulleys.get(j).maxBrt.getValuef() * (100 - Utils.abs(cube.transformedY/2 - 50 - pulleys.get(j).gravity.getValuef())*falloff));
-        }
-        float yn =  cube.transformedY/model.yMax;
-        colors[cube.index] = lx.hsb(
-          cHue, 
-          Utils.constrain(100 *(0.8f -  yn * yn), 0, 100), 
-          Utils.min(100, cBrt)
-        );
-      }
+      float yn =  cube.transformedY/model.yMax;
+      colors[cube.index] = lx.hsb(
+        cHue, 
+        Utils.constrain(100 *(0.8f -  yn * yn), 0, 100), 
+        Utils.min(100, cBrt)
+      );
     }
   }
 
@@ -1059,11 +1056,13 @@ class Pulleys extends TSTriggerablePattern { //ported from SugarCubes
   }
 
   public void onTriggered(float strength) {
+    super.onTriggered(strength);
     numPulleys +=1;
     dropPulley.start();
   }
   
   public void onRelease() {
+    super.onRelease();
     dropPulley.stopAndReset();
   }
 }

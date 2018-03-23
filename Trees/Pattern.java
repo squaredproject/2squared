@@ -33,7 +33,7 @@ abstract class TSPattern extends LXPattern {
   }
 
   BasicParameter getChannelFade() {
-    return getFaderTransition(getChannel()).fade;
+    return getChannel().getFader();
   }
 
   ParameterTriggerableAdapter getParameterTriggerableAdapter() {

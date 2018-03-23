@@ -35,8 +35,8 @@ class ParameterTriggerableAdapter implements Triggerable, LXLoopTask {
     this.offValue = offValue;
     this.onValue = onValue;
 
-    lx.engine.addLoopTask(this);
     lx.engine.addLoopTask(triggeredEventDampedParameter.start());
+    lx.engine.addLoopTask(this);
   }
 
   public void loop(double deltaMs) {

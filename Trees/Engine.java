@@ -81,8 +81,6 @@ abstract class Engine {
 
     if (Config.enableNFC) {
       configureNFC();
-      // this line to allow any nfc reader to read any cube
-      nfcEngine.disableVisualTypeRestrictions = true;
     }
 
     configureTriggerables();
@@ -99,9 +97,11 @@ abstract class Engine {
       configureFadeCandyOutput();
     }
 
-    postCreateLX();
-
     lx.addEffect(masterBrightnessEffect);
+
+    configureEffects();
+
+    postCreateLX();
 
     if (Config.enableAPC40) {
       configureMIDI();
@@ -589,6 +589,12 @@ abstract class Engine {
     engineController.effectControllers.add(effectController);
   }
 
+  void configureEffects() {
+    for (LXEffect effect : lx.getEffects()) {
+      effect.enabled.setValue(true);
+    }
+  }
+
   /* configureBMPTool */
 
   void configureBMPTool() {
@@ -658,6 +664,12 @@ abstract class Engine {
         new ArrayList<Triggerable>()
       };
     }
+    
+    for (int i = 0; i < 6; i++) {
+      for (int j = 0; j < 9; j++) {
+        nfcToggles[i][j] = new BooleanParameter("toggle");
+      }
+    }
 
     registerPatternTriggerables();
     registerOneShotTriggerables();
@@ -672,7 +684,7 @@ abstract class Engine {
     if (Config.enableAPC40) {
       apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
       for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
-        ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
+        ArrayList<Triggerable> triggerablesList = apc40DrumpadTriggerablesLists[i];
         apc40DrumpadTriggerables[i] = triggerablesList.toArray(new Triggerable[triggerablesList.size()]);
       }
       apc40DrumpadTriggerablesLists = null;
@@ -694,14 +706,10 @@ abstract class Engine {
   void configureNFC() {
     nfcEngine = new NFCEngine(lx);
     nfcEngine.start();
-    
-    for (int i = 0; i < 6; i++) {
-      for (int j = 0; j < 9; j++) {
-        nfcToggles[i][j] = new BooleanParameter("toggle");
-      }
-    }
 
     nfcEngine.registerReaderPatternTypeRestrictions(Arrays.asList(readerPatternTypeRestrictions()));
+    // this line to allow any nfc reader to read any cube
+    nfcEngine.disableVisualTypeRestrictions = true;
   }
 
   /* configureExternalOutput */
