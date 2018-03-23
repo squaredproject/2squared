@@ -88,7 +88,7 @@ abstract class Engine {
     configureTriggerables();
     lx.engine.addLoopTask(new ModelTransformTask(model));
 
-    configureBMPTool();
+    // configureBMPTool();
     configureAutomation();
 
     if (Config.enableOutputBigtree) {
