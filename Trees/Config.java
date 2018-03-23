@@ -1,7 +1,7 @@
 final class Config {
 
-  static final boolean enableIPad = true;
-  static final boolean autoplayBMSet = true;
+  static final boolean enableIPad = false;
+  static final boolean autoplayBMSet = false;
 
   static final boolean enableNFC = false;
   static final boolean enableAPC40 = true;
