@@ -1,0 +1,262 @@
+#!/bin/sh
+#  Copyright 2008 Nicholas A. Schembri State College PA USA
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see
+#    <http://www.gnu.org/licenses/>.
+
+# Thank you Voyage Linux for the idea, http://voyage.hk/ Great job on release 0.5
+#
+# Tested with 8.04.1
+# tested with 9.10
+# tested with debian live 6.0.1
+#
+# ****************************************************************************************
+#
+#                                 Change log
+#
+# 2008.08.01  Added debugging comments in "drop to a shell" section. grub option aufs=tmpfs-debug will stop the init script.
+#             reviewed *********** fix fstab on tmpfs ******************
+#             rootaufs failed when system was booted with /dev/xxx and fstab had uuid= info.
+#             BlaYO pointed out the best and simplest solution was to use grep -v. Grep replaces a sed one liner.
+#             Add the comment block to fstab
+#
+# 2009.12.07 Corrected issue caused by Apparmor.
+#            Name changed to __rootaufs.
+#
+# 2011.08.19 Changed if condition to avoid issue (sh: bad number) when $aufsdebug is not set.
+#            Now checks exists apparmor before delete.
+#
+# 2011.08.20 For work correctly with Debian Live 6.0.1 (http://live.debian.net/) two lines must be removed from rc.local modification part:
+#             'mount -f  /ro'
+#             'echo aufs-tmpfs /rw tmpfs rw 0 0 >>/etc/mtab'
+#
+
+
+
+
+
+case $1 in
+prereqs)
+    exit 0
+    ;;
+esac
+
+export aufs
+
+for x in $(cat /proc/cmdline); do
+    case $x in
+    root=*)
+        ROOTNAME=${x#root=}
+        ;;
+    aufs=*)
+        aufs=${x#aufs=}
+        case $aufs in
+        tmpfs-debug)
+            aufs=tmpfs
+            aufsdebug=1
+            ;;
+        esac
+        ;;
+    esac
+done
+
+
+if [ "$aufs" != "tmpfs" ]; then
+    #not set in boot loader
+    #I'm not loved. good bye
+    exit 0
+fi
+
+
+
+
+# This is a simple overview of the steps needed to use aufs on the root file system and see the /rw and /ro  branches.
+# initramfs init-botton script
+# move the root file system to aufs/unionfs readonly /ro
+# root is mounted on ${rootmnt}
+# create tmpfs on /rw
+# create a aufs using /ro and /rw
+# put some files on the tmpfs to fix mtab and fstab
+# move aufs to rootmnt to finish the init process.
+# No changes to the root file system are made by this script.
+#
+#  Why!
+#  This will allow you to use a usb flash drive and control what is written to the drive.
+#  no need to rebuild the squashfs file just to add a program.
+#  boot to single user mode.  The system works the way you expect. boot aufs=tmpfs and no changes are written to the flash.
+#  run ubuntu on an eeePC .
+
+# Install
+# Install ubuntu 8.04 Hardy. Hardy has aufs installed by default
+# apt-get update
+# apt-get dist-upgrade
+# apt-get install aufs-tools
+# echo aufs >> /etc/initramfs-tools/modules
+# put this file in /etc/initramfs-tools/scripts/init-bottom/rootaufs
+# chmod 0755 rootaufs
+# # clean up menu.lst
+# update-grub
+# update-initramfs -u
+# vi /boot/grub/menu.lst
+# add aufs=tmpfs to the default entry.
+# do not add this line to single user mode.
+# boot to single user mode in order to install software.
+# note: if your home account is on the root file system, your files are in ram and not saved.
+#
+
+
+echo
+echo "       root-aufs:  Setting up aufs on ${rootmnt} as root file system "
+echo
+
+modprobe -q --use-blacklist aufs
+if [ $? -ne 0 ]; then
+    echo    root-aufs error:      Failed to load aufs.ko
+    exit 0
+fi
+
+#make the mount points on the init root file system
+mkdir /aufs
+mkdir /rw
+mkdir /ro
+
+# mount the temp file system and move real root out of the way
+mount -t tmpfs aufs-tmpfs /rw
+mount --move ${rootmnt} /ro
+if [ $? -ne 0 ]; then
+    echo    root-aufs error:    ${rootmnt}  failed to move to /ro
+    exit 0
+fi
+
+
+mount -t aufs -o dirs=/rw:/ro=ro aufs /aufs
+if [ $? -ne 0 ]; then
+    echo    root-aufs error:      Failed to mount /aufs files system
+    exit 0
+fi
+
+
+#test for mount points on aufs file system
+[  -d /aufs/ro ] || mkdir /aufs/ro
+[  -d /aufs/rw ] || mkdir /aufs/rw
+
+# the real root file system is hidden on /ro of the init file system.  move it to /ro
+mount --move /ro /aufs/ro
+if [ $? -ne 0 ]; then
+    echo    root-aufs error:      Failed to move /ro /aufs/ro
+    exit 0
+fi
+
+# tmpfs file system is hidden on /rw
+mount --move /rw /aufs/rw
+if [ $? -ne 0 ]; then
+    echo    root-aufs error:      Failed to move /rw /aufs/rw
+    exit 0
+fi
+
+
+
+#*********** fix fstab on tmpfs ******************
+# test for /dev/sdx
+# this is not on the real file system.  This is created on the tmpfs each time the system boots.
+# The init process will try to mount the root filesystem listed in fstab. / and swap must be removed.
+# the root file system must be mounted on /ro not on /
+
+if [ "0$aufsdebug" -eq 1 ]; then
+    echo  "   root-aufs debug:    Remove the root file system and swap from fstab "
+    echo
+    echo
+    echo  "         ROOTNAME $ROOTNAME "
+    echo  "         resume   $resume   "
+    echo
+    echo  '     BlaYO pointed out that grep can be used to quickly remove '
+    echo  '      the root file system from fstab. '
+    echo
+    echo  '     Thank you BlaYO for the debug info.'
+    echo
+
+fi
+# old code
+# I'm sure that sed can do this in one step but I want to correct on the rootname  not matching the root in fstab.
+#cat /aufs/ro/etc/fstab|sed -e s/$ROOTNAME/\#$ROOTNAME/ -e s/$resume/\#$resume/ >/aufs/etc/fstab
+
+#Add the comment block to fstab
+cat <<EOF >/aufs/etc/fstab
+#
+#   RootAufs has mounted the root file system in ram
+#
+#  This fstab is in ram and the real fstab can be found /ro/etc/fstab
+#  the root file system ' / ' has been removed.
+#  All Swap files have been removed.
+#
+
+EOF
+
+#remove root and swap from fstab
+cat /aufs/ro/etc/fstab|grep -v ' / ' | grep -v swap >>/aufs/etc/fstab
+if [ $? -ne 0 ]; then
+    echo    root-aufs error:      Failed to create /aufs/etc/fstab
+    #exit 0
+fi
+
+
+
+
+# add the read only file system to fstab
+#ROOTTYPE=$(/lib/udev/vol_id -t ${ROOT})
+ROOTTYPE=$(cat /proc/mounts|grep ${ROOT}|cut -d' ' -f3)
+ROOTOPTIONS=$(cat /proc/mounts|grep ${ROOT}|cut -d' ' -f4)
+echo ${ROOT} /ro $ROOTTYPE $ROOTOPTIONS 0 0 >>/aufs/etc/fstab
+
+
+# S22mount on debian systems is not mounting  /ro correctly after boot
+# add to rc.local to correct what you see from df
+#replace last case of exit with #exit
+cat /aufs/ro/etc/rc.local|sed 's/\(.*\)exit/\1\#exit/' >/aufs/etc/rc.local
+echo mount -f  /ro >>/aufs/etc/rc.local
+
+# add back the root file system. mtab seems to be created by one of the init proceses.
+echo "echo aufs / aufs rw,xino=/rw/.aufs.xino,br:/rw=rw:/ro=ro 0 0 >>/etc/mtab" >>/aufs/etc/rc.local
+echo "echo aufs-tmpfs /rw tmpfs rw 0 0 >>/etc/mtab" >>/aufs/etc/rc.local
+echo exit 0 >>/aufs/etc/rc.local
+
+#  Copyright 2008 Joaquín I. Bogado García
+#fix para apparmor, se desactiva y listo ( From the lethe project. )
+[ -e /scripts/init-bottom/_apparmor ] && rm /scripts/init-bottom/_apparmor
+[ -e /aufs/etc/init.d/apparmor ] && rm /aufs/etc/init.d/apparmor
+
+
+#build remountrw
+echo \#!/bin/sh >/aufs/bin/remountrw
+echo mount -o remount,rw ${ROOT} >>/aufs/bin/remountrw
+chmod 0700 /aufs/bin/remountrw
+
+#build remountro
+echo \#!/bin/sh >/aufs/bin/remountro
+echo mount -o remount,ro ${ROOT} >>/aufs/bin/remountro
+chmod 0700 /aufs/bin/remountro
+
+# This should drop to a shell. (rewrite)
+if [ "0$aufsdebug" -eq 1 ]; then
+    echo
+    echo "   root-aufs debug:    mount --move /aufs ${rootmnt} "
+    echo
+    echo '   root-aufs debug:   init will stop here.   '
+    echo
+    exit 0
+fi
+
+mount --move /aufs ${rootmnt}
+
+exit 0
