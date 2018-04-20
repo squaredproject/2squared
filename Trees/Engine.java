@@ -84,7 +84,7 @@ abstract class Engine {
     }
 
     configureTriggerables();
-    lx.engine.addLoopTask(new ModelTransformTask(model));
+    lx.engine.addLoopTask(new ModelTransformTask(lx));
 
     // configureBMPTool();
     configureAutomation();

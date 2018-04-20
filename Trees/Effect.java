@@ -1,9 +1,10 @@
 import heronarts.lx.LX;
 import heronarts.lx.effect.LXEffect;
+import heronarts.lx.model.LXModel;
 
 abstract class Effect extends LXEffect {
 
-  protected final Model model;
+  protected Model model;
 
   Effect(LX lx) {
     super(lx);
@@ -15,6 +16,12 @@ abstract class Effect extends LXEffect {
     if (isEnabled()) {
       super.loop(deltaMs);
     }
+  }
+
+  @Override
+  public void onModelChanged(LXModel model) {
+    super.onModelChanged(model);
+    this.model = (Model)model;
   }
 }
 

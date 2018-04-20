@@ -870,18 +870,21 @@ class UIMapping extends UIWindow {
     tree = new UIToggleSet() {
       protected void onToggle(String value) {
         mappingTool.getConfig().treeIndex =  (value == "L") ? 0 : 1;
+        mappingTool.reloadModel();
       }
     }.setOptions(new String[] { "L", "R" });
     
     level = new UIIntegerBox() {
       protected void onValueChange(int value) {
         mappingTool.getConfig().level =  value;
+        mappingTool.reloadModel();
       }
     }.setRange(0, 14);
     
     face = new UIToggleSet() {
       protected void onToggle(String value) {
         mappingTool.getConfig().face = face.getValueIndex();
+        mappingTool.reloadModel();
       }
     }.setOptions(new String[] { " ", " ", " ", " ", " ", " ", " ", " " });
     
@@ -890,6 +893,7 @@ class UIMapping extends UIWindow {
     offsetParameter.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         mappingTool.getConfig().offset = parameter.getValuef();
+        mappingTool.reloadModel();
       }
     });
     
@@ -899,6 +903,7 @@ class UIMapping extends UIWindow {
     mountPointParameter.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         mappingTool.getConfig().mountPoint = parameter.getValuef();
+        mappingTool.reloadModel();
       }
     });
     
@@ -907,6 +912,7 @@ class UIMapping extends UIWindow {
     skewParameter.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         mappingTool.getConfig().skew = parameter.getValuef();
+        mappingTool.reloadModel();
       }
     });
     

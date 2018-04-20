@@ -183,6 +183,7 @@ class Model extends LXModel {
     final List<Tree> trees = new ArrayList<Tree>();
     
     private Fixture(Geometry geometry, List<TreeConfig> clusterConfig) {
+      LXPoint.resetCounter();
       int treeIndex = 0;
       for (float[] treePosition : Geometry.TREE_POSITIONS) {
         trees.add(new Tree(geometry, clusterConfig, treeIndex++, treePosition[0], treePosition[1], treePosition[2]));
@@ -644,11 +645,17 @@ class Cube extends LXModel {
 
 abstract class Layer extends LXLayer {
 
-  protected final Model model;
+  protected Model model;
 
   Layer(LX lx) {
     super(lx);
     model = (Model)lx.model;
+  }
+
+  @Override
+  public void onModelChanged(LXModel model) {
+    super.onModelChanged(model);
+    this.model = (Model)model;
   }
 }
 
@@ -664,16 +671,22 @@ abstract class ModelTransform extends Effect {
   abstract void transform(Model model);
 }
 
-class ModelTransformTask implements LXLoopTask {
+class ModelTransformTask implements LXLoopTask, LX.Listener {
 
-  protected final Model model;
+  protected Model model;
 
-  ModelTransformTask(Model model) {
-    this.model = model;
+  ModelTransformTask(LX lx) {
+    this.model = (Model)lx.model;
+    lx.addListener(this);
   }
 
   public void loop(double deltaMs) {
     model.runTransforms();
+  }
+
+  public void modelChanged(LX lx, LXModel model) {
+    this.model = (Model)model;
+    this.model.runTransforms();
   }
 }
 
