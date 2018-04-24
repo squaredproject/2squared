@@ -140,8 +140,8 @@ abstract class Engine {
     registerPatternController("Candy Cloud", new CandyCloud(lx));
     // registerPatternController("Galaxy Cloud", new GalaxyCloud(lx));
 
-    registerPatternController("Color Strobe", new ColorStrobe(lx));
-    registerPatternController("Strobe", new Strobe(lx));
+    // registerPatternController("Color Strobe", new ColorStrobe(lx));
+    // registerPatternController("Strobe", new Strobe(lx));
     registerPatternController("Sparkle Takeover", new SparkleTakeOver(lx));
     registerPatternController("Multi-Sine", new MultiSine(lx));
     registerPatternController("Seesaw", new SeeSaw(lx));
@@ -153,18 +153,18 @@ abstract class Engine {
 
     registerPatternController("Acid Trip", new AcidTrip(lx));
     registerPatternController("Rain", new Rain(lx));
-    registerPatternController("Bass Slam", new BassSlam(lx));
+    // registerPatternController("Bass Slam", new BassSlam(lx));
 
     registerPatternController("Fireflies", new Fireflies(lx));
     registerPatternController("Bubbles", new Bubbles(lx));
     registerPatternController("Lightning", new Lightning(lx));
     registerPatternController("Wisps", new Wisps(lx));
-    registerPatternController("Fireworks", new Explosions(lx));
+    // registerPatternController("Fireworks", new Explosions(lx));
   }
 
   void registerIPadEffects() {
     ColorEffect colorEffect = new ColorEffect2(lx);
-    ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
+    // ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
     FadeTextureEffect fadeTextureEffect = new FadeTextureEffect(lx);
     AcidTripTextureEffect acidTripTextureEffect = new AcidTripTextureEffect(lx);
     CandyTextureEffect candyTextureEffect = new CandyTextureEffect(lx);
@@ -184,7 +184,7 @@ abstract class Engine {
     // lx.addEffect(staticEffect);
     lx.addEffect(spinEffect);
     lx.addEffect(speedEffect);
-    lx.addEffect(colorStrobeTextureEffect);
+    // lx.addEffect(colorStrobeTextureEffect);
     lx.addEffect(fadeTextureEffect);
     // lx.addEffect(acidTripTextureEffect);
     lx.addEffect(candyTextureEffect);
@@ -195,7 +195,7 @@ abstract class Engine {
 
     registerEffectController("Rainbow", candyCloudTextureEffect, candyCloudTextureEffect.amount);
     registerEffectController("Candy Chaos", candyTextureEffect, candyTextureEffect.amount);
-    registerEffectController("Color Strobe", colorStrobeTextureEffect, colorStrobeTextureEffect.amount);
+    // registerEffectController("Color Strobe", colorStrobeTextureEffect, colorStrobeTextureEffect.amount);
     registerEffectController("Fade", fadeTextureEffect, fadeTextureEffect.amount);
     registerEffectController("Monochrome", colorEffect, colorEffect.mono);
     registerEffectController("White", colorEffect, colorEffect.desaturation);
