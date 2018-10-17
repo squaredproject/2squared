@@ -49,9 +49,9 @@ There are 4 different variations of canopyMajorLengths/layerBaseHeights in this 
 
 ry is the rotation of the tree in degrees
 
-x is the X location of the tree in feet
+x is the X location of the tree in inches
 
-y is the Y location of the tree in feet
+y is the Y location of the tree in inches
 
 Edit and save the entwinedTrees.json file so that it is set up to reflect the current installation.
 
