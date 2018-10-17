@@ -51,7 +51,7 @@ ry is the rotation of the tree in degrees
 
 x is the X location of the tree in inches
 
-y is the Y location of the tree in inches
+z is the Z location of the tree in inches
 
 Edit and save the entwinedTrees.json file so that it is set up to reflect the current installation.
 
@@ -64,16 +64,16 @@ For the larger trees, mapping is best done from above and some distance away if 
 
 Start the program, and make sure the installation layout is correct. 
 
-Turn the faders down for all of the patterns, and click "Enabled" on the mapping tool
+Turn the faders down for all of the patterns, and click "Enabled" on the mapping tool.
 
 The idea will be to cycle through each NDB(one NDB = one IP address) and each of the 16 outputs on that NDB, and map the cube that that NDB and output is connected to.
 
-When real cube blinks somewhere on the installation from the NDB and output you have selected in the mapping tool, check that "cube active" is lit up at the bottom. If it says "cube inacive", click that to change it.
+When a real cube blinks somewhere on the installation from the NDB and output you have selected in the mapping tool, check that "cube active" is lit up at the bottom. If it says "cube inacive", click that to change it.
 
 Next, change the Tree, Layer, Branch, and Point  in that order so that the cube's location in the program matches what you see in reality. Sometimes it is hard to see what Branch a cube is on in the program when Point is at a low number, so moving Point to a higher number can be helpful in those cases.
 
 Finally, adjust the Size so it matches the size of the cube. The original install had small cubes(size 0) and larger cubes(size 1). Note that changing the size does not change what is displayed until restart.
 
-Proceed to the next cube and repeat. It's a good idea to click Save as you go.
+Proceed to the next cube by going to the next output or NDB and repeat. It's a good idea to click Save as you go.
 
 Click Save and restart the program, and mapping should be done.
