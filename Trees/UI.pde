@@ -111,7 +111,9 @@ class UITrees extends UI3dComponent {
     fill(colors[cube.index]);
     if (mappingTool.isEnabled()) {
       Vec3D updatedPoint = model.getMountPoint(cube.config);
-      translate(updatedPoint.x, updatedPoint.y, updatedPoint.z);
+      if (updatedPoint != null) {
+        translate(updatedPoint.x, updatedPoint.y, updatedPoint.z);
+      }
     }
     else {
       translate(cube.x, cube.y, cube.z);
@@ -1038,4 +1040,3 @@ class UIOutput extends UIWindow {
     }
   }
 }
-
