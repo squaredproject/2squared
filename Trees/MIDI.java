@@ -1,13 +1,7 @@
 import heronarts.lx.LX;
 import heronarts.lx.LXAutomationRecorder;
 import heronarts.lx.LXChannel;
-import heronarts.lx.midi.LXAbstractMidiListener;
-import heronarts.lx.midi.LXMidiControlChange;
-import heronarts.lx.midi.LXMidiDevice;
-import heronarts.lx.midi.LXMidiInput;
-import heronarts.lx.midi.LXMidiNoteOff;
-import heronarts.lx.midi.LXMidiNoteOn;
-import heronarts.lx.midi.LXMidiOutput;
+import heronarts.lx.midi.*;
 import heronarts.lx.midi.device.APC40;
 import heronarts.lx.output.LXDatagramOutput;
 import heronarts.lx.parameter.BasicParameter;
@@ -17,11 +11,13 @@ import heronarts.lx.parameter.LXListenableNormalizedParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.parameter.LXParameterListener;
 
-interface InterfaceController {
-  void select();
-  void scroll(int delta);
-  void knob(int delta);
-}
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.SysexMessage;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiUnavailableException;
+
 
 class MidiEngine {
   final static byte[] APC_MODE_SYSEX = {
@@ -52,6 +48,7 @@ class MidiEngine {
     try {
       setAPC40Mode();
     } catch (java.lang.UnsatisfiedLinkError e){
+      System.out.println("could not set up APC40: unsatisfied link error, caused by mmj on non mac");
       return;
     }
     LXMidiInput apcInput = APC40.matchInput(lx);
@@ -89,7 +86,7 @@ class MidiEngine {
           }
         }
         
-        public void noteOffReceived(LXMidiNoteOff note) {
+        public void noteOffReceived(LXMidiNote note) {
           int channel = note.getChannel();
           int pitch = note.getPitch();
           switch (pitch) {
@@ -172,9 +169,9 @@ class MidiEngine {
         }
         for (int col = 0; col < apc40Drumpad.triggerables[row].length && col < 9; col++) {
           if (col < 8) {
-            apc40.bindNote(nfcToggles[row][col], col, midiNumber, APC40.DIRECT);
+            //apc40.bindNote(nfcToggles[row][col], col, midiNumber, APC40.DIRECT);
           } else if (row < 5) {
-            apc40.bindNote(nfcToggles[row][col], 0, APC40.SCENE_LAUNCH + row, APC40.DIRECT);
+            //apc40.bindNote(nfcToggles[row][col], 0, APC40.SCENE_LAUNCH + row, APC40.DIRECT);
             // stop all clips button doesn't light up. Doesn't have an LED in it
             // apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.STOP_ALL_CLIPS, APC40.DIRECT);
           }
@@ -260,15 +257,56 @@ class MidiEngine {
     apc40.bindNoteOn(auto.armRecord, 0, APC40.REC, LXMidiDevice.TOGGLE);
     apc40.bindNote(automationStop[automationSlot.getValuei()], 0, APC40.STOP, LXMidiDevice.DIRECT);
   }
-  
+
+  // This is theproblem with the APC40 that it requires a special SYSEX to say we're
+// ableton. The Mac requires using this obsolete library, with windows we don't,
+// so we literally have to check the operating system version.
+//
+
+
   void setAPC40Mode() {
+
+    boolean sentSysEx = false;
     int i = 0;
-    for (String info : de.humatic.mmj.MidiSystem.getOutputs()) { 
-      if (info.contains("APC40")) {
-        de.humatic.mmj.MidiSystem.openMidiOutput(i).sendMidi(APC_MODE_SYSEX);
-        break;
+
+
+    //System.out.println(" APC40 2 Mode --- for non-mac ");
+    MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+    //System.out.println(" length of array is "+infos.length);
+
+    for (MidiDevice.Info info : MidiSystem.getMidiDeviceInfo()) {
+
+      //System.out.println(" looking for the APC40:: "+info.toString());
+
+      // Note: on Macs, there are often multiple devices that will claim to be 
+      // APC40, but some will have receivers and some will not. Only try
+      // to send on the ones that have receivers.
+      if (info.toString().contains("APC40")) {
+
+        //System.out.println(" Found APC40 - try to send send sysex");
+        try {
+         SysexMessage sysMsg = new SysexMessage(  );
+         sysMsg.setMessage(APC_MODE_SYSEX, APC_MODE_SYSEX.length);
+
+         MidiDevice dev = MidiSystem.getMidiDevice(info);
+
+           dev.open();
+           Receiver r = dev.getReceiver();
+
+           r.send(sysMsg, -1);
+           sentSysEx = true;
+           dev.close();
+        }
+        catch ( InvalidMidiDataException e ) {
+          //System.out.println("InvalidMidiDataException: sysex send " + e.getMessage());
+        }
+        catch ( MidiUnavailableException e ) {
+          //System.out.println("MidiUnavailableException: sysex send " + e.getMessage());
+        }
+
+      // just send to all of them
       }
-      ++i;
+      i++;
     }
   }
 
