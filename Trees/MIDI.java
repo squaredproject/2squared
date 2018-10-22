@@ -40,11 +40,17 @@ class MidiEngine {
   private final LXAutomationRecorder[] automation;
   private final BooleanParameter[] automationStop;
   
-  public MidiEngine(final LX lx, LXListenableNormalizedParameter[] effectKnobParameters, final TSDrumpad apc40Drumpad, final BasicParameter drumpadVelocity, final BooleanParameter[] previewChannels, final BPMTool bpmTool, final InterfaceController uiDeck, final BooleanParameter[][] nfcToggles, final BasicParameter outputBrightness, DiscreteParameter automationSlot, LXAutomationRecorder[] automation, BooleanParameter[] automationStop) {
+  public MidiEngine(final LX lx, LXListenableNormalizedParameter[] effectKnobParameters, final TSDrumpad apc40Drumpad, 
+        final BasicParameter drumpadVelocity, final BooleanParameter[] previewChannels, final BPMTool bpmTool, 
+        final InterfaceController uiDeck, final BooleanParameter[][] nfcToggles, 
+        final BasicParameter outputBrightness, DiscreteParameter automationSlot, 
+        LXAutomationRecorder[] automation, BooleanParameter[] automationStop) {
+    
     this.lx = lx;
     this.automationSlot = automationSlot;
     this.automation = automation;
     this.automationStop = automationStop;
+
     try {
       setAPC40Mode();
     } catch (java.lang.UnsatisfiedLinkError e){
@@ -160,23 +166,11 @@ class MidiEngine {
         }
       };
 
-      for (int row = 0; row < apc40Drumpad.triggerables.length && row < 6; row++) {
-        int midiNumber;
-        if (row < 5) {
-          midiNumber = APC40.CLIP_LAUNCH + row;
-        } else {
-          midiNumber = APC40.CLIP_STOP;
-        }
-        for (int col = 0; col < apc40Drumpad.triggerables[row].length && col < 9; col++) {
-          if (col < 8) {
-            //apc40.bindNote(nfcToggles[row][col], col, midiNumber, APC40.DIRECT);
-          } else if (row < 5) {
-            //apc40.bindNote(nfcToggles[row][col], 0, APC40.SCENE_LAUNCH + row, APC40.DIRECT);
-            // stop all clips button doesn't light up. Doesn't have an LED in it
-            // apc40.bindNote(new BooleanParameter("ANON", false), 0, APC40.STOP_ALL_CLIPS, APC40.DIRECT);
-          }
-        }
-      }
+      // Breadcrumb: there was some code here to init the NFC subsystem.
+      // We aren't using NFC anymore, but if you want to revive it, go look
+      // at earlier versions of this file in the code repo.
+      // this section is all about NFC which we're removing,
+      // which means this function doesn't need the apc40Drumpad anymore
       
       int[] channelIndices = new int[Engine.NUM_CHANNELS];
       for (int i = 0; i < Engine.NUM_CHANNELS; ++i) {
@@ -258,11 +252,11 @@ class MidiEngine {
     apc40.bindNote(automationStop[automationSlot.getValuei()], 0, APC40.STOP, LXMidiDevice.DIRECT);
   }
 
-  // This is theproblem with the APC40 that it requires a special SYSEX to say we're
-// ableton. The Mac requires using this obsolete library, with windows we don't,
-// so we literally have to check the operating system version.
+// This is theproblem with the APC40 that it requires a special SYSEX to say we're
+// ableton. In older versions of this code, we used a library called 'mmj' that works
+// only on the mac and is obsolete, we've switched to CoreMidi which seems more modern
+// here in 2018 and seems to play nicely on multiple platforms
 //
-
 
   void setAPC40Mode() {
 
@@ -280,7 +274,8 @@ class MidiEngine {
 
       // Note: on Macs, there are often multiple devices that will claim to be 
       // APC40, but some will have receivers and some will not. Only try
-      // to send on the ones that have receivers.
+      // to send on the ones that have receivers. Sending this sysex to the wrong
+      // device seems somewhat harmless
       if (info.toString().contains("APC40")) {
 
         //System.out.println(" Found APC40 - try to send send sysex");
