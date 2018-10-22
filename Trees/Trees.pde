@@ -62,7 +62,11 @@ ChannelTreeLevels[] channelTreeLevels;
 
 void setup() {
   size(1148, 720, OPENGL);
-  frameRate(90); // this will get processing 2 to actually hit around 60
+  // Regrettably, there is a problem in Processing3 that will cause
+  // a watchdog in JOGL to fire off if you set the framerate early.
+  // It's possible to move it, but Processing3 looks just fine IMHO regarding
+  // framerate so let's let it do it's thing
+  //frameRate(90); // this will get processing 2 to actually hit around 60
   
   engine = new ProcessingEngine(sketchPath());
   engine.start();
