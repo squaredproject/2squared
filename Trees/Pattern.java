@@ -1,6 +1,5 @@
 import heronarts.lx.LX;
 import heronarts.lx.LXChannel;
-import heronarts.lx.model.LXModel;
 import heronarts.lx.pattern.LXPattern;
 import heronarts.lx.parameter.BasicParameter;
 import heronarts.lx.parameter.LXParameter;
@@ -10,7 +9,7 @@ abstract class TSPattern extends LXPattern {
   ParameterTriggerableAdapter parameterTriggerableAdapter;
   String readableName;
 
-  protected Model model;
+  protected final Model model;
 
   TSPattern(LX lx) {
     super(lx);
@@ -57,11 +56,6 @@ abstract class TSPattern extends LXPattern {
     return (TreesTransition) channel.getFaderTransition();
   }
 
-  @Override
-  public void onModelChanged(LXModel model) {
-    super.onModelChanged(model);
-    this.model = (Model)model;
-  }
 }
 
 abstract class TSTriggerablePattern extends TSPattern implements Triggerable {

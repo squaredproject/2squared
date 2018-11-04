@@ -645,17 +645,11 @@ class Cube extends LXModel {
 
 abstract class Layer extends LXLayer {
 
-  protected Model model;
+  protected final Model model;
 
   Layer(LX lx) {
     super(lx);
     model = (Model)lx.model;
-  }
-
-  @Override
-  public void onModelChanged(LXModel model) {
-    super.onModelChanged(model);
-    this.model = (Model)model;
   }
 }
 
@@ -671,22 +665,17 @@ abstract class ModelTransform extends Effect {
   abstract void transform(Model model);
 }
 
-class ModelTransformTask implements LXLoopTask, LX.Listener {
+class ModelTransformTask implements LXLoopTask {
 
-  protected Model model;
+  protected final Model model;
 
-  ModelTransformTask(LX lx) {
-    this.model = (Model)lx.model;
-    lx.addListener(this);
+  ModelTransformTask(Model model) {
+    this.model = model;
   }
 
   public void loop(double deltaMs) {
     model.runTransforms();
   }
 
-  public void modelChanged(LX lx, LXModel model) {
-    this.model = (Model)model;
-    this.model.runTransforms();
-  }
 }
 

@@ -84,7 +84,7 @@ abstract class Engine {
     }
 
     configureTriggerables();
-    lx.engine.addLoopTask(new ModelTransformTask(lx));
+    lx.engine.addLoopTask(new ModelTransformTask(model));
 
     // configureBMPTool();
     configureAutomation();
@@ -316,6 +316,9 @@ abstract class Engine {
   }
 
   void registerEffectTriggerables() {
+
+    System.out.println(" Register Effect Triggerables: ");
+
     BlurEffect blurEffect = new TSBlurEffect(lx);
     ColorEffect colorEffect = new ColorEffect(lx);
     GhostEffect ghostEffect = new GhostEffect(lx);
