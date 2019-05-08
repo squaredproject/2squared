@@ -629,6 +629,8 @@ class Cube extends LXModel {
     this.r = (float)Point2D.distance(treeCenter.x, treeCenter.z, this.x, this.z);
     this.theta = 180 + 180/Utils.PI*Utils.atan2(this.z - treeCenter.z, this.x - treeCenter.x);
     this.cylinderPoint = new Vec2D(this.theta, this.ty);
+
+    this.transformedCylinderPoint = new Vec2D(this.theta, this.y);
     
     transform.pop();
   }
