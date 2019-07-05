@@ -30,6 +30,7 @@ echo -e "\n\n*********** Done installing fadecandy **************\n\n"
 ######################
 cd $HOME
 echo -e "\n\n*********** Compiling 2squared **************\n\n"
+git checkout hayes-valley; git pull
 cd 2squared && sh compile.sh && cd /home/squared
 echo -e "\n\n*********** Done compiling 2squared **************\n\n"
 
