@@ -114,6 +114,16 @@ echo -e "*********** enabling ssh access  **************"
 sudo apt-get install openssh-server
 sudo systemctl enable ssh
 
+### enable Avahi mDNS so you can access the pi as rasberry.local on mac machines
+### this is required for the ipad application to connect to the pi
+### ipad app is hardcoded to connect to hostname odroid.local
+### SO SET THE HOSTNAME TO odroid.local (even though this is a rasberry pi)
+echo -e "*********** enabling Avahi mDNS  **************"
+sudo hostname odroid.local   
+sudo apt-get install avahi-daemon
+sudo systemctl enable avahi-daemon
+sudo systemctl restart avahi-daemon
+
 echo -e "*********** Done with hostapd **************"
  
 ### for some reason, networking doesn't work until you reboot
