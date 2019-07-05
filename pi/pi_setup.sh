@@ -11,6 +11,15 @@ echo -e "\n\n\n*********** Creating new user squared **************\n\n\n\n\n"
 sudo useradd -m -d $HOME -s /bin/bash -p 'thetrees!' squared
 sudo chmod -R a+w /home/squared
 
+
+#######################
+## Update debian ######
+#######################
+echo -e "*********** Updating OS packages **************"
+sudo apt-get update
+sudo apt-get dist-upgrade
+
+
 #######################
 ## Install Fadecandy ##
 #######################
@@ -31,8 +40,7 @@ echo -e "\n\n*********** Done installing fadecandy **************\n\n"
 cd $HOME
 echo -e "\n\n*********** Compiling 2squared **************\n\n"
 cd $HOME;  git clone https://github.com/squaredproject/2squared.git;
-git checkout hayes-valley; git pull
-cd 2squared && sh compile.sh && cd /home/squared
+cd 2squared && git checkout hayes-valley && sh compile.sh && cd /home/squared
 echo -e "\n\n*********** Done compiling 2squared **************\n\n"
 
 #####################################
@@ -50,25 +58,27 @@ sudo systemctl start 2squared
 sudo systemctl start fadecandy
 
 ######################
-####### Hostapd ######
+####### Network ######
 ######################
+### See https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+
 cd  $HOME/2squared/pi/
 
 echo -e "\n\n*********** configuring hostapd **************"
-
-sudo apt --assume-yes install dnsmasq hostapd bridge-utils -qq
-sudo cp hostapd.conf  /etc/hostapd/hostapd.conf
-sudo cp hostapd  /etc/default/hostapd
-
-sudo cp dnsmasq.conf /etc/dnsmasq.conf
-
-### Enable  hotspot as wireless access point
-### See https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
-
 echo -e "\n\n\n*********** configuring wifi access point **************\n\n\n"
 echo -e "*********** warning: running this script more than once  **************"
 echo -e "*********** warning: appends lines to /etc/rc.local /etc/dhcpcd.conf /etc/sysctl.conf   **************"
 
+sudo apt --assume-yes install dnsmasq hostapd bridge-utils -qq
+
+echo -e "********** hostapd setup *****************"
+sudo cp hostapd.conf  /etc/hostapd/hostapd.conf
+sudo cp hostapd  /etc/default/hostapd
+
+echo -e "********** editing etc/dnsmasq.conf *****************"
+sudo cp dnsmasq.conf /etc/dnsmasq.conf
+
+echo -e "********** editing /etc/dhcpcd.conf *****************"
 sudo cp  /etc/dhcpcd.conf /etc/dhcpcd.conf.bak
 echo "interface wlan1" >> /etc/dhcpcd.conf
 echo "\t static ip_address=192.168.4.1/24" >> /etc/dhcpcd.conf
@@ -77,8 +87,8 @@ echo "\t nohook wpa_supplicant" >> /etc/dhcpcd.conf
 echo "\n\ninterface eth0" >> /etc/dhcpcd.conf
 echo "\tstatic ip_address=10.0.0.10/24" >> /etc/dhcpcd.conf
 
-
 ### Uncomment line re IP forwarding
+echo -e "********** ip forwarding *****************"
 sudo cp /etc/sysctl.conf  /etc/sysctl.conf.orig
 sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
 
@@ -105,4 +115,11 @@ sudo systemctl enable ssh
 
 echo -e "*********** Done with hostapd **************"
  
-
+### for some reason, networking doesn't work until you reboot
+echo -e "*********** Rebooting to clean network configution issues *************"
+sleep 2
+echo -e "*********** Rebooting to clean network configution issues *************"
+sleep 2
+echo -e "*********** Rebooting to clean network configution issues *************"
+sleep 4
+sudo reboot
