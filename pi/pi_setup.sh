@@ -15,9 +15,9 @@ sudo chmod -R a+w /home/squared
 #######################
 ## Update debian ######
 #######################
-echo -e "*********** Updating OS packages **************"
-sudo apt-get update
-sudo apt-get dist-upgrade
+#echo -e "*********** Updating OS packages **************"
+#sudo apt-get update
+#sudo apt-get dist-upgrade
 
 
 #######################
@@ -87,6 +87,12 @@ echo "\t nohook wpa_supplicant" >> /etc/dhcpcd.conf
 echo "\n\ninterface eth0" >> /etc/dhcpcd.conf
 echo "\tstatic ip_address=10.0.0.10/24" >> /etc/dhcpcd.conf
 
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl restart hostapd
+sudo systemctl restart dhcpcd
+sudo systemctl reload  dnsmasq
+
 ### Uncomment line re IP forwarding
 echo -e "********** ip forwarding *****************"
 sudo cp /etc/sysctl.conf  /etc/sysctl.conf.orig
@@ -102,11 +108,6 @@ sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
 sudo cp /etc/rc.local /tmp/rc.local.orig
 sudo sed -i 's/exit 0/iptables-restore < \/etc\/iptables.ipv4.nat/' /etc/rc.local
 
-sudo systemctl unmask hostapd
-sudo systemctl enable hostapd
-sudo systemctl restart hostapd
-sudo systemctl restart dhcpcd
-sudo systemctl reload  dnsmasq
 
 ### enable ssh
 echo -e "*********** enabling ssh access  **************"
