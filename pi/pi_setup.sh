@@ -30,6 +30,7 @@ echo -e "\n\n*********** Done installing fadecandy **************\n\n"
 ######################
 cd $HOME
 echo -e "\n\n*********** Compiling 2squared **************\n\n"
+cd $HOME;  clone https://github.com/squaredproject/2squared.git;
 git checkout hayes-valley; git pull
 cd 2squared && sh compile.sh && cd /home/squared
 echo -e "\n\n*********** Done compiling 2squared **************\n\n"
@@ -43,8 +44,10 @@ echo -e "\n\n*********** Setting up fadecandy and squared services *************
 
 sudo cp /home/squared/2squared/pi/2squared.service /etc/systemd/system/
 sudo cp /home/squared/2squared/pi/fadecandy.service /etc/systemd/system/
-sudo systemctl reenable 2squared.service
-sudo systemctl reenable fadecandy.service
+sudo systemctl enable 2squared.service
+sudo systemctl enable fadecandy.service
+sudo systemctl start 2squared
+sudo systemctl start fadecandy
 
 ######################
 ####### Hostapd ######
