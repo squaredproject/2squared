@@ -1,0 +1,10 @@
+[Unit]
+Description=2squared
+
+[Service]
+ExecStart=/home/squared/2squared/run.sh
+ExecStop=/bin/pkill java
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
