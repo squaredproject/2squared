@@ -15,7 +15,7 @@ sudo chmod -R a+w /home/squared
 ## Install Fadecandy ##
 #######################
 cd $HOME 
-echo -e "\n\n\n*********** Installing fadecandy **************\n\n\n\n\n"
+echo -e "\n\n*********** Installing fadecandy **************\n\n"
 
 git clone git://github.com/scanlime/fadecandy
 cd fadecandy/server
@@ -23,26 +23,25 @@ make submodules
 make
 sudo mv fcserver /usr/local/bin
 
-echo -e "\n\n\n*********** Done installing fadecandy **************\n\n\n\n\n"
-
+echo -e "\n\n*********** Done installing fadecandy **************\n\n"
 
 ######################
 ## Compile 2squared ##
 ######################
-echo -e "\n\n\n*********** Compiling 2squared **************\n\n\n\n\n"
-git clone https://github.com/squaredproject/2squared.git
+cd $HOME
+echo -e "\n\n*********** Compiling 2squared **************\n\n"
 cd 2squared && sh compile.sh && cd /home/squared
-echo -e "\n\n\n*********** Done compiling 2squared **************\n\n\n\n\n"
+echo -e "\n\n*********** Done compiling 2squared **************\n\n"
 
 #####################################
 ## Fadecandy and 2squared Services ##
 #####################################
 cd $HOME
 
-echo -e "\n\n\n*********** Setting up fadecand and squared services **************\n\n\n\n\n"
+echo -e "\n\n*********** Setting up fadecandy and squared services **************\n\n"
 
-sudo cp /home/squared/2squared/pi/pi_setup/2squared.service /etc/systemd/system/
-sudo cp /home/squared/2squared/pi/pi_setup/fadecandy.service /etc/systemd/system/
+sudo cp /home/squared/2squared/pi/2squared.service /etc/systemd/system/
+sudo cp /home/squared/2squared/pi/fadecandy.service /etc/systemd/system/
 sudo systemctl reenable 2squared.service
 sudo systemctl reenable fadecandy.service
 
@@ -51,7 +50,7 @@ sudo systemctl reenable fadecandy.service
 ######################
 cd  $HOME/2squared/pi/
 
-echo -e "\n\n\n*********** configuring hostapd **************"
+echo -e "\n\n*********** configuring hostapd **************"
 
 sudo apt --assume-yes install dnsmasq hostapd bridge-utils -qq
 sudo cp hostapd.conf  /etc/hostapd/hostapd.conf
@@ -62,7 +61,7 @@ sudo cp dnsmasq.conf /etc/dnsmasq.conf
 ### Enable  hotspot as wireless access point
 ### See https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 
-echo -e "\n\n\n*********** configuring wifi access point **************\n\n\n\n\n"
+echo -e "\n\n\n*********** configuring wifi access point **************\n\n\n"
 echo -e "*********** warning: running this script more than once  **************"
 echo -e "*********** warning: appends lines to /etc/rc.local /etc/dhcpcd.conf /etc/sysctl.conf   **************"
 
