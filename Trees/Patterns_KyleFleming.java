@@ -778,7 +778,7 @@ class Fade extends TSPattern {
 class OrderTest extends TSPattern {
   
   SawLFO sweep = new SawLFO(0, 15.999, 8000);
-  int[] order = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+  int[] order = new int[] { 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 7 };
   
   OrderTest(LX lx) {
     super(lx);

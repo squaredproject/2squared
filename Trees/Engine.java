@@ -81,14 +81,12 @@ abstract class Engine {
 
     if (Config.enableNFC) {
       configureNFC();
-      // this line to allow any nfc reader to read any cube
-      nfcEngine.disableVisualTypeRestrictions = true;
     }
 
     configureTriggerables();
     lx.engine.addLoopTask(new ModelTransformTask(model));
 
-    configureBMPTool();
+    // configureBMPTool();
     configureAutomation();
 
     if (Config.enableOutputBigtree) {
@@ -99,9 +97,11 @@ abstract class Engine {
       configureFadeCandyOutput();
     }
 
-    postCreateLX();
-
     lx.addEffect(masterBrightnessEffect);
+
+    configureEffects();
+
+    postCreateLX();
 
     if (Config.enableAPC40) {
       configureMIDI();
@@ -140,8 +140,8 @@ abstract class Engine {
     registerPatternController("Candy Cloud", new CandyCloud(lx));
     // registerPatternController("Galaxy Cloud", new GalaxyCloud(lx));
 
-    registerPatternController("Color Strobe", new ColorStrobe(lx));
-    registerPatternController("Strobe", new Strobe(lx));
+    // registerPatternController("Color Strobe", new ColorStrobe(lx));
+    // registerPatternController("Strobe", new Strobe(lx));
     registerPatternController("Sparkle Takeover", new SparkleTakeOver(lx));
     registerPatternController("Multi-Sine", new MultiSine(lx));
     registerPatternController("Seesaw", new SeeSaw(lx));
@@ -153,18 +153,18 @@ abstract class Engine {
 
     registerPatternController("Acid Trip", new AcidTrip(lx));
     registerPatternController("Rain", new Rain(lx));
-    registerPatternController("Bass Slam", new BassSlam(lx));
+    // registerPatternController("Bass Slam", new BassSlam(lx));
 
     registerPatternController("Fireflies", new Fireflies(lx));
     registerPatternController("Bubbles", new Bubbles(lx));
     registerPatternController("Lightning", new Lightning(lx));
     registerPatternController("Wisps", new Wisps(lx));
-    registerPatternController("Fireworks", new Explosions(lx));
+    // registerPatternController("Fireworks", new Explosions(lx));
   }
 
   void registerIPadEffects() {
     ColorEffect colorEffect = new ColorEffect2(lx);
-    ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
+    // ColorStrobeTextureEffect colorStrobeTextureEffect = new ColorStrobeTextureEffect(lx);
     FadeTextureEffect fadeTextureEffect = new FadeTextureEffect(lx);
     AcidTripTextureEffect acidTripTextureEffect = new AcidTripTextureEffect(lx);
     CandyTextureEffect candyTextureEffect = new CandyTextureEffect(lx);
@@ -184,7 +184,7 @@ abstract class Engine {
     // lx.addEffect(staticEffect);
     lx.addEffect(spinEffect);
     lx.addEffect(speedEffect);
-    lx.addEffect(colorStrobeTextureEffect);
+    // lx.addEffect(colorStrobeTextureEffect);
     lx.addEffect(fadeTextureEffect);
     // lx.addEffect(acidTripTextureEffect);
     lx.addEffect(candyTextureEffect);
@@ -195,7 +195,7 @@ abstract class Engine {
 
     registerEffectController("Rainbow", candyCloudTextureEffect, candyCloudTextureEffect.amount);
     registerEffectController("Candy Chaos", candyTextureEffect, candyTextureEffect.amount);
-    registerEffectController("Color Strobe", colorStrobeTextureEffect, colorStrobeTextureEffect.amount);
+    // registerEffectController("Color Strobe", colorStrobeTextureEffect, colorStrobeTextureEffect.amount);
     registerEffectController("Fade", fadeTextureEffect, fadeTextureEffect.amount);
     registerEffectController("Monochrome", colorEffect, colorEffect.mono);
     registerEffectController("White", colorEffect, colorEffect.desaturation);
@@ -246,6 +246,8 @@ abstract class Engine {
     patterns.add(new Pixels(lx));
     patterns.add(new Wedges(lx));
     patterns.add(new Parallax(lx));
+    patterns.add(new ClusterLineTest(lx));
+    patterns.add(new OrderTest(lx));
   }
 
   LXPattern[] getPatternListForChannels() {
@@ -273,7 +275,7 @@ abstract class Engine {
     registerPattern(new Fumes(lx), "3707000050a9b1");
     registerPattern(new Voronoi(lx), "3707000050a952");
     registerPattern(new CandyCloud(lx), "3707000050aab4");
-    registerPattern(new GalaxyCloud(lx), "3707000050a91d");
+    // registerPattern(new GalaxyCloud(lx), "3707000050a91d");
 
     registerPattern(new ColorStrobe(lx), "3707000050a975", 3);
     registerPattern(new Explosions(lx, 20), "3707000050a8bf", 3);
@@ -289,8 +291,8 @@ abstract class Engine {
     registerPattern(new Fire(lx), "-", 5); // Make red
     
     // registerPattern(new DoubleHelix(lx), "");
-    registerPattern(new AcidTrip(lx), "3707000050a914");
     registerPattern(new Rain(lx), "3707000050a937");
+    registerPattern(new AcidTrip(lx), "3707000050a914");
 
     registerPattern(new Wisps(lx, 1, 60, 50, 270, 20, 3.5, 10), "3707000050a905"); // downward yellow wisp
     registerPattern(new Wisps(lx, 30, 210, 100, 90, 20, 3.5, 10), "3707000050ab1a"); // colorful wisp storm
@@ -314,6 +316,9 @@ abstract class Engine {
   }
 
   void registerEffectTriggerables() {
+
+    System.out.println(" Register Effect Triggerables: ");
+
     BlurEffect blurEffect = new TSBlurEffect(lx);
     ColorEffect colorEffect = new ColorEffect(lx);
     GhostEffect ghostEffect = new GhostEffect(lx);
@@ -518,7 +523,7 @@ abstract class Engine {
 
     Triggerable triggerable = configurePatternAsTriggerable(pattern);
     BooleanParameter toggle = null;
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       toggle = apc40DrumpadTriggerablesLists[apc40DrumpadRow].size() < 9 ? nfcToggles[apc40DrumpadRow][apc40DrumpadTriggerablesLists[apc40DrumpadRow].size()] : null;
       apc40DrumpadTriggerablesLists[apc40DrumpadRow].add(triggerable);
     }
@@ -548,7 +553,7 @@ abstract class Engine {
     if (effect instanceof Triggerable) {
       Triggerable triggerable = (Triggerable)effect;
       BooleanParameter toggle = null;
-      if (apc40Drumpad != null) {
+      if (Config.enableAPC40) {
         toggle = apc40DrumpadTriggerablesLists[0].size() < 9 ? nfcToggles[0][apc40DrumpadTriggerablesLists[0].size()] : null;
         apc40DrumpadTriggerablesLists[0].add(triggerable);
       }
@@ -573,7 +578,7 @@ abstract class Engine {
   void registerEffectControlParameter(LXListenableNormalizedParameter parameter, String nfcSerialNumber, double offValue, double onValue, int row) {
     ParameterTriggerableAdapter triggerable = new ParameterTriggerableAdapter(lx, parameter, offValue, onValue);
     BooleanParameter toggle = null;
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       toggle = apc40DrumpadTriggerablesLists[row].size() < 9 ? nfcToggles[row][apc40DrumpadTriggerablesLists[row].size()] : null;
       apc40DrumpadTriggerablesLists[row].add(triggerable);
     }
@@ -587,6 +592,12 @@ abstract class Engine {
     TSEffectController effectController = new TSEffectController(name, effect, triggerable);
 
     engineController.effectControllers.add(effectController);
+  }
+
+  void configureEffects() {
+    for (LXEffect effect : lx.getEffects()) {
+      effect.enabled.setValue(true);
+    }
   }
 
   /* configureBMPTool */
@@ -648,7 +659,7 @@ abstract class Engine {
 
   @SuppressWarnings("unchecked")
   void configureTriggerables() {
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       apc40DrumpadTriggerablesLists = new ArrayList[] {
         new ArrayList<Triggerable>(),
         new ArrayList<Triggerable>(),
@@ -657,6 +668,12 @@ abstract class Engine {
         new ArrayList<Triggerable>(),
         new ArrayList<Triggerable>()
       };
+    }
+    
+    for (int i = 0; i < 6; i++) {
+      for (int j = 0; j < 9; j++) {
+        nfcToggles[i][j] = new BooleanParameter("toggle");
+      }
     }
 
     registerPatternTriggerables();
@@ -669,10 +686,10 @@ abstract class Engine {
       engineController.endEffectIndex = lx.engine.getEffects().size();
     }
 
-    if (apc40Drumpad != null) {
+    if (Config.enableAPC40) {
       apc40DrumpadTriggerables = new Triggerable[apc40DrumpadTriggerablesLists.length][];
       for (int i = 0; i < apc40DrumpadTriggerablesLists.length; i++) {
-        ArrayList<Triggerable> triggerablesList= apc40DrumpadTriggerablesLists[i];
+        ArrayList<Triggerable> triggerablesList = apc40DrumpadTriggerablesLists[i];
         apc40DrumpadTriggerables[i] = triggerablesList.toArray(new Triggerable[triggerablesList.size()]);
       }
       apc40DrumpadTriggerablesLists = null;
@@ -694,14 +711,10 @@ abstract class Engine {
   void configureNFC() {
     nfcEngine = new NFCEngine(lx);
     nfcEngine.start();
-    
-    for (int i = 0; i < 6; i++) {
-      for (int j = 0; j < 9; j++) {
-        nfcToggles[i][j] = new BooleanParameter("toggle");
-      }
-    }
 
     nfcEngine.registerReaderPatternTypeRestrictions(Arrays.asList(readerPatternTypeRestrictions()));
+    // this line to allow any nfc reader to read any cube
+    nfcEngine.disableVisualTypeRestrictions = true;
   }
 
   /* configureExternalOutput */
@@ -716,7 +729,7 @@ abstract class Engine {
         output.addDatagram(datagrams[ci++] = Output.clusterDatagram(cluster).setAddress(cluster.ipAddress));
       }
       outputBrightness.parameters.add(output.brightness);
-      output.enabled.setValue(false);
+      // output.enabled.setValue(false);
       lx.addOutput(output);
       output.start();
     } catch (Exception x) {

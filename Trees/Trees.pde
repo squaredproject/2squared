@@ -137,7 +137,7 @@ void configureUI() {
   lx.ui.addLayer(new UIEffects(lx.ui, effectKnobParameters));
   lx.ui.addLayer(uiDeck);
   lx.ui.addLayer(new UILoopRecorder(lx.ui));
-  lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4, bpmTool));
+  // lx.ui.addLayer(new UIMasterBpm(lx.ui, Trees.this.width-144, 4, bpmTool));
 }
 
 void draw() {

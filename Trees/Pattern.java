@@ -33,7 +33,7 @@ abstract class TSPattern extends LXPattern {
   }
 
   BasicParameter getChannelFade() {
-    return getFaderTransition(getChannel()).fade;
+    return getChannel().getFader();
   }
 
   ParameterTriggerableAdapter getParameterTriggerableAdapter() {
@@ -55,6 +55,7 @@ abstract class TSPattern extends LXPattern {
   TreesTransition getFaderTransition(LXChannel channel) {
     return (TreesTransition) channel.getFaderTransition();
   }
+
 }
 
 abstract class TSTriggerablePattern extends TSPattern implements Triggerable {

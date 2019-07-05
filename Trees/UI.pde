@@ -551,12 +551,12 @@ class UIMultiDeck extends UIWindow implements InterfaceController {
 
   private final static int KNOBS_PER_ROW = 4;
 
-  static final int NUM_PATTERNS_VISIBLE = 10;
+  static final int NUM_PATTERNS_VISIBLE = 15;
   static final int PATTERN_ROW_HEIGHT = 20;
   static final int PATTERN_LIST_HEIGHT = NUM_PATTERNS_VISIBLE * PATTERN_ROW_HEIGHT;
   
   public final static int DEFAULT_WIDTH = 140;
-  public final static int DEFAULT_HEIGHT = 158 + PATTERN_LIST_HEIGHT;
+  public final static int DEFAULT_HEIGHT = 164 + PATTERN_LIST_HEIGHT;
 
   final UIItemList[] patternLists;
   final UIToggleSet[] blendModes;
@@ -736,7 +736,7 @@ class UIEffects extends UIWindow {
   final int KNOBS_PER_ROW = 4;
   
   UIEffects(UI ui, LXListenableNormalizedParameter[] effectKnobParameters) {
-    super(ui, "MASTER EFFECTS", Trees.this.width-144, 110, 140, 120);
+    super(ui, "MASTER EFFECTS", Trees.this.width-144, 4, 140, 120);
     
     int yp = TITLE_LABEL_HEIGHT;
     for (int ki = 0; ki < 8; ++ki) {
@@ -870,18 +870,21 @@ class UIMapping extends UIWindow {
     tree = new UIToggleSet() {
       protected void onToggle(String value) {
         mappingTool.getConfig().treeIndex =  (value == "L") ? 0 : 1;
+        mappingTool.reloadModel();
       }
     }.setOptions(new String[] { "L", "R" });
     
     level = new UIIntegerBox() {
       protected void onValueChange(int value) {
         mappingTool.getConfig().level =  value;
+        mappingTool.reloadModel();
       }
     }.setRange(0, 14);
     
     face = new UIToggleSet() {
       protected void onToggle(String value) {
         mappingTool.getConfig().face = face.getValueIndex();
+        mappingTool.reloadModel();
       }
     }.setOptions(new String[] { " ", " ", " ", " ", " ", " ", " ", " " });
     
@@ -890,6 +893,7 @@ class UIMapping extends UIWindow {
     offsetParameter.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         mappingTool.getConfig().offset = parameter.getValuef();
+        mappingTool.reloadModel();
       }
     });
     
@@ -899,6 +903,7 @@ class UIMapping extends UIWindow {
     mountPointParameter.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         mappingTool.getConfig().mountPoint = parameter.getValuef();
+        mappingTool.reloadModel();
       }
     });
     
@@ -907,6 +912,7 @@ class UIMapping extends UIWindow {
     skewParameter.addListener(new LXParameterListener() {
       public void onParameterChanged(LXParameter parameter) {
         mappingTool.getConfig().skew = parameter.getValuef();
+        mappingTool.reloadModel();
       }
     });
     
