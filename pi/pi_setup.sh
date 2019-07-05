@@ -11,16 +11,6 @@ echo -e "\n\n\n*********** Creating new user squared **************\n\n\n\n\n"
 sudo useradd -m -d $HOME -s /bin/bash -p 'thetrees!' squared
 sudo chmod -R a+w /home/squared
 
-######################
-####### wifi internet access ######
-######################
-cd $HOME/pi/
-
-echo -e "\n\n\n*********** configuring wifi access **************\n\n\n\n\n"
-sudo cp wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
-
-echo -e "\n\n\n*********** DONE **************\n\n\n\n\n"
-
 #######################
 ## Install Fadecandy ##
 #######################
@@ -37,20 +27,18 @@ echo -e "\n\n\n*********** Done installing fadecandy **************\n\n\n\n\n"
 
 
 ######################
-## Install 2squared ##
+## Compile 2squared ##
 ######################
-cd $HOME 
-echo -e "\n\n\n*********** Installing 2squared **************\n\n\n\n\n"
+echo -e "\n\n\n*********** Compiling 2squared **************\n\n\n\n\n"
 git clone https://github.com/squaredproject/2squared.git
-#git checkout minitree-norfolk # Comment this out before merge to master
 cd 2squared && sh compile.sh && cd /home/squared
-
-echo -e "\n\n\n*********** Done installing 2squared **************\n\n\n\n\n"
-
+echo -e "\n\n\n*********** Done compiling 2squared **************\n\n\n\n\n"
 
 #####################################
 ## Fadecandy and 2squared Services ##
 #####################################
+cd $HOME
+
 echo -e "\n\n\n*********** Setting up fadecand and squared services **************\n\n\n\n\n"
 
 sudo cp /home/squared/2squared/pi/pi_setup/2squared.service /etc/systemd/system/
@@ -63,7 +51,7 @@ sudo systemctl reenable fadecandy.service
 ######################
 cd  $HOME/2squared/pi/
 
-echo -e "\n\n\n*********** configuring hostapd **************\n\n\n\n\n"
+echo -e "\n\n\n*********** configuring hostapd **************"
 
 sudo apt --assume-yes install dnsmasq hostapd bridge-utils -qq
 sudo cp hostapd.conf  /etc/hostapd/hostapd.conf
@@ -75,8 +63,8 @@ sudo cp dnsmasq.conf /etc/dnsmasq.conf
 ### See https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 
 echo -e "\n\n\n*********** configuring wifi access point **************\n\n\n\n\n"
-echo -e "\n\n\n*********** warning: running this script more than once  **************\n\n\n\n\n"
-echo -e "\n\n\n*********** warning: appends lines to /etc/rc.local /etc/dhcpcd.conf /etc/sysctl.conf   **************\n\n\n\n\n"
+echo -e "*********** warning: running this script more than once  **************"
+echo -e "*********** warning: appends lines to /etc/rc.local /etc/dhcpcd.conf /etc/sysctl.conf   **************"
 
 sudo cp  /etc/dhcpcd.conf /etc/dhcpcd.conf.bak
 echo "interface wlan1" >> /etc/dhcpcd.conf
@@ -108,10 +96,10 @@ sudo systemctl restart dhcpcd
 sudo systemctl reload  dnsmasq
 
 ### enable ssh
-echo -e "\n\n\n*********** enabling ssh access  **************\n\n\n\n\n"
+echo -e "*********** enabling ssh access  **************"
 sudo apt-get install openssh-server
 sudo systemctl enable ssh
 
-echo -e "\n\n\n*********** Done with hostapd **************\n\n\n\n\n"
+echo -e "*********** Done with hostapd **************"
  
 
