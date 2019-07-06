@@ -119,8 +119,8 @@ sudo systemctl enable ssh
 ### ipad app is hardcoded to connect to hostname odroid.local
 ### SO SET THE HOSTNAME TO odroid.local (even though this is a rasberry pi)
 echo -e "*********** enabling Avahi mDNS  **************"
-sudo sed -i 's/^#host-name.*$/host-name=odroid/' /etc/avahi/daemon.conf
 sudo apt-get install avahi-daemon
+sudo sed -i 's/^#host-name.*$/host-name=odroid/' /etc/avahi/avahi-daemon.conf
 sudo systemctl enable avahi-daemon
 sudo systemctl restart avahi-daemon
 
