@@ -76,6 +76,8 @@ echo "\t nohook wpa_supplicant" >> /etc/dhcpcd.conf
 
 echo "\n\ninterface eth0" >> /etc/dhcpcd.conf
 echo "\tstatic ip_address=10.0.0.10/24" >> /etc/dhcpcd.conf
+echo "\tstatic routers=10.0.0.1" >> /etc/dhcpcd.conf
+echo "\tstatic domain_name_servers=8.8.8.8" >> /etc/dhcpcd.conf
 
 
 ### Uncomment line re IP forwarding
