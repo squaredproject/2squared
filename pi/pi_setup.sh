@@ -30,10 +30,31 @@ echo -e "\n\n*********** Done installing fadecandy **************\n\n"
 ######################
 cd $HOME
 echo -e "\n\n*********** Compiling 2squared **************\n\n"
-cd $HOME;  clone https://github.com/squaredproject/2squared.git;
+cd $HOME;  git clone https://github.com/squaredproject/2squared.git;
 git checkout hayes-valley; git pull
 cd 2squared && sh compile.sh && cd /home/squared
 echo -e "\n\n*********** Done compiling 2squared **************\n\n"
+
+
+##################################
+## download autodimming service ##
+##################################
+cd $HOME
+echo -e "\n\n*********** Downloading 2squared autodimmer **************\n\n"
+cd $HOME;    git clone https://github.com/squaredproject/autoDimmingService.git;
+echo -e "\n\n*********** Done downloading 2squared autodimmer **************\n\n"
+
+#####################################
+## Setting up statuscake ##
+#####################################
+cd $HOME/2squared/statuscake
+
+echo -e "\n\n*********** Setting up statuscake services **************\n\n"
+sudo cp statuscake.timer /etc/systemd/system/
+sudo cp statuscake.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable statuscake.timer
+
 
 #####################################
 ## Fadecandy and 2squared Services ##
