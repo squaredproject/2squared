@@ -15,8 +15,8 @@ class MappingTool extends Effect {
 
   final List<TreeConfig> clusterConfig;
 
-  // final SinLFO strobe = new SinLFO(00, 20, 1000);
-  final QuadraticEnvelope strobe = new QuadraticEnvelope(100, 0, 3000);
+  final SinLFO strobe = new SinLFO(00, 100, 1000);
+  //final QuadraticEnvelope strobe = new QuadraticEnvelope(100, 0, 3000);
   
   final DiscreteParameter clusterIndex;
   final BooleanParameter showBlanks = new BooleanParameter("BLANKS", false);
