@@ -13,11 +13,6 @@
         "map": [[ 0, 384, 0, 384, "grb" ]]
     },
     {
-        "serial": "KWHKFRFNBBDAEULD",
-        "type": "fadecandy",
-        "map": [[ 0, 384, 0, 384, "grb" ]]
-    },
-    {
         "type": "fadecandy",
         "map": [[ 0, 0, 0, 384, "grb" ]]
     }
