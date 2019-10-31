@@ -35,7 +35,7 @@ class BPMTool {
   final String[] bpmLabels = {"SIN", "SAW", "TRI", "QD", "SQR"};
   final DiscreteParameter tempoLfoType = new DiscreteParameter("Tempo LFO", bpmLabels.length);
   
-  final String[] beatLabels = {"1", "\u00bd", "\u00bc", "1/16"}; // 1, ½, ¼, 1/16
+  final String[] beatLabels = {"1", "\u00bd", "\u00bc", "1/16"}; // 1, 1/2, 1/4, 1/16
   final DiscreteParameter beatType = new DiscreteParameter("Beat", beatLabels.length);
   final double[] beatScale = { 1, 2, 4, 16 };
   
