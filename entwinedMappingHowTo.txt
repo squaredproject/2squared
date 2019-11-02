@@ -1,7 +1,12 @@
 How to map the Entwined trees:
 
 Setting up the installation:
-The layout of the installation(How many trees, where they are, and what size) is stored in the file data/entwinedTrees.json. The json file must be edited directly in order to change the installation layout. Here is an example entwinedTrees.json file from the original install:
+The layout of the installation(How many trees, where they are, and what size)
+is stored in the file data/entwinedTrees.json. 
+
+The json file must be edited directly in order to change the installation layout. 
+
+Here is an example entwinedTrees.json file from the original install:
 [
 	{
 		"canopyMajorLengths" : [300, 200, 120],
