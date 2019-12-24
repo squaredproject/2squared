@@ -43,6 +43,27 @@ cd $HOME;  git clone https://github.com/squaredproject/2squared.git;
 cd 2squared && git checkout hayes-valley && sh compile.sh && cd /home/squared
 echo -e "\n\n*********** Done compiling 2squared **************\n\n"
 
+
+##################################
+## download autodimming service ##
+##################################
+cd $HOME
+echo -e "\n\n*********** Downloading 2squared autodimmer **************\n\n"
+cd $HOME;    git clone https://github.com/squaredproject/autoDimmingService.git;
+echo -e "\n\n*********** Done downloading 2squared autodimmer **************\n\n"
+
+#####################################
+## Setting up statuscake ##
+#####################################
+cd $HOME/2squared/statuscake
+
+echo -e "\n\n*********** Setting up statuscake services **************\n\n"
+sudo cp statuscake.timer /etc/systemd/system/
+sudo cp statuscake.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable statuscake.timer
+
+
 #####################################
 ## Fadecandy and 2squared Services ##
 #####################################
@@ -86,6 +107,8 @@ echo "\t nohook wpa_supplicant" >> /etc/dhcpcd.conf
 
 echo "\n\ninterface eth0" >> /etc/dhcpcd.conf
 echo "\tstatic ip_address=10.0.0.10/24" >> /etc/dhcpcd.conf
+echo "\tstatic routers=10.0.0.1" >> /etc/dhcpcd.conf
+echo "\tstatic domain_name_servers=8.8.8.8" >> /etc/dhcpcd.conf
 
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd

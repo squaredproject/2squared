@@ -1,0 +1,7 @@
+[Unit]
+Description=Ping Status Cake URL every 5 mins
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/squared/2squared/statuscake/statuscake.sh
+
