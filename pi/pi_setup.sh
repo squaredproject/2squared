@@ -40,7 +40,7 @@ echo -e "\n\n*********** Done installing fadecandy **************\n\n"
 cd $HOME
 echo -e "\n\n*********** Compiling 2squared **************\n\n"
 cd $HOME;  git clone https://github.com/squaredproject/2squared.git;
-cd 2squared && git checkout hayes-valley && sh compile.sh && cd /home/squared
+cd 2squared && git checkout reno && sh compile.sh && cd /home/squared
 echo -e "\n\n*********** Done compiling 2squared **************\n\n"
 
 
@@ -50,6 +50,9 @@ echo -e "\n\n*********** Done compiling 2squared **************\n\n"
 cd $HOME
 echo -e "\n\n*********** Downloading 2squared autodimmer **************\n\n"
 cd $HOME;    git clone https://github.com/squaredproject/autoDimmingService.git;
+cd autoDimmingService
+sudo cp autodimmer.service /etc/systemd/system
+sudo systemctl enable autodimmer
 echo -e "\n\n*********** Done downloading 2squared autodimmer **************\n\n"
 
 #####################################
