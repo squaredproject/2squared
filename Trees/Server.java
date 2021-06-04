@@ -50,7 +50,7 @@ class ParseClientTask implements LXLoopTask {
       String whatClientSaid = client.readStringUntil('\n');
       if (whatClientSaid == null) return;
 
-      System.out.print("Request: " + whatClientSaid);
+      // System.out.print("Request: " + whatClientSaid);
 
       Map<String, Object> message = null;
       try {
